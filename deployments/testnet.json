@@ -1,0 +1,11 @@
+{
+  "network": "testnet",
+  "factory": "pq87-vaults.qlyphs-grad-c48a-parent.testnet",
+  "factory_sha256": "4d421c032cd5ca6627f0a49dceb453c2d58f6e81d479e6b43d291e933d50a8e8",
+  "vault_sha256": "374af7b0bcda42b81a04b12b36f8574efe40c04bc39b220cc7d15c1791b7f8d3",
+  "factory_creation": {
+    "tx": "Cg3m4SRAnYFGeZgerLTMjQHXfh6JavUqSyXGH782DESQ",
+    "sender": "qlyphs-grad-c48a-parent.testnet",
+    "block_height": 274237208
+  }
+}

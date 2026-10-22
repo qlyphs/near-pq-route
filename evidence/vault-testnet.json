@@ -1,0 +1,50 @@
+{
+  "network": "testnet",
+  "factory": "pq87-vaults.qlyphs-grad-c48a-parent.testnet",
+  "vault": "1decab283ca92482.pq87-vaults.qlyphs-grad-c48a-parent.testnet",
+  "steps": [
+    {
+      "name": "factory creation audit: CreateAccount, Transfer, DeployContract only",
+      "ok": true,
+      "tx": "Cg3m4SRAnYFGeZgerLTMjQHXfh6JavUqSyXGH782DESQ",
+      "detail": "2 receipts"
+    },
+    {
+      "name": "factory creates the vault at the key-derived address",
+      "ok": true,
+      "tx": "Fay9aXzFWkTJi4ATSsJjMcDb5w1ijY2sRn4g7TZBttEe"
+    },
+    {
+      "name": "wallet preflight: pinned factory, registry record, code, zero keys, exact storage",
+      "ok": true,
+      "detail": "nonce 0 at block AVWgwg3iQX7U8HJURcgDeWwpWtEcdfcTkYUYnLUuFSU8"
+    },
+    {
+      "name": "NEAR payment of 0.1 NEAR to the signed receiver",
+      "ok": true,
+      "tx": "xu2Ftoast7NZ6axRS5wsuxG7rQV6iy5xhpgUgivdJnE",
+      "detail": "6.970171574775 Tgas"
+    },
+    {
+      "name": "replay refused on-chain",
+      "ok": true,
+      "tx": "6qgUj8udgdap8YFNe49ShKMpqfspq16nvrnF3A7WPasH"
+    },
+    {
+      "name": "tampered amount refused on-chain",
+      "ok": true,
+      "tx": "5Q7WX5VxTE92mLPLWdYLsA8juJxcwMBJXw8gSBBLrYaC"
+    },
+    {
+      "name": "foreign ML-DSA-87 key refused on-chain",
+      "ok": true,
+      "tx": "7P9En7FPmpQXxsjvFQppo1726cLWMQSXwjzrW8UC5GCb"
+    },
+    {
+      "name": "wNEAR (NEP-141) payment of 0.05 out of the vault",
+      "ok": true,
+      "tx": "47QGNkrx7Jx3jtS3CskmyenzAccbfu7KZaXaTtLd6TT6",
+      "detail": "7.064311100447 Tgas, vault wNEAR 50000000000000000000000"
+    }
+  ]
+}

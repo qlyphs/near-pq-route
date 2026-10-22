@@ -1,72 +1,90 @@
-# ML-DSA-87 verification on NEAR (gas spike)
+# Qlyphs ML-DSA-87 vault on NEAR
 
-Can a NEAR contract verify an ML-DSA-87 signature (FIPS 204, the scheme Quantus uses) on-chain, and at
-what cost? This spike answers that with the same C verifier as the Solana vault POC, compiled to Wasm.
+A NEAR contract that verifies an **ML-DSA-87 signature (FIPS 204, the scheme Quantus uses) on-chain, in a
+single call**, before it moves NEAR or NEP-141 tokens out of a vault. The vault account has no access key:
+only a post-quantum signature from its owner can spend from it. Anyone can relay the signed payment and pay
+the gas, but cannot change it.
 
-**Status: research spike. Not a vault, not audited, no real funds.**
+It reuses, byte for byte, the C verifier of the Qlyphs Solana vault. Solana needs about 21 transactions per
+verification. NEAR needs one call of about 7 Tgas, 2 % of the per-call limit.
 
-## Result
+**Status: research proof of concept. Not audited. No real funds.** Testnet only. Read
+[SECURITY.md](SECURITY.md) for what this does and does not protect, and [docs/PROTOCOL.md](docs/PROTOCOL.md)
+for the exact rules.
 
-| | NEAR testnet | Local sandbox (nearcore 2.6.2) |
-|---|---|---|
-| Full verification, one function call | **6.47 Tgas** (whole tx 6.80 Tgas) | 6.50 Tgas (tx 7.17 Tgas) |
-| Share of the 300 Tgas call limit | ~2 % | ~2 % |
-| Vectors (1 valid, 8 invalid) | 9/9 | 9/9 |
-| Contract size | 14,591 bytes | same bytes |
+## What is shown, and where the proof is
 
-The whole verification fits in a single call, with no session, no relay splitting and no extra
-transactions: one signed payload, one receipt, about 1–2 s to finality. At the minimum gas price
-(100 Mgas price, 10⁻⁴ NEAR per Tgas) one verification costs about 0.0007 NEAR.
-
-Cost breakdown (sandbox, cumulative Tgas inside the call, `verify_profile`):
-
-| Stage | Tgas |
+| Claim | Evidence |
 |---|---|
-| Input read and parse | 0.08 |
-| Hint check, challenge, μ = H(tr ‖ M′) | 0.33 |
-| Seven z polynomials, decode, norm check, NTT | 0.51 |
-| Eight rows of Az − c·t₁ (ExpandA dominates, ~0.61 per row) | 4.89 |
-| **Total** | **5.81** (+ host-call overhead = 6.5) |
+| Testnet: vault created by a keyless, audited factory; preflight passes; 0.1 NEAR and 0.05 wNEAR (`wrap.testnet`, a real NEP-141) paid by one ML-DSA-87 signature each; replay, tampered amount and foreign key refused on-chain | `evidence/vault-testnet.json` (every tx hash), `deployments/testnet.json` |
+| Sandbox: 45 checks: factory creation, registry and refunds; the two attacks found in review (a vault made outside the factory, a vault planted by an earlier life of the factory id) refused by the preflight; every message-field refusal; u128 edge cases; exact `ft_transfer` arguments; failed-delivery refund | `evidence/vault-sandbox.json` |
+| The verifier is the Solana POC's, unchanged | `core/SOURCE.sha256` |
+| Verification alone costs 6.47 Tgas on testnet, one call, 9/9 vectors | `evidence/testnet.json`, `evidence/gas.json` |
 
-Primitives (`bench`, one call each, minus the empty-call baseline): Keccak-f[1600] ≈ 0.008 Tgas,
-one ExpandA entry ≈ 0.053, NTT ≈ 0.048, inverse NTT ≈ 0.056, SHAKE256 over a 2,592-byte key ≈ 0.19.
+Testnet accounts: factory `pq87-vaults.qlyphs-grad-c48a-parent.testnet`, vault
+`1decab283ca92482.pq87-vaults.qlyphs-grad-c48a-parent.testnet`. Two earlier deployments
+(`pq87-vault.…` and `pq87-factory.…`, see `deployments/superseded-testnet-r1.json`) predate the review
+fixes and are not trusted.
 
-Testnet contract `pq87-spike.qlyphs-grad-c48a-parent.testnet`, deploy tx
-`696LKVe5rXryvDraJWpFW5kCRW3qhFHYzwKFv9mCagtC`. Every vector's transaction hash is in
-`evidence/testnet.json`; sandbox numbers are in `evidence/gas.json`.
+## How it works
 
-## What this does and does not show
+1. The **factory** is created by one transaction with no `FunctionCall`, so it never had a key and nothing
+   could be scheduled before its code ran. `auditFactoryCreation` checks that once per release.
+2. `factory.create(public key)` with at least 0.25 NEAR records the vault in the factory's registry and
+   creates it at an address derived from the key, in one atomic receipt: create, fund, deploy the vault
+   code embedded in the factory, `init`. If creation fails, the recorded deposit is refunded.
+3. Before signing, the wallet runs `checkVault`. At one final block it checks the pinned factory and its
+   code, the registry record, the vault code, zero access keys on both, and that the vault storage is
+   exactly the owner's key and a usable nonce.
+4. The owner signs a 256-byte message: network, vault, NEAR or token, receiver, amount, nonce, validity
+   window, `ft_transfer` gas.
+5. Anyone calls `execute(signature ‖ message)`. The contract checks every field, verifies the signature,
+   spends the nonce, then sends the NEAR or calls `ft_transfer` with 1 yoctoNEAR.
 
-- It shows that the verifier runs unchanged on NEAR's Wasm runtime and accepts and refuses the same
-  vectors as on the host and on Solana.
-- The vectors come from OpenSSL 3.5 (`fixtures/vectors.json`, copied from the Solana POC). They are not
-  the NIST ACVP set.
-- `contract/near.c` only verifies. It holds no funds, keeps no nonce, binds no domain and moves nothing.
-  A vault needs those, plus account locking (no full-access key on the vault account).
-- Gas is metered per Wasm instruction, so these numbers move with NEAR protocol upgrades. Re-measure on
-  the target network before relying on a figure.
+## Gas
+
+| | Tgas (testnet) |
+|---|---|
+| `execute`, NEAR transfer | 6.98 |
+| `execute`, NEP-141 transfer (plus the signed `ft_transfer` gas) | 7.07 |
+| Signature verification alone | 6.47 |
+| Of which ExpandA (8 rows of the matrix) | about 85 % |
+
+At the minimum gas price a payment costs about 0.0007 NEAR. Gas is metered per Wasm instruction, so
+re-measure on the target network after protocol upgrades.
 
 ## Layout
 
-- `core/`: the verifier, byte-identical to the Solana POC (`core/SOURCE.sha256`).
-- `contract/near.c`: raw NEAR host ABI glue, three methods: `verify`, `verify_profile`, `bench`.
-- `tests/measure.mjs`: local sandbox run, writes `evidence/gas.json`.
-- `tests/testnet.mjs`: testnet deploy and run, writes `evidence/testnet.json`.
+- `core/`: the ML-DSA-87 verifier, byte-identical to the Solana POC.
+- `contract/vault.c`: the vault. `contract/factory.c`: the factory. Raw NEAR host ABI in C, no Rust.
+- `contract/near.c`: the gas-measurement contract (`verify`, `verify_profile`, `bench`), never a vault.
+- `sdk/vault.mjs`: message encoding, a local OpenSSL test signer, `checkVault`, `auditFactoryCreation`.
+- `tests/`: sandbox suite, testnet runs, a test-only NEP-141 stand-in (`mock_ft.c`).
+- `deployments/testnet.json`: the pinned testnet release (factory id, code hashes, factory creation tx).
 
 ## Reproduce
 
-Requirements: Homebrew `llvm` and `lld` (Apple clang has no Wasm target), Node 20+.
+Requirements: Homebrew `llvm` and `lld` (Apple clang has no Wasm target), Node 20+, OpenSSL ≥ 3.5.
 
 ```bash
 npm install
-(cd node_modules/near-sandbox && node install.js)   # downloads the official nearcore sandbox
-bash scripts/build.sh                               # prints the wasm sha256
-NEAR_SANDBOX_BIN_PATH=$PWD/node_modules/near-sandbox/bin/near-sandbox node tests/measure.mjs
+(cd node_modules/near-sandbox && node install.js)   # official nearcore sandbox binary
+bash scripts/build.sh                               # prints every wasm sha256
+export NEAR_SANDBOX_BIN_PATH=$PWD/node_modules/near-sandbox/bin/near-sandbox
+node tests/vault.sandbox.mjs                        # 45 checks
+node tests/measure.mjs                              # verification gas profile
 ```
 
-Testnet (needs a funded testnet account):
+Testnet (needs two funded testnet accounts; the owner key file is created if absent):
 
 ```bash
-NEAR_RPC=https://test.rpc.fastnear.com PARENT_ACCOUNT=<id> PARENT_KEY_FILE=<file> \
-  SPIKE_KEY_FILE=<file> node tests/testnet.mjs
+PARENT_ACCOUNT=<id> PARENT_KEY_FILE=<file> RELAYER_ACCOUNT=<id> RELAYER_KEY_FILE=<file> \
+  OWNER_KEY_FILE=<file.pem> node tests/vault.testnet.mjs
 ```
+
+## Not done yet
+
+- An audit, and NIST ACVP vectors (the vectors here come from OpenSSL).
+- Signing in the Qlyphs wallet (today a local OpenSSL key signs).
+- Moving NFTs, multi-tokens or calling `ft_transfer_call` from a vault.
+- A mainnet release.

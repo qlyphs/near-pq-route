@@ -1,0 +1,10 @@
+{
+  "network": "testnet",
+  "factory": "pq87-factory.qlyphs-grad-c48a-parent.testnet",
+  "factory_sha256": "e0b8f40e01b25285c9d1c414337e26999210db762dbf99f845b03b12f5a23bff",
+  "vault_sha256": "374af7b0bcda42b81a04b12b36f8574efe40c04bc39b220cc7d15c1791b7f8d3",
+  "factory_creation": {
+    "tx": "76XcaEQurddnaeZgvBymJjhLejdf2CfdQEjwUftTEWnF",
+    "sender": "qlyphs-grad-c48a-parent.testnet"
+  }
+}

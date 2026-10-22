@@ -1,0 +1,239 @@
+{
+  "sandbox": "near-sandbox 2.6.2 (nearcore)",
+  "deployment": {
+    "network": "sandbox",
+    "factory": "factory.test.near",
+    "factory_sha256": "908097b412cf4a9889d5b17d0976bc99d9f696bdd164f20bbd3c4c796fb99f84",
+    "vault_sha256": "d4823570153bdcf0a90c61e935d0eb692800b25d880477187be8c54871b1bc7b"
+  },
+  "passed": 45,
+  "total": 45,
+  "results": [
+    {
+      "name": "factory creation audit: CreateAccount, Transfer, DeployContract only",
+      "ok": true,
+      "detail": "CreateAccount,Transfer,DeployContract"
+    },
+    {
+      "name": "factory account has no access key",
+      "ok": true
+    },
+    {
+      "name": "factory creates the vault at the key-derived address",
+      "ok": true,
+      "detail": "1a945f4736171a36.factory.test.near, 15.568877397976 Tgas total"
+    },
+    {
+      "name": "wallet preflight passes on a factory vault",
+      "ok": true,
+      "detail": "nonce 0"
+    },
+    {
+      "name": "vault holds the deposit minus the 0.01 NEAR registry fee",
+      "ok": true,
+      "detail": "4.990012205009462 NEAR"
+    },
+    {
+      "name": "second vault for the same key refused, deposit returned",
+      "ok": true,
+      "detail": "caller net cost 0.0001544687047167 NEAR"
+    },
+    {
+      "name": "deposit below 0.25 NEAR",
+      "ok": true,
+      "detail": "attach at least 0.25 NEAR"
+    },
+    {
+      "name": "wrong key length",
+      "ok": true,
+      "detail": "expected a 2592-byte"
+    },
+    {
+      "name": "on_create is private",
+      "ok": true,
+      "detail": "private"
+    },
+    {
+      "name": "preflight refuses a vault not created by the pinned factory",
+      "ok": true,
+      "detail": "rogue.test.near is not the pinned factory's address for this key"
+    },
+    {
+      "name": "earlier-life child: the re-creation alone passes the audit",
+      "ok": true
+    },
+    {
+      "name": "earlier-life child: preflight refuses it (no registry record)",
+      "ok": true,
+      "detail": "9a381318fb84331a.factory2.test.near is not in the factory registry as created for this key"
+    },
+    {
+      "name": "earlier-life child: creating that key fails and on_create refunds the deposit",
+      "ok": true,
+      "detail": "caller net cost 0.001312134153877 NEAR"
+    },
+    {
+      "name": "earlier-life child: still refused after the failed creation",
+      "ok": true,
+      "detail": "9a381318fb84331a.factory2.test.near is not in the factory registry as created for this key"
+    },
+    {
+      "name": "preflight refuses another owner key",
+      "ok": true,
+      "detail": "1a945f4736171a36.factory.test.near is not the pinned factory's address for this key"
+    },
+    {
+      "name": "preflight refuses a factory with other pinned code",
+      "ok": true,
+      "detail": "factory code is not the pinned release"
+    },
+    {
+      "name": "SDK refuses a lookalike receiver id",
+      "ok": true,
+      "detail": "not a NEAR account id: \"binаnce.near\""
+    },
+    {
+      "name": "init twice",
+      "ok": true,
+      "detail": "already initialized"
+    },
+    {
+      "name": "init from a grandparent account",
+      "ok": true,
+      "detail": "init must come from the parent account"
+    },
+    {
+      "name": "init from an unrelated account",
+      "ok": true,
+      "detail": "init must come from the parent account"
+    },
+    {
+      "name": "tampered amount",
+      "ok": true,
+      "detail": "invalid signature"
+    },
+    {
+      "name": "tampered receiver",
+      "ok": true,
+      "detail": "invalid signature"
+    },
+    {
+      "name": "altered signature",
+      "ok": true,
+      "detail": "invalid signature"
+    },
+    {
+      "name": "reserved bytes set",
+      "ok": true,
+      "detail": "reserved bytes must be zero"
+    },
+    {
+      "name": "signed by another key",
+      "ok": true,
+      "detail": "invalid signature"
+    },
+    {
+      "name": "other vault in the message",
+      "ok": true,
+      "detail": "message is for another vault"
+    },
+    {
+      "name": "other network in the message",
+      "ok": true,
+      "detail": "wrong network"
+    },
+    {
+      "name": "expired",
+      "ok": true,
+      "detail": "authorization expired"
+    },
+    {
+      "name": "validity window too long",
+      "ok": true,
+      "detail": "authorization expired"
+    },
+    {
+      "name": "issued in the future",
+      "ok": true,
+      "detail": "authorization expired"
+    },
+    {
+      "name": "future nonce",
+      "ok": true,
+      "detail": "stale or reused nonce"
+    },
+    {
+      "name": "amount above spendable balance",
+      "ok": true,
+      "detail": "insufficient balance"
+    },
+    {
+      "name": "amount near 2^128 (no overflow in the balance check)",
+      "ok": true,
+      "detail": "insufficient balance"
+    },
+    {
+      "name": "zero amount",
+      "ok": true,
+      "detail": "amount must be positive"
+    },
+    {
+      "name": "receiver is the vault",
+      "ok": true,
+      "detail": "receiver is the vault"
+    },
+    {
+      "name": "invalid receiver id",
+      "ok": true,
+      "detail": "bad receiver account"
+    },
+    {
+      "name": "JSON in the receiver id",
+      "ok": true,
+      "detail": "bad receiver account"
+    },
+    {
+      "name": "NEAR transfer with a token set",
+      "ok": true,
+      "detail": "token set on a NEAR transfer"
+    },
+    {
+      "name": "NEAR transfer with ft gas set",
+      "ok": true,
+      "detail": "token set on a NEAR transfer"
+    },
+    {
+      "name": "ft gas below 10 Tgas",
+      "ok": true,
+      "detail": "bad token account or gas"
+    },
+    {
+      "name": "NEAR payment: receiver gets exactly the signed amount",
+      "ok": true,
+      "detail": "call 7.066468128141 Tgas",
+      "call_tgas": 7.066468128141
+    },
+    {
+      "name": "replay of a spent authorization",
+      "ok": true,
+      "detail": "stale or reused nonce"
+    },
+    {
+      "name": "NEP-141 payment 123456789012345678901234567: exact ft_transfer call with 1 yocto",
+      "ok": true,
+      "detail": "call 7.166849129661 Tgas",
+      "call_tgas": 7.166849129661
+    },
+    {
+      "name": "NEP-141 payment 340282366920938463463374607431768211455: exact ft_transfer call with 1 yocto",
+      "ok": true,
+      "detail": "call 7.168539824061 Tgas",
+      "call_tgas": 7.168539824061
+    },
+    {
+      "name": "failed delivery refunds the vault and keeps the nonce spent",
+      "ok": true,
+      "detail": "balance delta 185052633152900000000 yocto"
+    }
+  ]
+}

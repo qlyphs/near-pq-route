@@ -1,0 +1,19 @@
+{
+  "name": "qlyphs-pq87-near",
+  "version": "1.0.0",
+  "description": "ML-DSA-87 verification on NEAR: gas spike",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "build": "bash scripts/build.sh",
+    "measure": "node tests/measure.mjs"
+  },
+  "author": "",
+  "license": "MIT",
+  "type": "commonjs",
+  "devDependencies": {
+    "near-workspaces": "^5.0.0"
+  },
+  "private": true
+}

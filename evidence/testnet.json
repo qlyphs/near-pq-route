@@ -1,0 +1,124 @@
+{
+  "network": "testnet",
+  "contract": "pq87-spike.qlyphs-grad-c48a-parent.testnet",
+  "deploy_tx": "696LKVe5rXryvDraJWpFW5kCRW3qhFHYzwKFv9mCagtC",
+  "vectors": [
+    {
+      "name": "valid-action",
+      "expected": true,
+      "got": true,
+      "ok": true,
+      "tx": "Hnfv59LBHnxPdJ19KQqYvJLoKRNVDcVXKXLcSXFdEfdD",
+      "call_tgas": 6.472,
+      "tx_tgas": 6.797,
+      "logs": [
+        "start 46497377825",
+        "verified 5547988217645"
+      ]
+    },
+    {
+      "name": "wrong-destination",
+      "expected": false,
+      "got": false,
+      "ok": true,
+      "tx": "31yYjZsqf7SdrQ1wdCvY6mzYiK7MwpuZCHs2UTuEWM5d",
+      "call_tgas": 6.472,
+      "tx_tgas": 6.797,
+      "logs": [
+        "start 46497377825",
+        "verified 5547981635597"
+      ]
+    },
+    {
+      "name": "wrong-amount",
+      "expected": false,
+      "got": false,
+      "ok": true,
+      "tx": "CmDgsYJDnevfZVFCP4QjhHXnagJMUfdgmrE35Gj5DLVa",
+      "call_tgas": 6.472,
+      "tx_tgas": 6.797,
+      "logs": [
+        "start 46497377825",
+        "verified 5547981635597"
+      ]
+    },
+    {
+      "name": "wrong-domain",
+      "expected": false,
+      "got": false,
+      "ok": true,
+      "tx": "AHLkmagtJVUK6iD4QA6eCap6Xz3QFSBNQWwYeNvMCW5d",
+      "call_tgas": 6.472,
+      "tx_tgas": 6.797,
+      "logs": [
+        "start 46497377825",
+        "verified 5547981635597"
+      ]
+    },
+    {
+      "name": "wrong-nonce",
+      "expected": false,
+      "got": false,
+      "ok": true,
+      "tx": "FDLzGtzpkY1AryxNFvQJcKyzWdbvJpSudBwmMpZLJv1t",
+      "call_tgas": 6.472,
+      "tx_tgas": 6.797,
+      "logs": [
+        "start 46497377825",
+        "verified 5547981635597"
+      ]
+    },
+    {
+      "name": "altered-signature",
+      "expected": false,
+      "got": false,
+      "ok": true,
+      "tx": "4QeqCg3RMJu8jMPHRCQUtdAcUn3MSRWq1XpBBYGcs9W6",
+      "call_tgas": 6.472,
+      "tx_tgas": 6.797,
+      "logs": [
+        "start 46497377825",
+        "verified 5547984926621"
+      ]
+    },
+    {
+      "name": "empty-signature-in-vault",
+      "expected": false,
+      "got": false,
+      "ok": true,
+      "tx": "GKkeDbJBLh3KXz1o8xPnyDaQjPQPmju3aYXhYy1aDFCA",
+      "call_tgas": 6.471,
+      "tx_tgas": 6.796,
+      "logs": [
+        "start 46497377825",
+        "verified 5546438968097"
+      ]
+    },
+    {
+      "name": "vault-signature-empty-context",
+      "expected": false,
+      "got": false,
+      "ok": true,
+      "tx": "2rmLeeHMigVmsscH6ggguFWsfDzHJ1TpECNd31mhhf3R",
+      "call_tgas": 6.47,
+      "tx_tgas": 6.795,
+      "logs": [
+        "start 46435286477",
+        "verified 5546357130605"
+      ]
+    },
+    {
+      "name": "wrong-context-signature",
+      "expected": false,
+      "got": false,
+      "ok": true,
+      "tx": "E1dzkjwY2Qsi5TVxDLkY91SHSpUar5hCEi8D4AH6Szes",
+      "call_tgas": 6.472,
+      "tx_tgas": 6.797,
+      "logs": [
+        "start 46497377825",
+        "verified 5547583421693"
+      ]
+    }
+  ]
+}

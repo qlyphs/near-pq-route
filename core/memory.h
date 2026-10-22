@@ -1,0 +1,7 @@
+#ifndef QP_MEMORY_H
+#define QP_MEMORY_H
+#include <stddef.h>
+void *memcpy(void*,const void*,size_t);
+void *memset(void*,int,size_t);
+int memcmp(const void*,const void*,size_t);
+#endif

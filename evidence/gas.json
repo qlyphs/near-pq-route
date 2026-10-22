@@ -1,0 +1,206 @@
+{
+  "sandbox": "near-sandbox 2.6.2 (nearcore)",
+  "wasm_sha256": "8f112e9a173713af6573ac670805fe677eda4609407636143dbcfa61dcef6d09",
+  "vectors": [
+    {
+      "name": "valid-action",
+      "expected": true,
+      "got": true,
+      "ok": true,
+      "call_gas": 6501314209733,
+      "call_tgas": 6.501,
+      "tx_tgas": 7.169
+    },
+    {
+      "name": "wrong-destination",
+      "expected": false,
+      "got": false,
+      "ok": true,
+      "call_gas": 6501307627685,
+      "call_tgas": 6.501,
+      "tx_tgas": 7.169
+    },
+    {
+      "name": "wrong-amount",
+      "expected": false,
+      "got": false,
+      "ok": true,
+      "call_gas": 6501307627685,
+      "call_tgas": 6.501,
+      "tx_tgas": 7.169
+    },
+    {
+      "name": "wrong-domain",
+      "expected": false,
+      "got": false,
+      "ok": true,
+      "call_gas": 6501307627685,
+      "call_tgas": 6.501,
+      "tx_tgas": 7.169
+    },
+    {
+      "name": "wrong-nonce",
+      "expected": false,
+      "got": false,
+      "ok": true,
+      "call_gas": 6501307627685,
+      "call_tgas": 6.501,
+      "tx_tgas": 7.169
+    },
+    {
+      "name": "altered-signature",
+      "expected": false,
+      "got": false,
+      "ok": true,
+      "call_gas": 6501310918709,
+      "call_tgas": 6.501,
+      "tx_tgas": 7.169
+    },
+    {
+      "name": "empty-signature-in-vault",
+      "expected": false,
+      "got": false,
+      "ok": true,
+      "call_gas": 6499764960185,
+      "call_tgas": 6.499,
+      "tx_tgas": 7.167
+    },
+    {
+      "name": "vault-signature-empty-context",
+      "expected": false,
+      "got": false,
+      "ok": true,
+      "call_gas": 6499550297737,
+      "call_tgas": 6.499,
+      "tx_tgas": 7.166
+    },
+    {
+      "name": "wrong-context-signature",
+      "expected": false,
+      "got": false,
+      "ok": true,
+      "call_gas": 6500909413781,
+      "call_tgas": 6.5,
+      "tx_tgas": 7.168
+    }
+  ],
+  "profile": {
+    "ok": true,
+    "call_tgas": 6.732,
+    "stages": [
+      {
+        "stage": "start",
+        "gas": 75153567257,
+        "tgas": 0.075
+      },
+      {
+        "stage": "begin",
+        "gas": 406349440625,
+        "tgas": 0.406
+      },
+      {
+        "stage": "z0",
+        "gas": 479937989228,
+        "tgas": 0.479
+      },
+      {
+        "stage": "z1",
+        "gas": 552605732558,
+        "tgas": 0.552
+      },
+      {
+        "stage": "z2",
+        "gas": 625273475888,
+        "tgas": 0.625
+      },
+      {
+        "stage": "z3",
+        "gas": 697941219218,
+        "tgas": 0.697
+      },
+      {
+        "stage": "z4",
+        "gas": 770608962548,
+        "tgas": 0.77
+      },
+      {
+        "stage": "z5",
+        "gas": 843276705878,
+        "tgas": 0.843
+      },
+      {
+        "stage": "z6",
+        "gas": 915948562988,
+        "tgas": 0.915
+      },
+      {
+        "stage": "row0",
+        "gas": 1525363397330,
+        "tgas": 1.525
+      },
+      {
+        "stage": "row1",
+        "gas": 2135751693329,
+        "tgas": 2.135
+      },
+      {
+        "stage": "row2",
+        "gas": 2746276566824,
+        "tgas": 2.746
+      },
+      {
+        "stage": "row3",
+        "gas": 3356172854735,
+        "tgas": 3.356
+      },
+      {
+        "stage": "row4",
+        "gas": 3966556214198,
+        "tgas": 3.966
+      },
+      {
+        "stage": "row5",
+        "gas": 4577133744077,
+        "tgas": 4.577
+      },
+      {
+        "stage": "row6",
+        "gas": 5187960569024,
+        "tgas": 5.187
+      },
+      {
+        "stage": "row7",
+        "gas": 5809215003515,
+        "tgas": 5.809
+      }
+    ]
+  },
+  "bench": [
+    {
+      "op": "baseline",
+      "tgas": 0.01786
+    },
+    {
+      "op": "keccak-f1600",
+      "tgas": 0.025751
+    },
+    {
+      "op": "expand-A-entry",
+      "tgas": 0.070511
+    },
+    {
+      "op": "ntt",
+      "tgas": 0.065869
+    },
+    {
+      "op": "invntt",
+      "tgas": 0.074055
+    },
+    {
+      "op": "shake256-2592B",
+      "tgas": 0.208406
+    }
+  ],
+  "max_call_tgas": 6.501,
+  "fits_one_call": true
+}

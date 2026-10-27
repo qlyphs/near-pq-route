@@ -116,7 +116,8 @@ async function prepare(context, close, words) {
       window.postMessage({ channel: 'qlyphs:request:1', request: { id, method, ...(params === undefined ? {} : { params }) } }, location.origin);
     });
   });
-  const viaProvider = (method) => method === 'connect' || !method.startsWith('nearVault') && method !== 'signNearVaultAuthorization';
+  // Every call goes through window.qlyphs, as a site would. rawRequest stays for comparison only.
+  const viaProvider = () => true;
   const call = (method, params, provider = viaProvider(method)) => dapp.evaluate(async ([method, params, provider]) => {
     try {
       return { result: await (provider ? window.qlyphs.request(params ? { method, params } : { method }) : window.rawRequest(method, params)) };
@@ -266,10 +267,17 @@ try {
   step('journal: message A signed at the new nonce (not submitted)', !!sA.answer.result?.signature, { detail: sA.answer.error ? JSON.stringify(sA.answer.error) : `nonce ${after.nonce}` });
   const journal = await w.wallet.evaluate(async () => (await chrome.storage.local.get('nearVaultJournal')).nearVaultJournal);
   out.journal_after_A = (journal ?? []).map((e) => ({ vault: e.vault, nonce: e.nonce, expiry: e.expiry, origin: e.origin, is_A: e.message === '0x' + mA.toString('hex') }));
-  const sB = await signThroughReview(w, 'sigB', hex(mB));
-  out.refusal_B = { review: sB.shown, answer: sB.answer };
-  step('journal: different message B at the same nonce refused after approval, nothing signed',
-    !!sB.answer.error && !sB.answer.result, { detail: JSON.stringify(sB.answer.error ?? 'signed!') });
+  // Refused before any review opens since the wallet's review-2 fixes.
+  // Count review windows opened during the call; closing ones (A's review) do not count.
+  let opened = 0;
+  const onPage = (page) => { if (page.url().includes('ui.html?request=') || page.url() === 'about:blank') opened++; };
+  w.context.on('page', onPage);
+  const sB = await w.call('signNearVaultAuthorization', { message: hex(mB) });
+  await new Promise((r) => setTimeout(r, 1500));
+  w.context.off('page', onPage);
+  out.refusal_B = { answer: sB, reviewWindowsOpened: opened };
+  step('journal: different message B at the same nonce refused before any review, nothing signed',
+    !!sB.error && !sB.result && opened === 0, { detail: JSON.stringify(sB.error ?? 'signed!') + `, ${opened} review window(s)` });
   const sA2 = await signThroughReview(w, 'sigA2', hex(mA));
   step('journal: message A signed again', !!sA2.answer.result?.signature, { detail: sA2.answer.error ? JSON.stringify(sA2.answer.error) : 'ok' });
   const stillNonce = (await checkVault(provider, deployment, { vault, publicKey })).nonce;

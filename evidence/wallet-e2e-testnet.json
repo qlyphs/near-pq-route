@@ -1,40 +1,40 @@
 {
   "network": "testnet",
-  "factory": "pq87-vaults-r2.qlyphs-grad-c48a-parent.testnet",
+  "factory": "pq87-vaults-r3.qlyphs-grad-c48a-parent.testnet",
   "relayer": "pq87-spike.qlyphs-grad-c48a-parent.testnet",
   "funder": "qlyphs-grad-c48a-parent.testnet",
   "steps": [
     {
       "name": "dev extension built, fresh 24-word phrase imported, backup acknowledged, site connected",
       "ok": true,
-      "detail": "extension 0.9.0, connect [{\"owner\":\"0x670ea41533baf29516822d485c0afbc88d8897e5ddd2fef0c16b425837ad1929\",\"address\":\"qzmnMv9f1A4UVi37ZCcjH2h9zpy4PX14rdGLDhnmLzWZhEUKQ\",\"genesis\":\"0xca0a88635de136b803302f00defdc1f559e5b2a6cf34e817ce0030ba4377e7a3\"}]"
+      "detail": "extension 0.9.0, connect [{\"owner\":\"0x040cee0f3022d8eec897d27ea1b5008af4dd4415f958e6224886c42438de02f0\",\"address\":\"qzjYYfiTwnc7cEs6THeTQhqyRanYyPoyy8MTLfHfaNLPQMg89\",\"genesis\":\"0xca0a88635de136b803302f00defdc1f559e5b2a6cf34e817ce0030ba4377e7a3\"}]"
     },
     {
       "name": "window.qlyphs.request forwards nearVaultPublicKey (documented call)",
-      "ok": false,
-      "detail": "{\"code\":\"UNSUPPORTED_METHOD\",\"message\":\"Unsupported wallet method\"}; capabilities lists it: true"
+      "ok": true,
+      "detail": "\"ok\"; capabilities lists it: true"
     },
     {
       "name": "nearVaultPublicKey on a fresh key: state derived, vault id is the factory derivation",
       "ok": true,
-      "detail": "state derived, vault fdb1cd764a1fa2f4.pq87-vaults-r2.qlyphs-grad-c48a-parent.testnet"
+      "detail": "state derived, vault 6efec6d0d921dfdf.pq87-vaults-r3.qlyphs-grad-c48a-parent.testnet"
     },
     {
       "name": "factory create final, then nearVaultPublicKey reads verified",
       "ok": true,
-      "tx": "FQraXLk8DDfAM63HaQCodzmuPsGMfFtEk968UENKxPaQ",
+      "tx": "CqRhhNXsFfywE3xfSPMgMW8rVF2eutpCcASYJRMecRTg",
       "detail": "derived -> verified"
     },
     {
       "name": "vault funded with 0.05 test NEAR",
       "ok": true,
-      "tx": "73GzkQSVZq2BoDRtVqbcmFutV9h9Batzbq1S8BL7ixhj",
+      "tx": "5Zwf24abUh5g35jC7FbjTtBCT3QTw7BKDuRKLQtMeNoN",
       "detail": "balance 290000000000000000000000 yocto, nonce 0"
     },
     {
       "name": "review window shows recipient, amount and vault",
       "ok": true,
-      "detail": "Vault payment Recipient pq87-spike.qlyphs-grad-c48a-parent.testnet From vault fdb1cd764a1fa2f4.pq87-vaults-r2.qlyphs-grad-c48a-parent.testnet Asset NEAR Amount 0.01 NEAR (10000000000000000000000 base units) Vault nonce 0 Current NEAR block 274975779 Valid from block 274975776 (now) Valid until block"
+      "detail": "Vault payment Recipient pq87-spike.qlyphs-grad-c48a-parent.testnet From vault 6efec6d0d921dfdf.pq87-vaults-r3.qlyphs-grad-c48a-parent.testnet Asset NEAR Amount 0.01 NEAR (10000000000000000000000 base units) Vault nonce 0 Current NEAR block 274979088 Valid from block 274979085 (now) Valid until block"
     },
     {
       "name": "approved: site gets {publicKey, signature} of the right sizes and key",
@@ -44,13 +44,13 @@
     {
       "name": "relayer accepts the wallet signature and returns a transaction hash",
       "ok": true,
-      "tx": "7WSFBxJHkDNiv5UFvMHmEZHwqDsSD2dqmD1nqrQkrL5U",
-      "detail": "HTTP 200 {\"transaction\":\"7WSFBxJHkDNiv5UFvMHmEZHwqDsSD2dqmD1nqrQkrL5U\"}"
+      "tx": "CSujM6YwpDZvNVwYUcNNsrSutzCNdm6rZ5E8Rv5gLYJb",
+      "detail": "HTTP 200 {\"transaction\":\"CSujM6YwpDZvNVwYUcNNsrSutzCNdm6rZ5E8Rv5gLYJb\"}"
     },
     {
       "name": "wallet reads the outcome as delivered",
       "ok": true,
-      "tx": "7WSFBxJHkDNiv5UFvMHmEZHwqDsSD2dqmD1nqrQkrL5U",
+      "tx": "CSujM6YwpDZvNVwYUcNNsrSutzCNdm6rZ5E8Rv5gLYJb",
       "detail": "wallet unknown -> submitted -> delivered; relayer delivered"
     },
     {
@@ -64,9 +64,9 @@
       "detail": "nonce 1"
     },
     {
-      "name": "journal: different message B at the same nonce refused after approval, nothing signed",
+      "name": "journal: different message B at the same nonce refused before any review, nothing signed",
       "ok": true,
-      "detail": "{\"code\":\"VERIFICATION_FAILED\",\"message\":\"Qlyphs: verification failed. No automatic write retry.\"}"
+      "detail": "{\"code\":\"INVALID_REQUEST\",\"message\":\"Qlyphs: invalid request. No automatic write retry.\"}, 0 review window(s)"
     },
     {
       "name": "journal: message A signed again",
@@ -105,25 +105,28 @@
   },
   "injected_provider": {
     "nearVaultPublicKey": {
-      "error": {
-        "code": "UNSUPPORTED_METHOD",
-        "message": "Unsupported wallet method"
+      "result": {
+        "address": "qzjYYfiTwnc7cEs6THeTQhqyRanYyPoyy8MTLfHfaNLPQMg89",
+        "publicKey": "0x99e379901b87cfcaf6015f8e9c8ed8a189baceb474348173f4cf1b9b7c72e9ff4592171eda6dbc74c9780500073144db861665e7183575c9351fa26645bc84463d56172d160b10b35841b8455b716de1e817afab90ded72cfa61835f00796121ea1c2835f661db2ed8fdcded533d9058211116451d7cb2eaebd9703f95b37c5b61efcdb9630ef1eca7ca2495c7b34db36c20ce74daeea944a70a046eb99269dc8677aa4582d91f03df007f192f023b41b3b719fd4f0c72506e0705c2ca48304586373473b9455c9c4b3af5ed8546b282cf99a4675430ecbadcedff0db6b39c57ca314291738bf0d9f1ba9afbff2d6f5e345844c319ddaaf56ab18928f55a171ad55f8db4049cf7628725741442b467cb39c1ad102dec6bddbb1e362d57fa5d35045741181f4b9354bed7803035118f64e2db8bbb1e1bdda7961375eb95a06bdf041e1584aee7ce27e43140d020f9d5d758dbb4fe4280a965e2bbe2cc2c7467f15e7c98fd20af0c84ed396ecc629bb16371b855a8eb2ccb2aa1e8a719d6990827d42fc6a7f2a4ed8f7e3efd38979c23e210c78728d3fd5a74d72ad33d33ab0ded2c050d25c61f9647e0945c5d0950aad906c48e512d78f799ff9cb69b08f26575fd5f6a46820c907d9171660998f123c813f6c44d218fedf0c61a5fd1fbc09c958b5ba3220b8d8390c82969a9603f18fc68c15b80b01496f98ec933b23748f76a89856c83142c2b3ffd8f348fdff216324d946b51810f6ef0b6e0b3761aeb1ef243e5d9b6b00b140b4b5bd86865a6502beff318350a35cf2d0c0e2f87f1227e11b762225287bdaf6cab719fc5e50999eb52a9493b58c95122fb919eb921a647d557bf241e7e0a6483edf0f6d42087fa1e03c7ced494a2853593f4540ddbbfd1260b4228b78a0ebfaa1add169a5f534278a087637754635edc04f4283f47ac535a6949b4a82f8bd66836e3ab5fd226e80e73ebe0302bba69563d6b04a1b15ad0fc6327ff6e97007ff1bee276c72d0a7a7debf6068d18b1c9eaf5d541ad4575bd0a557c20429b3214aa730fea8f62fff595a5b9227fadf8dd53b0b0aedf8d546b3815693877411ca06f102e77c7ebf759449c6496fc2319a0f3299af9c9e8f492e6280699da143810311b9d6406a5e14ebcbf07ddd86df30ea85bc2dad69f12f187b529f947c8ec08e2c2465eb93c28c94d8f95cdc341752be4235cbe9324f0735584c4dd103a96f36ef24dcf2c02175511a5ce25e948ea21404fb2d8aad52fcbf043b53382c71c2dc1e86d18f10c9bd46dabc0c9def81c254141f2489996dcd3217b9f68457365b05ece7c6e5f3a58cbeffb72c1335343140c829ce144e0f9b793bc15a8c965f1186e3f611f9a593a4e66576692f66a50f9b57403e12c9070cbb56cefc40849ab399c560caf40af29336b0403e6e841eefdae70fb986705ba405aaa5f663472176235b16e0c35fd767483c54b11b2a66cffb33d20294fe9b4ace49f521040093605164dbfcf2fc277e56e06f11a25993ce2dd62e2258a8fe5973123c40adc50a24f4bbad2eb8048ed2e264c4162ed39ae69c276ddfdfd86516728ddc94a73a5b0f4552e7135512bd63299f684aa35b7777eccc49315111dece3c410c84819359ce1e3c2f88e841ef97f0243806cad894a6e2615c22c475f7077689e7fa1718f82b7eb5756c2f236f5004c3d37d5d4e4265752d705645916224704d60ebeb7651022f6bde46612e0c06969cf21ee76f2926df4e010ac95ffe7eaa923e65b6cee6fb7cdf99f03ef186991aa647f428c330f8a366539b489d4bb42b8321e0d14f63a30c4a653bcb6e6db5dc81d9ffc813b0e210b6ca25b423f47cd8d4124dbd03faa041d4888de5d259dab8f8926bda090b9a7d710697b7bbe5b37342e1ff127dc08f6a6efced77bff6da75406591808b34d6ffa131b512ce0076e889d8bef31fb224a324093d3f48cfb8ee1f83984093a444e11f58be58febef91c1ca9f06efe933d5d084e9fb6112e5063b67661dddb9aab468b1f5d976f75f21c4a295aff9e9b7fd3715bc5f98006356a3c1c81789a4256119959b9411573449c13f73ca1036787e1ad5bfd6bfc463a3100f017fc925b26158bc9b0768e28dffd41bc9837dc392049f8c6122746cd53cf8571e6fda32e915ff448508e947bd73cd291fe52d96d53ccd5e308816450d0aa695b1754d04a422c2877d10e5736652cc7fb59b4363f0a7af6b72f773c077e7441310c3239c712d8000a0e6033d3796029fe58e9e5e1a277f562834d18842bea40c118dab78a2ed13d1c94ee1afe44cb412ba3ae268c8a4a2f8930b7b098285cf50c10e03eb19fedb144c81e0cf895ed874a914b3083a2a6e475510aa3717630de575098ef0a8dd2e58376fcc213dc83232a5d507bf540e6c294a82327d78af2901933eea48bf9ccf4deaa8d0fa9d37cfbac48b257f73770e56b68bea760e6d2c2b82bbee5d0a6599f5ca531d164395c0c43f0be9d54acb3d07bdc9335afada21f323f0d51ac5b2208f2c1397a61c94a04d9aa1f8a048affdc9bf41e7055a28469a6bfe8384f0bb436db0a5553db5b997ce9f8f635827c4f5dab7f585ed5fbf60eb0bb3200ea5094b996687dc5b8d64e96c24c719e83bf82d1730d43c1e047434b6a21b1133ce6535827d4c65d9edddf504787f478084aeaaabaf621dbd8a72d42528fb4c6a07e275734fd7c4d57dd7aa05977744063d1d597b7209264205e61b15fc224114930b9cee821091511b6a98a15b4352fe624988592505f975f38ae44107e27ddb1cef819b17d20cecd65710cf2aa48305cd3d5766680754cea05181bfd739537c2c121564fd4e6bdd59f18fc70451b420e6383eddf4090338630bbf35dacf1b7a10665fcc357a536eb22a5b9698446f19f2a24feb88861ad8653db767010a423eb4f9b2c5890bd3ea5509ec129ff29476f2e721904dc0251f34998a36e7a7a490529584806e663fec4d3f6d4d96d00a6497f32705312598b0b354c2a89438ace10c47ada2b0cea835ea21974ce83a26c2c0f9bb64316c99c31b99203aa065f9e7a70c4ac18d14a552b20bdfba198af9534f18edac0a7a95d4a3dc3fc9ad4a66ea0d1bf46caf2f00465d9f6babf0c9a8ea65b2ba169cf82372424596b4820f248ff914f61237b5f6fe16ad2a7f98d6a7e2dae4324ec2acd28fd97c5792ef925b5bef81d1231bcc8825b40ff65cd3bc6fa884eca47d0058df7d87ff0f2944cc2d632a4ef822359ef7ca1f28354c9026c26509e71ac384fdcded9ff26a5ac9a7b9c9b9b3fd02839e765e1e8ab759cff8020b04c07444b50d2f7cf8a5223388042560c4089f4766f56afbecb6f78cf8b8037544420c560498f010fb2fcd0a6e3773f90374f982d3a3e3de8677d5d54ce29f9e4ae08b52ba5182903f8624f0e51afc0f743fe4455e87c2c63e937c0289eb542b0642a94de30f4488cec90122234b1f0abaca58713a7f7264a4b6e305278c69ed48ab69ed14a63c7b75daee3b77f7cb2f1339b1696a0c5647310731817e85438646321870cdbb03b47c7f605fbbd3de3d1e4f5f4ccdcd39175384236c09ac2c2d23865d30b91fdb36b897356cc1a9654fb366a275acbcc0d39f632611810561608577ff79f09af5d147cc7ee42451c4402664b7c84339d59942bae4",
+        "network": "testnet",
+        "vault": "6efec6d0d921dfdf.pq87-vaults-r3.qlyphs-grad-c48a-parent.testnet",
+        "state": "derived"
       }
     },
     "capabilities_lists_nearVault": true
   },
-  "vault": "fdb1cd764a1fa2f4.pq87-vaults-r2.qlyphs-grad-c48a-parent.testnet",
-  "wallet_address": "qzmnMv9f1A4UVi37ZCcjH2h9zpy4PX14rdGLDhnmLzWZhEUKQ",
-  "tx_create": "FQraXLk8DDfAM63HaQCodzmuPsGMfFtEk968UENKxPaQ",
-  "tx_fund": "73GzkQSVZq2BoDRtVqbcmFutV9h9Batzbq1S8BL7ixhj",
+  "vault": "6efec6d0d921dfdf.pq87-vaults-r3.qlyphs-grad-c48a-parent.testnet",
+  "wallet_address": "qzjYYfiTwnc7cEs6THeTQhqyRanYyPoyy8MTLfHfaNLPQMg89",
+  "tx_create": "CqRhhNXsFfywE3xfSPMgMW8rVF2eutpCcASYJRMecRTg",
+  "tx_fund": "5Zwf24abUh5g35jC7FbjTtBCT3QTw7BKDuRKLQtMeNoN",
   "review_payment": {
     "title": "NEAR testnet · Quantum vault payment",
     "button": "Sign payment",
-    "summary": "Vault payment Recipient pq87-spike.qlyphs-grad-c48a-parent.testnet From vault fdb1cd764a1fa2f4.pq87-vaults-r2.qlyphs-grad-c48a-parent.testnet Asset NEAR Amount 0.01 NEAR (10000000000000000000000 base units) Vault nonce 0 Current NEAR block 274975779 Valid from block 274975776 (now) Valid until block 274976376 (in about 6 min) Requested by http://127.0.0.1:4400 Signing with Account 1 · qzmnMv9f…ZhEUKQ"
+    "summary": "Vault payment Recipient pq87-spike.qlyphs-grad-c48a-parent.testnet From vault 6efec6d0d921dfdf.pq87-vaults-r3.qlyphs-grad-c48a-parent.testnet Asset NEAR Amount 0.01 NEAR (10000000000000000000000 base units) Vault nonce 0 Current NEAR block 274979088 Valid from block 274979085 (now) Valid until block 274979685 (in about 6 min) Requested by http://127.0.0.1:4400 Signing with Account 1 · qzjYYfiT…PQMg89"
   },
-  "tx_payment": "7WSFBxJHkDNiv5UFvMHmEZHwqDsSD2dqmD1nqrQkrL5U",
+  "tx_payment": "CSujM6YwpDZvNVwYUcNNsrSutzCNdm6rZ5E8Rv5gLYJb",
   "relayer_outcome": {
-    "transaction": "7WSFBxJHkDNiv5UFvMHmEZHwqDsSD2dqmD1nqrQkrL5U",
+    "transaction": "CSujM6YwpDZvNVwYUcNNsrSutzCNdm6rZ5E8Rv5gLYJb",
     "status": "delivered",
     "detail": "NEAR transfer"
   },
@@ -133,32 +136,27 @@
   },
   "journal_after_A": [
     {
-      "vault": "fdb1cd764a1fa2f4.pq87-vaults-r2.qlyphs-grad-c48a-parent.testnet",
+      "vault": "6efec6d0d921dfdf.pq87-vaults-r3.qlyphs-grad-c48a-parent.testnet",
       "nonce": "1",
-      "expiry": "274976411",
+      "expiry": "274979714",
       "origin": "http://127.0.0.1:4400",
       "is_A": true
     }
   ],
   "refusal_B": {
-    "review": {
-      "title": "NEAR testnet · Quantum vault payment",
-      "button": "Sign payment",
-      "summary": "Vault payment Recipient pq87-spike.qlyphs-grad-c48a-parent.testnet From vault fdb1cd764a1fa2f4.pq87-vaults-r2.qlyphs-grad-c48a-parent.testnet Asset NEAR Amount 0.02 NEAR (20000000000000000000000 base units) Vault nonce 1 Current NEAR block 274975826 Valid from block 274975811 (now) Valid until block 274976411 (in about 6 min) Requested by http://127.0.0.1:4400 Signing with Account 1 · qzmnMv9f…ZhEUKQ",
-      "after": "Qlyphs You already signed another payment with this nonce and it can still run. Signing a new one would not cancel it: wait until it runs or expires NEAR testnet · Quantum vault payment http://127.0.0.1:4400 0.02 NEAR Vault payment Recipient pq87-spike.qlyphs-grad-c48a-parent.testnet From vault fdb1cd764a1fa2f4.pq87-vaults-r2.qlyphs-grad-c48a-parent.testnet Asset NEAR Amount 0.02 NEAR (20000000000"
-    },
     "answer": {
       "error": {
-        "code": "VERIFICATION_FAILED",
-        "message": "Qlyphs: verification failed. No automatic write retry."
+        "code": "INVALID_REQUEST",
+        "message": "Qlyphs: invalid request. No automatic write retry."
       }
-    }
+    },
+    "reviewWindowsOpened": 0
   },
   "twelve_words": {
     "connect": [
       {
-        "owner": "0xf4b1b0c0160ddcee5f0917f1a6cc1b6bae4c2bfee587e1db61b5281272f1bc13",
-        "address": "qzpz572baykifx59hrMTDraRiLhmCfpMYLoKSBh4MFLgqyeog",
+        "owner": "0xcbdbeea67f598440a591ed423d68bdc053325f071b090c41c5972f3832afe899",
+        "address": "qzp4Xgy5hYD4wiioMnsRirUQEvRoAwvaH8FjEK4znNAtHkMJv",
         "genesis": "0xca0a88635de136b803302f00defdc1f559e5b2a6cf34e817ce0030ba4377e7a3"
       }
     ],
@@ -169,5 +167,5 @@
       }
     }
   },
-  "passed": "14/15"
+  "passed": "15/15"
 }

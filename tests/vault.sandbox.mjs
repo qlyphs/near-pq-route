@@ -75,6 +75,7 @@ try {
   await expectRefused('deposit below 0.25 NEAR', () => create(stranger.publicKey, NEAR / 10n), 'attach at least 0.25 NEAR');
   await expectRefused('wrong key length', () => alice.callRaw(factory, 'create', new Uint8Array(100), { gas: 200n * TGAS, attachedDeposit: NEAR }), 'expected a 2592-byte');
   await expectRefused('on_create is private', () => alice.callRaw(factory, 'on_create', new Uint8Array(17), { gas: 30n * TGAS }), 'private');
+  await expectRefused('refund of a created vault', () => bob.callRaw(factory, 'refund', new Uint8Array(Buffer.from('r' + vault.split('.')[0], 'latin1')), { gas: 30n * TGAS }), 'no failed creation to refund');
 
   // A vault made outside the factory (the first review's delayed-AddKey batch) is never trusted.
   const rogue = `rogue.${root.accountId}`;
@@ -100,7 +101,15 @@ try {
     const blocked = await create(victim.publicKey, 2n * NEAR, alice, f2);
     await settle();
     const lost = before - (await total(alice));
-    record('earlier-life child: creating that key fails and on_create refunds the deposit', blocked.logs.some((l) => l.includes('refunded')) && lost < NEAR / 100n, { detail: `caller net cost ${Number(lost) / 1e24} NEAR` });
+    record('earlier-life child: creating that key fails and the record waits for a refund', blocked.logs.some((l) => l.includes('refund pending')) && lost > NEAR, { detail: `caller out ${Number(lost) / 1e24} NEAR until refund` });
+    const rk = new Uint8Array(Buffer.from('r' + planted.split('.')[0], 'latin1'));
+    await expectRefused('refund of an unknown key', () => bob.callRaw(f2, 'refund', new Uint8Array(Buffer.from('r' + '0'.repeat(16), 'latin1')), { gas: 30n * TGAS }), 'no such record');
+    // Anyone may trigger it; the money goes to the recorded caller only.
+    const paid = await bob.callRaw(f2, 'refund', rk, { gas: 30n * TGAS });
+    await settle();
+    const net = before - (await total(alice));
+    record('refund, sent by a third party, pays the recorded caller', paid.succeeded && paid.logs.some((l) => l.includes('refunded')) && net < NEAR / 100n, { detail: `caller net cost ${Number(net) / 1e24} NEAR` });
+    await expectRefused('second refund of the same record', () => bob.callRaw(f2, 'refund', rk, { gas: 30n * TGAS }), 'no such record');
     await expectThrows('earlier-life child: still refused after the failed creation', () => checkVault(provider, d2, { vault: planted, publicKey: victim.publicKey }), 'not in the factory registry');
   }
   await expectThrows('preflight refuses another owner key', () => checkVault(provider, deployment, { vault, publicKey: stranger.publicKey }), "not the pinned factory's address");

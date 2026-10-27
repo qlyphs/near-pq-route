@@ -39,6 +39,20 @@ and is refused (tested). Release rules that remain:
   and gas;
 - read the audit from archival nodes you trust.
 
+## Short vault ids
+
+The vault id carries only 64 bits of the key's hash. A key whose hash shares those 8 bytes can be created
+first at that address: it cannot spend from the right owner's vault, but it takes the name, and money sent
+to the name before `checkVault` passed would be under that other key. Wallets therefore treat a derived id
+as unusable until the full-key check passes at a final block, and show a conflict if another key holds it.
+A mainnet profile should carry the full 256-bit hash in the id.
+
+## Failed creations
+
+The creation callback only rewrites the record's status. A failed creation is marked `F` and paid back by
+`refund`, which anyone may call, from the record's amount to the record's caller, once the forwarded
+deposit is back. A record is never deleted because time passed: a pending creation may still complete.
+
 ## What it does not protect
 
 - **NEAR itself is not post-quantum.** Consensus, validators, the relayer's key and every account outside

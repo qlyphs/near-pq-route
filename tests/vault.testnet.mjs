@@ -1,7 +1,7 @@
 // Testnet run: keyless factory (audited), vault created by the factory, preflight, NEAR and wNEAR payments, refusals.
 // Writes deployments/testnet.json (the pinned release) and evidence/vault-testnet.json.
 // Usage: PARENT_ACCOUNT=<id> PARENT_KEY_FILE=<file> RELAYER_ACCOUNT=<id> RELAYER_KEY_FILE=<file>
-//        OWNER_KEY_FILE=<ML-DSA-87 pem, created if absent> node tests/vault.testnet.mjs
+//        OWNER_KEY_FILE=<ML-DSA-87 pem, created if absent> [FACTORY_NAME=pq87-vaults] node tests/vault.testnet.mjs
 import { connect, KeyPair, keyStores, transactions } from 'near-api-js';
 import { createHash } from 'node:crypto';
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
@@ -11,7 +11,8 @@ import { Key, auditFactoryCreation, checkVault, encodeMessage, executeArgs, vaul
 
 const NODE = process.env.NEAR_RPC ?? 'https://test.rpc.fastnear.com';
 const { PARENT_ACCOUNT: parentId, RELAYER_ACCOUNT: relayerId } = process.env;
-const factoryId = `pq87-vaults.${parentId}`;
+// A new factory code needs a new, never-used account id (FACTORY_NAME); a pinned release keeps its own.
+const factoryId = `${process.env.FACTORY_NAME ?? 'pq87-vaults'}.${parentId}`;
 const TOKEN = 'wrap.testnet';
 const TGAS = 10n ** 12n, NEAR = 10n ** 24n;
 const sha = (b) => createHash('sha256').update(b).digest('hex');

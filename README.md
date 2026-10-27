@@ -17,14 +17,15 @@ for the exact rules.
 | Claim | Evidence |
 |---|---|
 | Testnet: vault created by a keyless, audited factory; preflight passes; 0.1 NEAR and 0.05 wNEAR (`wrap.testnet`, a real NEP-141) paid by one ML-DSA-87 signature each; replay, tampered amount and foreign key refused on-chain | `evidence/vault-testnet.json` (every tx hash), `deployments/testnet.json` |
-| Sandbox: 45 checks: factory creation, registry and refunds; the two attacks found in review (a vault made outside the factory, a vault planted by an earlier life of the factory id) refused by the preflight; every message-field refusal; u128 edge cases; exact `ft_transfer` arguments; failed-delivery refund | `evidence/vault-sandbox.json` |
+| Sandbox: 49 checks: factory creation, registry and refunds (failed creation, third-party refund, no double refund); the two attacks found in review (a vault made outside the factory, a vault planted by an earlier life of the factory id) refused by the preflight; every message-field refusal; u128 edge cases; exact `ft_transfer` arguments; failed-delivery refund | `evidence/vault-sandbox.json` |
 | The verifier is the Solana POC's, unchanged | `core/SOURCE.sha256` |
 | Verification alone costs 6.47 Tgas on testnet, one call, 9/9 vectors | `evidence/testnet.json`, `evidence/gas.json` |
 
-Testnet accounts: factory `pq87-vaults.qlyphs-grad-c48a-parent.testnet`, vault
-`1decab283ca92482.pq87-vaults.qlyphs-grad-c48a-parent.testnet`. Two earlier deployments
-(`pq87-vault.…` and `pq87-factory.…`, see `deployments/superseded-testnet-r1.json`) predate the review
-fixes and are not trusted.
+Testnet accounts: factory `pq87-vaults-r2.qlyphs-grad-c48a-parent.testnet`, vault
+`1decab283ca92482.pq87-vaults-r2.qlyphs-grad-c48a-parent.testnet`. Earlier deployments predate review
+fixes and are not trusted: `pq87-vault.…` and `pq87-factory.…` (`deployments/superseded-testnet-r1.json`),
+and `pq87-vaults.…`, whose factory refunded failed creations from its callback
+(`deployments/superseded-testnet-r2.json`).
 
 ## How it works
 
@@ -32,7 +33,8 @@ fixes and are not trusted.
    could be scheduled before its code ran. `auditFactoryCreation` checks that once per release.
 2. `factory.create(public key)` with at least 0.25 NEAR records the vault in the factory's registry and
    creates it at an address derived from the key, in one atomic receipt: create, fund, deploy the vault
-   code embedded in the factory, `init`. If creation fails, the recorded deposit is refunded.
+   code embedded in the factory, `init`. If creation fails, the record is marked failed and
+   `refund`, which anyone may call, pays the recorded deposit back to the recorded caller.
 3. Before signing, the wallet runs `checkVault`. At one final block it checks the pinned factory and its
    code, the registry record, the vault code, zero access keys on both, and that the vault storage is
    exactly the owner's key and a usable nonce.

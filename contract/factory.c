@@ -46,6 +46,7 @@ IMPORT(promise_result) uint64_t promise_result(uint64_t idx, uint64_t reg);
 #define LABEL 16u  /* hex of the first 8 bytes of SHA-256(public key) */
 #define PENDING 'P'
 #define CREATED 'C'
+#define FAILED 'F'  /* creation failed; the deposit is owed to the caller until refund() pays it */
 
 static const uint8_t vault_code[] = {
 #embed VAULT_WASM
@@ -53,7 +54,8 @@ static const uint8_t vault_code[] = {
 
 static uint8_t pk[PK];
 static uint8_t self_id[MAX_ID], who[MAX_ID], vault_id[MAX_ID];
-/* Registry record: key "r" + label; value SHA-256(pk) (32) | status | pending only: deposit (16) | caller len | caller. */
+/* Registry record: key "r" + label; value SHA-256(pk) (32) | status | pending or failed only: deposit (16) |
+ * caller len | caller. */
 static uint8_t rkey[1 + LABEL], rec[32 + 1 + 16 + 1 + MAX_ID];
 
 static void fail(const char *m) { size_t n = 0; while (m[n]) n++; panic_utf8(n, (uint64_t)(uintptr_t)m); }
@@ -70,8 +72,8 @@ static uint64_t le64(const uint8_t *p) { uint64_t x = 0; for (unsigned i = 0; i 
 static void put64(uint8_t *p, uint64_t x) { for (unsigned i = 0; i < 8; i++) p[i] = (uint8_t)(x >> (8 * i)); }
 
 /* create(pk), with at least 0.25 NEAR attached. Creates <label>.<factory>, where the label is derived from
- * the key, so nobody can take the address of someone else's key. The record is written before the batch
- * runs; on_create keeps it on success, or removes it and refunds the recorded deposit on failure. */
+ * the key. The label is a short locator, not the binding: wallets check the full key (checkVault). The record
+ * is written before the batch runs; on_create marks it created on success, or failed on failure. */
 EXPORT(create) void create(void) {
   input(0);
   REQUIRE(read_reg(0, pk, PK) == PK, "expected a 2592-byte ML-DSA-87 public key");
@@ -104,16 +106,23 @@ EXPORT(create) void create(void) {
   promise_then(p, slen, PTR(self_id), 9, PTR("on_create"), sizeof(rkey), PTR(rkey), PTR(none), 10 * TGAS);
 }
 
-/* Private callback, argument: the registry key. The refund amount and recipient come from the record,
- * never from the arguments, and only a pending record can be settled. */
+/* Reads the record at the registry key given as the call's input into rec; returns its length. */
+static size_t load_record(void) {
+  input(0); REQUIRE(read_reg(0, rkey, sizeof(rkey)) == sizeof(rkey) && rkey[0] == 'r', "bad registry key");
+  REQUIRE(storage_read(sizeof(rkey), PTR(rkey), 2) == 1, "no such record");
+  return read_reg(2, rec, sizeof(rec));
+}
+
+/* Private callback, argument: the registry key. It only rewrites the record's status byte, at the same
+ * size or smaller, so it needs no balance and cannot fail on funds. It never pays: the forwarded deposit
+ * comes back in a separate refund receipt that may land after this callback, so paying here could fail
+ * and leave the record pending for good. */
 EXPORT(on_create) void on_create(void) {
   current_account_id(0); size_t slen = read_reg(0, self_id, MAX_ID);
   predecessor_account_id(1); size_t plen = read_reg(1, who, MAX_ID);
   REQUIRE(plen == slen && memcmp(who, self_id, slen) == 0, "private");
   REQUIRE(promise_results_count() == 1, "one result expected");
-  input(0); REQUIRE(read_reg(0, rkey, sizeof(rkey)) == sizeof(rkey) && rkey[0] == 'r', "bad callback arguments");
-  REQUIRE(storage_read(sizeof(rkey), PTR(rkey), 2) == 1, "no such record");
-  size_t n = read_reg(2, rec, sizeof(rec));
+  size_t n = load_record();
   REQUIRE(n >= 50 && rec[32] == PENDING && n == 50u + rec[49], "no pending creation");
   if (promise_result(0, 3) == 1) {
     rec[32] = CREATED;
@@ -121,10 +130,21 @@ EXPORT(on_create) void on_create(void) {
     log_utf8(13, PTR("vault created"));
     return;
   }
+  rec[32] = FAILED;
+  storage_write(sizeof(rkey), PTR(rkey), n, PTR(rec), 0);
+  log_utf8(37, PTR("vault creation failed, refund pending"));
+}
+
+/* refund(registry key): anyone may call it. Pays a failed creation's recorded deposit to its recorded
+ * caller and removes the record, so the key can be tried again. Amount and recipient come from the record
+ * only. If the factory cannot pay yet, the whole call fails and the record stays failed: call again later. */
+EXPORT(refund) void refund(void) {
+  size_t n = load_record();
+  REQUIRE(n >= 50 && rec[32] == FAILED && n == 50u + rec[49], "no failed creation to refund");
   storage_remove(sizeof(rkey), PTR(rkey), 0);
   uint64_t p = promise_batch_create(rec[49], PTR(rec + 50));
   promise_batch_action_transfer(p, PTR(rec + 33));
-  log_utf8(31, PTR("vault creation failed, refunded"));
+  log_utf8(8, PTR("refunded"));
 }
 
 /* View: {"version":..,"chain":..,"vault_sha256":"<hex>"}: the vault code this factory deploys. */

@@ -14,8 +14,13 @@ release. The factory has no access key and no upgrade path.
 
 `create(public key (2,592 bytes))`, with at least 0.25 NEAR attached, creates the vault at an address
 derived from the key: `<label>.<factory>`, where the label is the hex of the first 8 bytes of
-SHA-256(public key) (`vaultAddress` in the SDK). Nobody can take the address of someone else's key. The
-factory account id must be at most 47 characters so the vault id fits in 64.
+SHA-256(public key) (`vaultAddress` in the SDK). The factory account id must be at most 47 characters so
+the vault id fits in 64.
+
+The label is a 64-bit locator, not the binding. Another key whose hash starts with the same 8 bytes
+(about 2^64 classical or 2^32 idealized quantum trials) can be created first at that address. It can never
+spend from the right owner's vault, but it occupies the name. What binds a vault to its owner is the full
+key, checked by `checkVault`, so no funds may be sent to a vault id before that check passes.
 
 `create` first writes a registry record in the factory's storage, key `r<label>`, value
 `SHA-256(pk) ‖ 'P' ‖ deposit ‖ caller`. It refuses a key that already has a record. It then emits one
@@ -27,13 +32,19 @@ receipt to the vault account:
 3. `DeployContract` with the vault code embedded in the factory (its SHA-256 is `vault_sha256`)
 4. `FunctionCall init` with the public key
 
-The actions of a receipt are atomic. The private callback `on_create` settles the record:
+The actions of a receipt are atomic. The private callback `on_create` settles the record, and only
+rewrites its status byte, so it needs no balance and cannot fail on funds:
 
 - on success it becomes `SHA-256(pk) ‖ 'C'`;
-- on failure (for example, an account already sits at that address) it is removed, and the deposit
-  recorded in it goes back to the recorded caller.
+- on failure (for example, an account already sits at that address) it becomes
+  `SHA-256(pk) ‖ 'F' ‖ deposit ‖ caller`.
 
-The refund never comes from the callback's arguments. `init` refuses a second call and any caller other
+The callback never pays. The deposit forwarded to the failed receipt comes back to the factory in a
+separate refund receipt, which may arrive after the callback; paying from the callback could then fail
+and leave the record pending for good. Instead `refund(registry key)`, which anyone may call, pays a
+failed record's deposit to its recorded caller and removes the record, so the key can be tried again.
+Amount and recipient come from the record only, never from arguments. If the factory cannot pay yet, the
+whole call fails, the record stays `F`, and it can be called again. `init` refuses a second call and any caller other
 than the direct parent account.
 
 The vault never has an access key: nobody can sign as the vault, redeploy it or delete it.

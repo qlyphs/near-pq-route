@@ -12,9 +12,25 @@ const succeeded = (o) => isObject(o?.outcome?.status) && ('SuccessValue' in o.ou
 // transaction is refused too. Reporting it as failed would invite a second, real payment.
 const rejectedAttempt = (detail) => ({ status: 'unknown', attemptRejected: true, detail });
 
+const TGAS = 10n ** 12n;
+
+/**
+ * True only for the exact call the vault builds from the authorization (contract/vault.c): ft_transfer
+ * with 1 yocto, the signed gas, and arguments that are byte for byte
+ * {"receiver_id":"<signed receiver>","amount":"<signed amount, decimal>"}. Method name and deposit alone
+ * would also match a transfer to someone else. Account ids need no JSON escaping (message.mjs checks them).
+ */
+function isSignedFtTransfer(call, req) {
+  if (call?.method_name !== 'ft_transfer' || call.deposit !== '1' || typeof call.args !== 'string') return false;
+  if (!/^\d+$/.test(String(call.gas)) || BigInt(String(call.gas)) !== BigInt(req.ftGasTgas) * TGAS) return false;
+  const expected = JSON.stringify({ receiver_id: req.receiver, amount: req.amount.toString() });
+  return Buffer.from(call.args, 'base64').equals(Buffer.from(expected, 'utf8'));
+}
+
 /**
  * The id of the payment receipt `execute` emitted: among the receipts the execute outcome created, from
- * the vault, to the receiver (NEAR) or the token (ft), with exactly the signed action. Refund receipts
+ * the vault, to the receiver (NEAR) or the token (ft), with exactly the signed action (amount, and for a
+ * token also the decoded receiver, amount and gas). Refund receipts
  * share executors with real ones, so nothing is matched by executor alone. Anything ambiguous is null.
  */
 function paymentReceipt(result, req, execute) {
@@ -25,9 +41,7 @@ function paymentReceipt(result, req, execute) {
     const actions = r.receipt?.Action?.actions;
     if (!Array.isArray(actions) || actions.length !== 1) return false;
     const a = actions[0];
-    return req.action === 0
-      ? a?.Transfer?.deposit === req.amount.toString()
-      : a?.FunctionCall?.method_name === 'ft_transfer' && a.FunctionCall.deposit === '1';
+    return req.action === 0 ? a?.Transfer?.deposit === req.amount.toString() : isSignedFtTransfer(a?.FunctionCall, req);
   });
   return matches.length === 1 && typeof matches[0].receipt_id === 'string' ? matches[0].receipt_id : null;
 }
@@ -35,7 +49,7 @@ function paymentReceipt(result, req, execute) {
 /**
  * Classifies a final `EXPERIMENTAL_tx_status` result against the authorization the transaction carries:
  * - accepted: `execute` succeeded, so the nonce is spent, and the payment receipt has no outcome yet;
- * - delivered: the payment receipt (Transfer of the signed amount, or ft_transfer with 1 yocto) succeeded;
+ * - delivered: the payment receipt (Transfer of the signed amount, or the signed ft_transfer) succeeded;
  * - failed: an ACCEPTED execute's payment receipt failed (funds stay in the vault, the nonce is spent);
  * - unknown: anything missing, ambiguous or unexpected. A refused transaction or `execute` is `unknown`
  *   with `attemptRejected: true`: it proves only that this attempt failed.

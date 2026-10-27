@@ -6,53 +6,69 @@
     {
       "name": "wallet preflight and noble ML-DSA-87 signature",
       "ok": true,
-      "detail": "vault nonce 2, final height 274978343"
+      "detail": "vault nonce 4, final height 274983094"
+    },
+    {
+      "name": "the relayer started with its account under RELAYER_MAX_ACCOUNT_SPENDABLE",
+      "ok": true,
+      "detail": "spendable 352630324519507299999995 <= limit 500000000000000000000000 yocto (default)"
+    },
+    {
+      "name": "a second relayer on the same state directory refuses to start",
+      "ok": true,
+      "detail": "state dir /var/folders/4n/_5193m250vn30vlxs3yn82zm0000gn/T/qvault-relayer-state-rwE5mU is locked by running process 8251"
     },
     {
       "name": "relayer accepts and returns a transaction hash",
       "ok": true,
-      "tx": "GjSxCPrZMCp3HGEGjdojdMXutLFhskUwTKegpMot1Bz6",
+      "tx": "2Kza7T5s4NKWUpvirnWZQPECCYNBJo13TDU1kR5mjWhx",
       "detail": "HTTP 200"
     },
     {
       "name": "outcome followed to delivered",
       "ok": true,
-      "tx": "GjSxCPrZMCp3HGEGjdojdMXutLFhskUwTKegpMot1Bz6",
+      "tx": "2Kza7T5s4NKWUpvirnWZQPECCYNBJo13TDU1kR5mjWhx",
       "detail": "delivered"
+    },
+    {
+      "name": "signing block priced at most half the ceiling, inclusion block at most the ceiling",
+      "ok": true,
+      "tx": "2Kza7T5s4NKWUpvirnWZQPECCYNBJo13TDU1kR5mjWhx",
+      "detail": "reference 100000000 at 274983099, inclusion 100000000, ceiling 1000000000 yocto/gas; re-broadcast allowed until 274983320"
     },
     {
       "name": "on-chain: execute with 30 Tgas and no deposit, then 0.01 NEAR from the vault to the signed receiver",
       "ok": true,
-      "tx": "GjSxCPrZMCp3HGEGjdojdMXutLFhskUwTKegpMot1Bz6",
+      "tx": "2Kza7T5s4NKWUpvirnWZQPECCYNBJo13TDU1kR5mjWhx",
       "detail": "gas 30000000000000, deposit 0, transfer 10000000000000000000000 to qlyphs-grad-c48a-parent.testnet"
     },
     {
       "name": "measured peak charge and net cost stay under the reserved bound",
       "ok": true,
-      "tx": "GjSxCPrZMCp3HGEGjdojdMXutLFhskUwTKegpMot1Bz6",
-      "detail": "peak 30953116503895000000000, net 774436944775500000000, reserved 31440226083610000000000 yocto"
+      "tx": "2Kza7T5s4NKWUpvirnWZQPECCYNBJo13TDU1kR5mjWhx",
+      "detail": "peak 30953116503895000000000, net 774327271400700000000, reserved 31440226083610000000000 yocto"
     },
     {
       "name": "repeat returns the same hash, nothing resubmitted",
       "ok": true,
-      "tx": "GjSxCPrZMCp3HGEGjdojdMXutLFhskUwTKegpMot1Bz6",
-      "detail": "vault nonce 2 -> 3, relayer access-key nonce 274232351000058 -> 274232351000058"
+      "tx": "2Kza7T5s4NKWUpvirnWZQPECCYNBJo13TDU1kR5mjWhx",
+      "detail": "vault nonce 4 -> 5, relayer access-key nonce 274232351000063 -> 274232351000063"
     },
     {
       "name": "a fresh relayer refuses the spent authorization at preflight, without a transaction",
       "ok": true,
-      "detail": "HTTP 422 nonce is not the vault's next nonce (3)"
+      "detail": "HTTP 422 nonce is not the vault's next nonce (5)"
     },
     {
       "name": "replayed authorization: /outcome is unknown with attemptRejected, not failed; the first stays delivered",
       "ok": true,
-      "tx": "ANrC8HHzazZz7frfogWByiEVWny55PuM7oMnryQ47wz8",
-      "detail": "replay unknown attemptRejected=true; vault {\"ActionError\":{\"index\":0,\"kind\":{\"FunctionCallError\":{\"ExecutionError\":\"Smart contract panicked: stale or reused nonce\"}}}}; first delivered; vault nonce 3"
+      "tx": "yAcPXFnM2uf5PtVPCLJms7zGuxq81cT7aar6id5cy9R",
+      "detail": "replay unknown attemptRejected=true; vault {\"ActionError\":{\"index\":0,\"kind\":{\"FunctionCallError\":{\"ExecutionError\":\"Smart contract panicked: stale or reused nonce\"}}}}; first delivered; vault nonce 5"
     },
     {
       "name": "tampered signature refused, no transaction sent",
       "ok": true,
-      "detail": "HTTP 422 invalid signature; relayer access-key nonce 274232351000059 -> 274232351000059"
+      "detail": "HTTP 422 invalid signature; relayer access-key nonce 274232351000064 -> 274232351000064"
     },
     {
       "name": "reserved spend is persisted to the state file",
@@ -62,18 +78,31 @@
   ],
   "vault": "1decab283ca92482.pq87-vaults-r3.qlyphs-grad-c48a-parent.testnet",
   "receiver": "qlyphs-grad-c48a-parent.testnet",
+  "relayer_account_limit_override": null,
+  "account": {
+    "spendable_at_start_yocto": "352630324519507299999995",
+    "max_account_spendable_yocto": "500000000000000000000000"
+  },
+  "gas_price": {
+    "reference_block": "HDsEzLVxRhNtnnD3voUtYsdihkP3u6YEkshVNFyrPVz7",
+    "reference_height": "274983099",
+    "rebroadcast_until_height": "274983320",
+    "reference_block_yocto": "100000000",
+    "inclusion_block_yocto": "100000000",
+    "ceiling_yocto": "1000000000"
+  },
   "spend": {
     "protocol_version": 88,
     "max_gas_price_yocto": "1000000000",
     "reserved_per_near_transfer_yocto": "31440226083610000000000",
     "peak_charge_yocto": "30953116503895000000000",
-    "net_cost_after_refunds_yocto": "774436944775500000000",
-    "heights": "274978343..274978359"
+    "net_cost_after_refunds_yocto": "774327271400700000000",
+    "heights": "274983094..274983109"
   },
   "replay": {
-    "tx": "ANrC8HHzazZz7frfogWByiEVWny55PuM7oMnryQ47wz8",
+    "tx": "yAcPXFnM2uf5PtVPCLJms7zGuxq81cT7aar6id5cy9R",
     "relayer_outcome": {
-      "transaction": "ANrC8HHzazZz7frfogWByiEVWny55PuM7oMnryQ47wz8",
+      "transaction": "yAcPXFnM2uf5PtVPCLJms7zGuxq81cT7aar6id5cy9R",
       "status": "unknown",
       "attemptRejected": true,
       "detail": "execute refused for this attempt; the authorization may be accepted elsewhere"
@@ -89,7 +118,7 @@
       }
     },
     "first_tx_outcome": {
-      "transaction": "GjSxCPrZMCp3HGEGjdojdMXutLFhskUwTKegpMot1Bz6",
+      "transaction": "2Kza7T5s4NKWUpvirnWZQPECCYNBJo13TDU1kR5mjWhx",
       "status": "delivered",
       "detail": "NEAR transfer"
     }

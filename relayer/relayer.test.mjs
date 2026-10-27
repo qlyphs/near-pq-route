@@ -1,31 +1,50 @@
 // Unit tests of the relayer: refusals before any gas, idempotence, slot reconciliation, quotas, spend bound, outcomes, HTTP limits.
 import assert from 'node:assert/strict';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { request } from 'node:http';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { after, describe, test } from 'node:test';
+import { after, before, describe, test } from 'node:test';
 import { ml_dsa87 } from '@noble/post-quantum/ml-dsa.js';
 import { CONTEXT, Key, SIG_LEN, encodeMessage, vaultAddress } from '../sdk/vault.mjs';
 import { nobleKeyFromPem } from '../tests/ml-dsa-seed.mjs';
 import { KeyPair } from 'near-api-js';
 import { loadConfig } from './config.mjs';
-import { costBound, readProtocolCosts } from './cost.mjs';
+import { checkRelayerAccount, spendableBalance } from './account.mjs';
+import { costBound, priceSafeBlocks, readProtocolCosts } from './cost.mjs';
 import { Ledger, messageId, slotId } from './ledger.mjs';
 import { Limiter, Quota, SpendCap } from './limits.mjs';
+import { acquireLock } from './lock.mjs';
 import { REQUEST_LEN, parseRequest } from './message.mjs';
 import { classify, createOutcomeReader, outcome } from './outcome.mjs';
 import { attachedGas, createRelay } from './relay.mjs';
 import { RpcError, TransportError } from './rpc.mjs';
 import { createRelayerServer, startFromEnv } from './server.mjs';
 import { verifyAuthorization } from './signature.mjs';
-import { createSubmitter } from './submitter.mjs';
+import { INCLUSION_MARGIN_BLOCKS, PriceTooHigh, StaleReference, createSubmitter } from './submitter.mjs';
 
 const deployment = JSON.parse(readFileSync(new URL('../deployments/testnet.json', import.meta.url), 'utf8'));
 const TGAS = 10n ** 12n;
 const PRICE = 10n ** 9n;
+const STEP = { num: 1n, den: 100n }; // testnet gas_price_adjustment_rate
+// Fees of testnet protocol 88 (EXPERIMENTAL_protocol_config, 2026-10-27).
+const protocolConfig = {
+  chain_id: 'testnet', protocol_version: 88, max_gas_price: '10000000000000000000000', gas_price_adjustment_rate: [1, 100],
+  runtime_config: {
+    min_gas_purchase_price: '1000000000',
+    storage_amount_per_byte: '10000000000000000000',
+    transaction_costs: {
+      pessimistic_gas_price_inflation_ratio: [1, 1],
+      action_receipt_creation_config: { execution: 108059500000, send_not_sir: 108059500000, send_sir: 108059500000 },
+      action_creation_config: {
+        function_call_cost: { execution: 780000000000, send_not_sir: 200000000000, send_sir: 200000000000 },
+        function_call_cost_per_byte: { execution: 2235934, send_not_sir: 47683715, send_sir: 2235934 },
+      },
+    },
+  },
+};
 const scratch = mkdtempSync(join(tmpdir(), 'qvault-relayer-'));
 after(() => rmSync(scratch, { recursive: true, force: true }));
 
@@ -324,21 +343,21 @@ describe('R2-M5: the hash is fixed before broadcast and never dropped', () => {
     const rpc = { call: async (method, params) => {
       calls.push({ method, params });
       if (method === 'query') return { nonce: 41 };
-      if (method === 'block') return { header: { hash: '11111111111111111111111111111111' } };
+      if (method === 'block') return { header: { hash: '11111111111111111111111111111111', height: 500, gas_price: '100000000' } };
       if (method === 'send_tx') {
         assert.ok(signedSeen, 'hash recorded before the broadcast');
         throw new TransportError('send_tx: timeout');
       }
       throw new Error(method);
     } };
-    const { submit, rebroadcast } = createSubmitter({ rpc, accountId: 'relayer.testnet', keyPair: KeyPair.fromRandom('ed25519') });
+    const { submit, rebroadcast } = createSubmitter({ rpc, accountId: 'relayer.testnet', keyPair: KeyPair.fromRandom('ed25519'), maxGasPriceYocto: PRICE, priceStep: STEP });
     const err = await submit({ vault, args: new Uint8Array(REQUEST_LEN), gas: 30n * TGAS }, (s) => { signedSeen = s; }).catch((e) => e);
     assert.ok(err instanceof TransportError);
     assert.equal(err.transaction, signedSeen.transaction);
     assert.match(err.transaction, /^[1-9A-HJ-NP-Za-km-z]{43,44}$/);
     assert.equal(err.signed, signedSeen.signed);
     const sends = () => calls.filter((c) => c.method === 'send_tx').map((c) => c.params.signed_tx_base64);
-    await rebroadcast(err.signed).catch(() => {});
+    await rebroadcast(err.signed, signedSeen.rebroadcastUntil).catch(() => {});
     assert.deepEqual(sends(), [err.signed, err.signed]);
   });
 });
@@ -536,7 +555,11 @@ describe('outcome (R2-H1)', () => {
   const nearMsg = msg({ amount: AMOUNT });
   const ftMsg = msg({ kind: 'ft', token: 'wrap.testnet', ftGasTgas: 30, amount: 7n });
   const transferTo = (receiver, deposit = AMOUNT.toString()) => ({ receipt_id: 'P', predecessor_id: V, receiver_id: receiver, receipt: { Action: { actions: [{ Transfer: { deposit } }] } } });
-  const ftCall = { receipt_id: 'P', predecessor_id: V, receiver_id: 'wrap.testnet', receipt: { Action: { actions: [{ FunctionCall: { method_name: 'ft_transfer', deposit: '1' } }] } } };
+  const ftArgs = (o) => Buffer.from(typeof o === 'string' ? o : JSON.stringify(o)).toString('base64');
+  // What the vault emits for ftMsg (contract/vault.c): exact JSON bytes, 1 yocto, the signed 30 Tgas.
+  const ftAction = (over = {}) => ({ method_name: 'ft_transfer', args: ftArgs({ receiver_id: 'alice.testnet', amount: '7' }), gas: 30 * 1e12, deposit: '1', ...over });
+  const ftCall = { receipt_id: 'P', predecessor_id: V, receiver_id: 'wrap.testnet', receipt: { Action: { actions: [{ FunctionCall: ftAction() }] } } };
+  const ftWith = (over) => ({ ...ftCall, receipt: { Action: { actions: [{ FunctionCall: ftAction(over) }] } } });
   // A refund to the relayer, executed like the payment would be: never to be taken for it.
   const refund = { receipt_id: 'R', predecessor_id: 'system', receiver_id: 'relayer.testnet', receipt: { Action: { actions: [{ Transfer: { deposit: AMOUNT.toString() } }] } } };
   const result = ({ m = nearMsg, tx = { Success: true }, execute = { SuccessValue: '' }, payment = { SuccessValue: '' }, receipts, emitted = ['P', 'R'] } = {}) => ({
@@ -579,8 +602,28 @@ describe('outcome (R2-H1)', () => {
       [{ ...transferTo('alice.testnet'), predecessor_id: 'other.testnet' }, refund],
       [{ ...transferTo('alice.testnet'), receipt: { Action: { actions: [{ Transfer: { deposit: AMOUNT.toString() } }, { Transfer: { deposit: '1' } }] } } }],
     ]) assert.equal(c(result({ receipts })).status, 'unknown', JSON.stringify(receipts[0]));
-    assert.equal(c(result({ m: ftMsg, receipts: [{ ...ftCall, receipt: { Action: { actions: [{ FunctionCall: { method_name: 'ft_transfer', deposit: '2' } }] } } }] })).status, 'unknown');
+    assert.equal(c(result({ m: ftMsg, receipts: [ftWith({ deposit: '2' })] })).status, 'unknown');
     assert.equal(c(result({ m: ftMsg, receipts: [{ ...ftCall, receiver_id: 'alice.testnet' }] })).status, 'unknown');
+  });
+  test('R3: an ft_transfer whose decoded arguments or gas differ from the signed ones is not the payment', () => {
+    assert.equal(c(result({ m: ftMsg, receipts: [ftCall, refund] })).status, 'delivered', 'the exact call');
+    for (const [why, over] of [
+      ['another receiver', { args: ftArgs({ receiver_id: 'mallory.testnet', amount: '7' }) }],
+      ['another amount', { args: ftArgs({ receiver_id: 'alice.testnet', amount: '8' }) }],
+      ['amount as a number', { args: ftArgs('{"receiver_id":"alice.testnet","amount":7}') }],
+      ['amount with a leading zero', { args: ftArgs({ receiver_id: 'alice.testnet', amount: '07' }) }],
+      ['an extra field', { args: ftArgs({ receiver_id: 'alice.testnet', amount: '7', memo: 'x' }) }],
+      ['a duplicate key', { args: ftArgs('{"receiver_id":"mallory.testnet","receiver_id":"alice.testnet","amount":"7"}') }],
+      ['fields reordered', { args: ftArgs({ amount: '7', receiver_id: 'alice.testnet' }) }],
+      ['not JSON', { args: ftArgs('not json') }],
+      ['no args', { args: undefined }],
+      ['less gas', { gas: 29 * 1e12 }],
+      ['more gas', { gas: 31 * 1e12 }],
+      ['gas malformed', { gas: 'lots' }],
+      ['another method', { method_name: 'ft_transfer_call' }],
+    ]) assert.equal(c(result({ m: ftMsg, receipts: [ftWith(over), refund] })).status, 'unknown', why);
+    // The gas may come as a decimal string too.
+    assert.equal(c(result({ m: ftMsg, receipts: [ftWith({ gas: '30000000000000' }), refund] })).status, 'delivered');
   });
   test('two matching receipts are ambiguous: unknown', () => {
     assert.equal(c(result({ emitted: ['P', 'Q'], receipts: [transferTo('alice.testnet'), { ...transferTo('alice.testnet'), receipt_id: 'Q' }] })).status, 'unknown');
@@ -663,21 +706,7 @@ describe('R2-M4: outcome reads are bounded and coalesced', () => {
 });
 
 describe('R2-M6: spend bound from the protocol config, persisted across restarts', () => {
-  // Fees of testnet protocol 88 (EXPERIMENTAL_protocol_config, 2026-10-27).
-  const config = {
-    chain_id: 'testnet', protocol_version: 88, max_gas_price: '10000000000000000000000',
-    runtime_config: {
-      min_gas_purchase_price: '1000000000',
-      transaction_costs: {
-        pessimistic_gas_price_inflation_ratio: [1, 1],
-        action_receipt_creation_config: { execution: 108059500000, send_not_sir: 108059500000, send_sir: 108059500000 },
-        action_creation_config: {
-          function_call_cost: { execution: 780000000000, send_not_sir: 200000000000, send_sir: 200000000000 },
-          function_call_cost_per_byte: { execution: 2235934, send_not_sir: 47683715, send_sir: 2235934 },
-        },
-      },
-    },
-  };
+  const config = protocolConfig;
   const rpcWith = (c) => ({ call: async (method) => { assert.equal(method, 'EXPERIMENTAL_protocol_config'); if (c instanceof Error) throw c; return c; } });
 
   test('bound = (send + execution fees + prepaid gas) x max(ceiling, purchase floor)', async () => {
@@ -754,6 +783,236 @@ describe('R2-M6: spend bound from the protocol config, persisted across restarts
     const dir = join(scratch, 'not-a-dir-file');
     writeFileSync(dir, '');
     assert.throws(() => new SpendCap(100n, { file: join(dir, 'x.json') }));
+  });
+});
+
+describe('R3-1a: the gas price is checked at the block the transaction is signed against', () => {
+  // A fake RPC whose final block, gas price and access key a test moves.
+  function fakeRpc({ height = 500n, price = PRICE / 2n } = {}) {
+    const st = { height, price, sends: [] };
+    st.call = async (method, params) => {
+      if (method === 'query') return { nonce: 41 };
+      if (method === 'block') return { header: { hash: '11111111111111111111111111111111', height: Number(st.height), gas_price: String(st.price) } };
+      if (method === 'send_tx') { st.sends.push(params.signed_tx_base64); return {}; }
+      throw new Error(method);
+    };
+    return st;
+  }
+  const submitterOn = (rpc) => createSubmitter({ rpc, accountId: 'relayer.testnet', keyPair: KeyPair.fromRandom('ed25519'), maxGasPriceYocto: PRICE, priceStep: STEP });
+  const request = { vault, args: new Uint8Array(REQUEST_LEN), gas: 30n * TGAS };
+
+  test('price window: blocks until the price could pass the ceiling at 1 % per block', () => {
+    // 1.01^69 = 1.989 <= 2 < 1.01^70 = 2.007
+    assert.equal(priceSafeBlocks(PRICE / 2n, PRICE, STEP), 69n);
+    assert.equal(priceSafeBlocks(PRICE, PRICE, STEP), 0n);
+    assert.equal(priceSafeBlocks(PRICE + 1n, PRICE, STEP), 0n);
+    let p = PRICE / 4n;
+    const n = priceSafeBlocks(p, PRICE, STEP);
+    for (let i = 0n; i < n; i++) p = p * 101n / 100n;
+    assert.ok(p <= PRICE && p * 101n / 100n > PRICE * 99n / 100n, 'tight, and never past the ceiling');
+  });
+
+  test('a price above half the ceiling at the signing block: nothing signed, nothing sent', async () => {
+    const rpc = fakeRpc({ price: PRICE / 2n + 1n });
+    let signed = null;
+    await assert.rejects(submitterOn(rpc).submit(request, (s) => { signed = s; }), PriceTooHigh);
+    assert.equal(signed, null);
+    assert.deepEqual(rpc.sends, []);
+  });
+
+  test('signing records the last height it may be re-broadcast at; past it nothing is sent again', async () => {
+    const rpc = fakeRpc({ height: 500n, price: PRICE / 2n });
+    const { submit, rebroadcast } = submitterOn(rpc);
+    let seen;
+    await submit(request, (s) => { seen = s; });
+    assert.equal(seen.rebroadcastUntil, 500n + 69n - INCLUSION_MARGIN_BLOCKS);
+    rpc.height = seen.rebroadcastUntil;
+    await rebroadcast(seen.signed, seen.rebroadcastUntil);
+    assert.deepEqual(rpc.sends, [seen.signed, seen.signed]);
+    rpc.height = seen.rebroadcastUntil + 1n;
+    await assert.rejects(rebroadcast(seen.signed, seen.rebroadcastUntil), StaleReference);
+    await assert.rejects(rebroadcast(seen.signed, undefined), StaleReference, 'no recorded window: never sent');
+    assert.equal(rpc.sends.length, 2);
+  });
+
+  test('a price that rose while the request waited: 503, reservation and quotas given back, slot free', async () => {
+    let rising = true;
+    const h = harness({ vaultPerHour: 1, ipPerHour: 1, submit: async (req, n, onSigned) => {
+      if (rising) throw new PriceTooHigh('rose');
+      onSigned({ transaction: fakeHash(n), signed: 'eA==', rebroadcastUntil: 2000n });
+      return fakeHash(n);
+    } });
+    const r = await h.relay(body(msg()), 'ip');
+    assert.equal(r.status, 503);
+    assert.match(r.body.error, /gas price/);
+    assert.equal(h.ledger.lookup(messageId(msg())), null);
+    rising = false;
+    const ok = await h.relay(body(msg()), 'ip');
+    assert.equal(ok.status, 200, 'quota of 1 per vault and per client was given back');
+    assert.equal(h.ledger.lookup(messageId(msg())).rebroadcastUntil, 2000n);
+  });
+
+  test('the reservation of an unsigned attempt goes back to the cap', async () => {
+    const cap = new SpendCap(10n ** 24n);
+    const r = createRelay(relayDeps({ cap, submit: async () => { throw new PriceTooHigh('rose'); } }));
+    assert.equal((await r.relay(body(msg()), 'ip')).status, 503);
+    assert.equal(cap.spent, 0n);
+  });
+
+  test('an uncertain transaction past its window is marked stopped and never re-broadcast', async () => {
+    const h = harness({
+      submit: async (req, n, onSigned) => {
+        onSigned({ transaction: fakeHash(n, '7'), signed: 'eA==', rebroadcastUntil: 1300n });
+        throw new TransportError('send_tx: timeout');
+      },
+      rebroadcast: async () => { throw new StaleReference('too old'); },
+    });
+    const b = body(msg());
+    assert.equal((await h.relay(b, 'ip')).status, 504);
+    const stopped = await h.relay(b, 'ip');
+    assert.equal(stopped.status, 504);
+    assert.match(stopped.body.error, /not re-broadcast/);
+    assert.equal(stopped.body.transaction, fakeHash(1, '7'));
+    const e = h.ledger.lookup(messageId(msg()));
+    assert.equal(e.state, 'uncertain');
+    assert.equal(e.stopped, true);
+    assert.equal(h.resent.length, 1, 'one attempt hit the window');
+    assert.deepEqual(await h.relay(b, 'ip'), stopped);
+    assert.equal(h.resent.length, 1, 'and nothing is sent after it');
+    assert.equal((await h.relay(body(msg({ amount: 5n })), 'ip')).status, 409, 'the slot is kept while the window is open');
+    // The outcome is still learned from the chain.
+    h.ledger.observe(fakeHash(1, '7'), { status: 'delivered' });
+    assert.equal(h.ledger.lookup(messageId(msg())).state, 'delivered');
+  });
+});
+
+describe('R3-1b: the relayer account balance is the hard budget', () => {
+  const NEAR = 10n ** 24n;
+  const perByte = 10n ** 19n;
+  const rpcAccount = (view) => ({ call: async (method, params) => {
+    assert.equal(params.request_type, 'view_account');
+    assert.equal(params.finality, 'final');
+    if (view instanceof Error) throw view;
+    return view;
+  } });
+
+  test('spendable = balance minus the storage stake not covered by locked', async () => {
+    const view = { amount: '501134797994649199999995', locked: '0', storage_usage: 14773 };
+    assert.equal(await spendableBalance(rpcAccount(view), { account: 'r.testnet', storageAmountPerByte: perByte }), 501134797994649199999995n - 14773n * perByte);
+    assert.equal(await spendableBalance(rpcAccount({ ...view, locked: String(NEAR) }), { account: 'r.testnet', storageAmountPerByte: perByte }), 501134797994649199999995n);
+    assert.equal(await spendableBalance(rpcAccount({ ...view, amount: '1' }), { account: 'r.testnet', storageAmountPerByte: perByte }), 0n);
+  });
+
+  test('refuses above RELAYER_MAX_ACCOUNT_SPENDABLE, accepts at or below it, fails closed on a bad read', async () => {
+    const view = { amount: String(NEAR), locked: '0', storage_usage: 0 };
+    const args = (max) => ({ account: 'r.testnet', storageAmountPerByte: perByte, maxSpendable: max });
+    await assert.rejects(checkRelayerAccount(rpcAccount(view), args(NEAR - 1n)), /RELAYER_MAX_ACCOUNT_SPENDABLE/);
+    assert.equal(await checkRelayerAccount(rpcAccount(view), args(NEAR)), NEAR);
+    await assert.rejects(checkRelayerAccount(rpcAccount(new TransportError('timeout')), args(NEAR)), /unreadable/);
+    await assert.rejects(checkRelayerAccount(rpcAccount({ amount: 'x', locked: '0', storage_usage: 0 }), args(NEAR)), /malformed/);
+    assert.equal(loadConfig({ RELAYER_ACCOUNT: 'r.testnet', RELAYER_KEY_FILE: '/dev/null' }).maxAccountSpendableYocto, NEAR / 2n, 'default 0.5 NEAR');
+  });
+});
+
+describe('R3-2: one relayer per state directory', () => {
+  const NEAR = 10n ** 24n;
+  let rpcServer, rpcUrl, balance = NEAR / 4n;
+  const keyFile = join(scratch, 'relayer.key');
+  writeFileSync(keyFile, KeyPair.fromRandom('ed25519').toString() + '\n');
+  const start = (dir, extra = {}) => startFromEnv({ RELAYER_ACCOUNT: 'relayer.testnet', RELAYER_KEY_FILE: keyFile, RELAYER_STATE_DIR: dir, PORT: '0', NEAR_RPC: rpcUrl, ...extra });
+  const stop = (s) => new Promise((ok) => { s.server.closeAllConnections(); s.server.close(ok); });
+
+  // A fake RPC with the protocol config and the relayer account.
+  before(async () => {
+    rpcServer = (await import('node:http')).createServer((req, res) => {
+      let text = '';
+      req.on('data', (c) => { text += c; });
+      req.on('end', () => {
+        const { id, method } = JSON.parse(text);
+        const result = method === 'EXPERIMENTAL_protocol_config' ? protocolConfig
+          : { amount: String(balance), locked: '0', storage_usage: 1000, block_hash: 'x', block_height: 1 };
+        res.end(JSON.stringify({ jsonrpc: '2.0', id, result }));
+      });
+    });
+    await new Promise((ok) => rpcServer.listen(0, '127.0.0.1', ok));
+    rpcUrl = `http://127.0.0.1:${rpcServer.address().port}`;
+  });
+
+  test('a second instance on the same directory refuses to start; the first keeps its spend file', async () => {
+    const dir = mkdtempSync(join(scratch, 'state-'));
+    const a = await start(dir);
+    assert.equal(readFileSync(join(dir, 'relayer.lock'), 'utf8'), `${process.pid}\n`);
+    await assert.rejects(start(dir), /locked by running process/);
+    const other = await start(mkdtempSync(join(scratch, 'state-')));
+    await stop(other);
+    await stop(a);
+    assert.throws(() => readFileSync(join(dir, 'relayer.lock')), /ENOENT/, 'closing releases the lock');
+    const b = await start(dir);
+    await stop(b);
+  });
+
+  test('a failed start releases the lock; an over-funded account does not start', async () => {
+    const dir = mkdtempSync(join(scratch, 'state-'));
+    balance = NEAR;
+    await assert.rejects(start(dir), /RELAYER_MAX_ACCOUNT_SPENDABLE/);
+    const lifted = await start(dir, { RELAYER_MAX_ACCOUNT_SPENDABLE: String(NEAR) });
+    const health = await (await fetch(`http://127.0.0.1:${lifted.address.port}/health`)).json();
+    assert.equal(health.account_spendable_at_start_yocto, String(NEAR - 1000n * 10n ** 19n));
+    await stop(lifted);
+    balance = NEAR / 4n;
+  });
+
+  test('a lock left by a dead process, or unreadable, is cleared only on explicit request', () => {
+    const dir = mkdtempSync(join(scratch, 'state-'));
+    const dead = spawnSync(process.execPath, ['-e', '']).pid;
+    writeFileSync(join(dir, 'relayer.lock'), `${dead}\n`);
+    assert.throws(() => acquireLock(dir), /stale lock .*not running.*RELAYER_CLEAR_STALE_LOCK=1/);
+    const release = acquireLock(dir, { clearStale: true });
+    assert.equal(readFileSync(join(dir, 'relayer.lock'), 'utf8'), `${process.pid}\n`);
+    release();
+    writeFileSync(join(dir, 'relayer.lock'), '');
+    assert.throws(() => acquireLock(dir), /unreadable/);
+    acquireLock(dir, { clearStale: true })();
+    // A live pid is never cleared, not even on request.
+    writeFileSync(join(dir, 'relayer.lock'), `${process.pid}\n`);
+    assert.throws(() => acquireLock(dir, { clearStale: true }), /running process/);
+    assert.equal(loadConfig({ RELAYER_ACCOUNT: 'r.testnet', RELAYER_KEY_FILE: '/dev/null', RELAYER_CLEAR_STALE_LOCK: '1' }).clearStaleLock, true);
+  });
+
+  after(() => rpcServer.close());
+});
+
+describe('R3-4: delivery states follow acceptance and never regress', () => {
+  const setup = () => {
+    const l = new Ledger();
+    const m = messageId(msg());
+    l.claim(slotId(msg()), m, { nonce: 3n, expiry: 1600n, pending: null, chain: { nonce: 3n, height: 1200n } });
+    l.signed(m, fakeHash(1), 'eA==', 2000n);
+    l.settle(m, 'submitted');
+    return { l, state: () => l.lookup(m).state };
+  };
+  test('accepted -> delivered and accepted -> delivery_failed', () => {
+    for (const [status, final] of [['delivered', 'delivered'], ['failed', 'delivery_failed']]) {
+      const { l, state } = setup();
+      l.observe(fakeHash(1), { status: 'accepted' });
+      assert.equal(state(), 'accepted');
+      l.observe(fakeHash(1), { status });
+      assert.equal(state(), final);
+    }
+  });
+  test('accepted never goes back to unknown or rejected; a delivery state is final', () => {
+    const { l, state } = setup();
+    l.observe(fakeHash(1), { status: 'accepted' });
+    l.observe(fakeHash(1), { status: 'unknown', attemptRejected: true });
+    l.observe(fakeHash(1), { status: 'submitted' });
+    assert.equal(state(), 'accepted');
+    l.observe(fakeHash(1), { status: 'delivered' });
+    for (const status of ['accepted', 'failed', 'unknown', 'submitted']) l.observe(fakeHash(1), { status, attemptRejected: true });
+    assert.equal(state(), 'delivered');
+    const b = setup();
+    b.l.observe(fakeHash(1), { status: 'failed' });
+    for (const status of ['accepted', 'delivered']) b.l.observe(fakeHash(1), { status });
+    assert.equal(b.state(), 'delivery_failed');
   });
 });
 

@@ -1,7 +1,9 @@
 // Testnet run of the relayer against the pinned deployment: a wallet-style (noble) signed payment relayed,
 // followed to delivery; a repeat answered with the same hash; the same signed bytes replayed as a second
 // execute (around the relayer's dedupe), refused by the vault and reported unknown with attemptRejected,
-// never failed; a tampered signature refused with no transaction; the measured charge under the spend bound.
+// never failed; a tampered signature refused with no transaction; the measured charge under the spend bound;
+// the gas price of the signing and inclusion blocks against the ceiling; a second relayer on the same state
+// directory refused; the relayer account's spendable balance under RELAYER_MAX_ACCOUNT_SPENDABLE.
 // Writes evidence/relayer-testnet.json.
 // Usage: RELAYER_ACCOUNT=<id> RELAYER_KEY_FILE=<ed25519 key file> OWNER_KEY_FILE=<ML-DSA-87 pem> \
 //   [RECEIVER=<id>] node tests/relayer.testnet.mjs
@@ -10,6 +12,9 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { CONTEXT, Key, checkVault, encodeMessage, executeArgs, vaultAddress } from '../sdk/vault.mjs';
+import { transactions, utils } from 'near-api-js';
+import { readProtocolCosts } from '../relayer/cost.mjs';
+import { messageId } from '../relayer/ledger.mjs';
 import { createRpc } from '../relayer/rpc.mjs';
 import { startFromEnv } from '../relayer/server.mjs';
 import { createSubmitter, loadRelayerKey } from '../relayer/submitter.mjs';
@@ -44,7 +49,8 @@ const finalHeight = async () => BigInt((await rpc.call('block', { finality: 'fin
 
 // A fresh state directory: the spend file starts empty for this run (and is removed after).
 const stateDir = mkdtempSync(join(tmpdir(), 'qvault-relayer-state-'));
-const { server, address } = await startFromEnv({ ...process.env, PORT: '0', RELAYER_STATE_DIR: stateDir });
+const { server, address, ledger } = await startFromEnv({ ...process.env, PORT: '0', RELAYER_STATE_DIR: stateDir });
+out.relayer_account_limit_override = process.env.RELAYER_MAX_ACCOUNT_SPENDABLE ?? null;
 const base = `http://127.0.0.1:${address.port}`;
 const post = async (body, at = base) => { const r = await fetch(`${at}/execute`, { method: 'POST', body }); return { status: r.status, body: await r.json() }; };
 const follow = async (tx, until) => {
@@ -70,6 +76,13 @@ try {
 
   // 2. Relay it and follow the outcome to delivery.
   const health0 = await (await fetch(`${base}/health`)).json();
+  out.account = { spendable_at_start_yocto: health0.account_spendable_at_start_yocto, max_account_spendable_yocto: health0.max_account_spendable_yocto };
+  step('the relayer started with its account under RELAYER_MAX_ACCOUNT_SPENDABLE',
+    BigInt(health0.account_spendable_at_start_yocto) <= BigInt(health0.max_account_spendable_yocto),
+    { detail: `spendable ${health0.account_spendable_at_start_yocto} <= limit ${health0.max_account_spendable_yocto} yocto${out.relayer_account_limit_override ? ' (limit set by env for this run)' : ' (default)'}` });
+  const sameDir = await startFromEnv({ ...process.env, PORT: '0', RELAYER_STATE_DIR: stateDir }).then((s) => { others.push({ server: s.server, dir: null }); return null; }, (e) => e);
+  step('a second relayer on the same state directory refuses to start', sameDir instanceof Error && /locked by running process/.test(sameDir.message),
+    { detail: sameDir?.message ?? 'it started' });
   const h0 = await finalHeight();
   const balance0 = await balanceAt(h0);
   const sent = await post(body);
@@ -81,6 +94,19 @@ try {
   const transfer = final.receipts.find((r) => r.predecessor_id === vault)?.receipt.Action.actions[0].Transfer;
   const attached = final.transaction.actions[0].FunctionCall;
   const paid = final.receipts.find((r) => r.predecessor_id === vault);
+  // The price of the block the transaction was signed against, and of the block it was included in.
+  const priceOf = async (hash) => BigInt((await rpc.call('block', { block_id: hash })).header.gas_price);
+  // The transaction view does not name its reference block; the signed bytes the relayer kept do.
+  const entry = ledger.lookup(messageId(message));
+  const refHash = utils.serialize.base_encode(Uint8Array.from(transactions.SignedTransaction.decode(Buffer.from(entry.signed, 'base64')).transaction.blockHash));
+  const refHeight = BigInt((await rpc.call('block', { block_id: refHash })).header.height);
+  const refPrice = await priceOf(refHash);
+  const inclusionPrice = await priceOf(final.transaction_outcome.block_hash);
+  const ceiling = BigInt(health0.max_gas_price_yocto);
+  out.gas_price = { reference_block: refHash, reference_height: refHeight.toString(), rebroadcast_until_height: entry.rebroadcastUntil.toString(), reference_block_yocto: refPrice.toString(), inclusion_block_yocto: inclusionPrice.toString(), ceiling_yocto: ceiling.toString() };
+  step('signing block priced at most half the ceiling, inclusion block at most the ceiling',
+    refPrice * 2n <= ceiling && inclusionPrice <= ceiling && entry.rebroadcastUntil > refHeight,
+    { tx, detail: `reference ${refPrice} at ${refHeight}, inclusion ${inclusionPrice}, ceiling ${ceiling} yocto/gas; re-broadcast allowed until ${entry.rebroadcastUntil}` });
   step('on-chain: execute with 30 Tgas and no deposit, then 0.01 NEAR from the vault to the signed receiver',
     BigInt(attached.gas) === 30n * 10n ** 12n && attached.deposit === '0' && transfer?.deposit === AMOUNT.toString() && paid?.receiver_id === receiver && final.transaction.receiver_id === vault,
     { tx, detail: `gas ${attached.gas}, deposit ${attached.deposit}, transfer ${transfer?.deposit} to ${paid?.receiver_id}` });
@@ -121,7 +147,8 @@ try {
   const fresh = await post(body, `http://127.0.0.1:${other.address.port}`);
   step('a fresh relayer refuses the spent authorization at preflight, without a transaction',
     fresh.status === 422 && !fresh.body.transaction, { detail: `HTTP ${fresh.status} ${fresh.body.error}` });
-  const { submit } = createSubmitter({ rpc, accountId: relayerId, keyPair: loadRelayerKey(process.env.RELAYER_KEY_FILE) });
+  const { submit } = createSubmitter({ rpc, accountId: relayerId, keyPair: loadRelayerKey(process.env.RELAYER_KEY_FILE),
+    maxGasPriceYocto: BigInt(health0.max_gas_price_yocto), priceStep: (await readProtocolCosts(rpc, deployment)).priceStep });
   const replayTx = await submit({ vault, args: executeArgs(body.subarray(0, 4627), body.subarray(4627)), gas: 30n * 10n ** 12n });
   const replayed = await follow(replayTx, (x) => x.attemptRejected === true || ['accepted', 'delivered', 'failed'].includes(x.status));
   const replayFinal = await rpc.call('EXPERIMENTAL_tx_status', { tx_hash: replayTx, sender_account_id: relayerId, wait_until: 'FINAL' });
@@ -157,7 +184,7 @@ try {
   for (const { server: s, dir } of [{ server, dir: stateDir }, ...others]) {
     s.closeAllConnections();
     s.close();
-    rmSync(dir, { recursive: true, force: true });
+    if (dir) rmSync(dir, { recursive: true, force: true });
   }
 }
 

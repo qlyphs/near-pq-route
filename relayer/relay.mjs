@@ -5,6 +5,7 @@ import { Busy } from './limits.mjs';
 import { Refusal, parseRequest } from './message.mjs';
 import { RpcError, TransportError, isValidationRejection } from './rpc.mjs';
 import { verifyAuthorization } from './signature.mjs';
+import { PriceTooHigh, StaleReference } from './submitter.mjs';
 
 const TGAS = 10n ** 12n;
 export const BASE_GAS_TGAS = 30n;
@@ -28,7 +29,8 @@ export function createRelay(deps) {
     if (vault.nonce !== req.nonce) throw new Refusal(422, `nonce is not the vault's next nonce (${vault.nonce})`);
     if (!(req.issued <= vault.height && vault.height < req.expiry)) throw new Refusal(422, 'authorization expired or not yet valid');
     if (!verifyAuthorization(req.signature, req.message, vault.publicKey)) throw new Refusal(422, 'invalid signature');
-    // The spend bound holds only while the price stays under the ceiling; keep 2x headroom (cost.mjs).
+    // An early refusal, before any reservation. The binding check runs again in the submitter, at the
+    // block the transaction is signed against, after the wait in its queue.
     if ((await gasPrice()) * 2n > maxGasPriceYocto) throw new Refusal(503, 'gas price too close to the relayer ceiling, retry later');
     return { nonce: vault.nonce, height: vault.height };
   }
@@ -39,16 +41,29 @@ export function createRelay(deps) {
       vaultQuota.untake(req.vault);
       throw new Refusal(429, 'quota reached for this client');
     }
-    if (!cap.reserve(costOf(req))) throw new Refusal(503, 'paused: spend cap reached');
+    const cost = costOf(req);
+    if (!cap.reserve(cost)) {
+      vaultQuota.untake(req.vault);
+      ipQuota.untake(ip);
+      throw new Refusal(503, 'paused: spend cap reached');
+    }
     try {
       // The hash and the signed bytes are recorded before the broadcast, so no answer is ever lost.
       const tx = await submit({ vault: req.vault, args: executeArgs(req.signature, req.message), gas: attachedGas(req) },
-        ({ transaction, signed }) => ledger.signed(msg, transaction, signed));
+        ({ transaction, signed, rebroadcastUntil }) => ledger.signed(msg, transaction, signed, rebroadcastUntil));
       ledger.settle(msg, 'submitted');
       return { status: 200, body: { transaction: tx } };
     } catch (e) {
       const signed = ledger.lookup(msg)?.tx;
-      if (!signed) throw e; // nothing was signed: the caller frees the slot
+      if (!signed) {
+        // Nothing was signed, so nothing can ever be charged: the reservation and the quotas go back,
+        // and the caller frees the slot.
+        cap.refund(cost);
+        vaultQuota.untake(req.vault);
+        ipQuota.untake(ip);
+        if (e instanceof PriceTooHigh) throw new Refusal(503, 'gas price too close to the relayer ceiling, retry later');
+        throw e;
+      }
       if (isValidationRejection(e)) {
         ledger.release(slot, msg);
         return { status: 502, body: { error: `rpc refused the transaction: ${e.message}` } };
@@ -65,13 +80,13 @@ export function createRelay(deps) {
     entry.pending = new Promise((ok) => { settle = ok; });
     let result;
     try {
-      await limiter.run(() => rebroadcast(entry.signed));
+      await limiter.run(() => rebroadcast(entry.signed, entry.rebroadcastUntil));
       ledger.settle(msg, 'submitted');
       result = { status: 200, body: { transaction: entry.tx } };
     } catch (e) {
       // Even a refusal of a resend may mean it was already included: the state stays uncertain.
-      ledger.settle(msg, 'uncertain');
-      result = e instanceof Busy
+      if (e instanceof StaleReference) ledger.stop(msg); else ledger.settle(msg, 'uncertain');
+      result = e instanceof StaleReference ? stopped(entry) : e instanceof Busy
         ? { status: 503, body: { error: 'busy, retry later', transaction: entry.tx } }
         : { status: 504, body: { error: 'no definitive answer from rpc; follow the transaction', transaction: entry.tx } };
     }
@@ -79,11 +94,14 @@ export function createRelay(deps) {
     return result;
   }
 
+  // Past its price window an uncertain transaction is only followed, never sent again.
+  const stopped = (entry) => ({ status: 504, body: { error: 'not re-broadcast: its block is too old for the gas price bound; follow the transaction', transaction: entry.tx } });
+
   // An answer from the ledger alone, or null when the request needs the chain.
   function known(entry, msg) {
     if (!entry) return null;
     if (entry.pending) return entry.pending;
-    if (entry.state === 'uncertain') return resend(entry, msg);
+    if (entry.state === 'uncertain') return entry.stopped ? stopped(entry) : resend(entry, msg);
     if (entry.state === 'rejected') return null; // only the chain can say whether a resend is safe
     return { status: 200, body: { transaction: entry.tx } };
   }

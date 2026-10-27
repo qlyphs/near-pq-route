@@ -40,38 +40,59 @@ the vault checks every byte again. What it adds is protection of its own gas bud
   nonce, so the old one was never accepted and can no longer be. The same message is sent again only
   after its last `execute` was seen refused and a fresh read shows the nonce unchanged and the window
   open. Released records stay in the history.
-- **Bounded cost.** Quotas count only verified requests, so garbage cannot use up a vault's quota. At
-  start the relayer reads `EXPERIMENTAL_protocol_config` (and refuses to start without it, on another
-  chain, or if receipts are priced with a pessimistic inflation other than 1). Every submission reserves
-  (send fees + execution fees + prepaid gas) × max(`RELAYER_MAX_GAS_PRICE_YOCTO`,
-  `min_gas_purchase_price`): nearcore charges the send fees at the block's gas price and the receipt's
-  gas at the purchase price (the gas price raised to `min_gas_purchase_price`, 1e9 yocto/gas on testnet),
-  so this bounds the charge while the inclusion block's price is at most the ceiling. The relay refuses
-  to sign unless today's price is at most half the ceiling; prices move at most 1 % per block, so that
-  headroom lasts about 70 blocks. Reservations are never credited back. Measured on testnet
-  (`evidence/relayer-testnet.json`): a NEAR transfer reserved 0.03144 NEAR, its peak charge was 0.03095
-  NEAR and its net cost after refunds 0.00077 NEAR. The reserved total and the pause are written to
-  `RELAYER_STATE_DIR` (atomically, before the reservation counts) and read back at start, so a restart
-  does not reset an exhausted budget: a human must delete the file or raise the cap. A spend file that
-  cannot be read or written fails closed.
+- **Bounded cost: the account balance is the budget.** A NEAR transaction carries no signed maximum gas
+  price, so nothing the relayer computes can force what one transaction is charged. The enforceable
+  budget for the testnet rehearsal is the relayer account itself: a dedicated account, funded
+  minimally, with no automatic top-up. At start the relayer reads it at a final block and refuses to
+  start if its balance minus the storage stake (storage_usage × `storage_amount_per_byte`, less
+  `locked`) exceeds `RELAYER_MAX_ACCOUNT_SPENDABLE` (default 0.5 NEAR). Whatever the price does, the
+  relayer cannot lose more than that. Everything below is an estimate whose job is to pause early.
+- **The reservation estimate.** Quotas count only verified requests, so garbage cannot use up a vault's
+  quota. At start the relayer reads `EXPERIMENTAL_protocol_config` (and refuses to start without it, on
+  another chain, without a gas price adjustment rate, or if receipts are priced with a pessimistic
+  inflation other than 1). Every submission reserves (send fees + execution fees + prepaid gas) ×
+  max(`RELAYER_MAX_GAS_PRICE_YOCTO`, `min_gas_purchase_price`): nearcore charges the send fees at the
+  block's gas price and the receipt's gas at the purchase price (the gas price raised to
+  `min_gas_purchase_price`, 1e9 yocto/gas on testnet), so this covers the charge while the inclusion
+  block's price is at most the ceiling. Two checks keep it so in practice. The submitter reads the
+  final block it signs against after the request's wait in its serial queue and signs nothing if that
+  block's price is above half the ceiling (the reservation and quotas of an unsigned attempt go back).
+  And the signed bytes are re-broadcast only while the final height is within that block's price
+  window: the number of blocks the price needs to pass the ceiling at the protocol's fastest rate
+  (`gas_price_adjustment_rate`, 1 % per block on testnet, each step rounded up), less 10 blocks for
+  inclusion. Past it the transaction stays uncertain, is marked stopped and is only followed. What the
+  estimate cannot exclude is a first broadcast that the network includes long after it was sent, while
+  the reference block stays valid; the account balance bounds that case. Reservations are never
+  credited back once signed. Measured on testnet (`evidence/relayer-testnet.json`): a NEAR transfer
+  reserved 0.03144 NEAR, its peak charge was 0.03095 NEAR and its net cost after refunds 0.00077 NEAR,
+  signed against a block priced 1e8 yocto/gas under a 1e9 ceiling. The reserved total and the pause are
+  written to `RELAYER_STATE_DIR` (atomically, before the reservation counts) and read back at start, so
+  a restart does not reset an exhausted budget: a human must delete the file or raise the cap. A spend
+  file that cannot be read or written fails closed.
+- **One writer per state directory.** Before it reads the spend file the relayer creates
+  `relayer.lock` in the state directory with O_EXCL and its pid, and refuses to start while a running
+  process holds it (two instances would overwrite each other's reserved total). A lock left by a dead
+  process is cleared only when started with `RELAYER_CLEAR_STALE_LOCK=1`; a live pid is never cleared.
 - **Bounded reads.** `/outcome` reads go through their own bounded queue, a per-client and a global
   per-minute budget, and concurrent reads of one transaction share a single RPC call. Verification runs
   in a bounded queue; the body is never read past 4,883 bytes.
 - **No claim beyond the evidence.** `/execute` answers when RPC accepted the transaction. `/outcome` says
   `delivered` only from a final outcome where the payment receipt (identified among the receipts the
-  `execute` emitted: from the vault, to the receiver or token, with exactly the signed Transfer or
-  `ft_transfer` with 1 yocto) succeeded, and `failed` only when such a receipt of an accepted `execute`
+  `execute` emitted: from the vault, to the receiver or token, with exactly the signed Transfer, or an
+  `ft_transfer` with 1 yocto, the signed gas and arguments byte for byte
+  `{"receiver_id":"<signed receiver>","amount":"<signed amount>"}`) succeeded, and `failed` only when such a receipt of an accepted `execute`
   failed. A refused `execute` is `unknown` with `attemptRejected`: a replay of an authorization already
   accepted elsewhere is refused too, and calling it failed would invite a second, real payment (tested on
-  testnet). Anything missing or ambiguous is `unknown`.
+  testnet). Anything missing or ambiguous is `unknown`. Once accepted, a record only moves on to
+  delivered or delivery failed, and those never change.
 - **Little to steal.** It holds one ed25519 key that can only spend the relayer account's NEAR, never
   logs it, and keeps only hashes: of messages, of (vault, nonce), of quota keys, and transaction hashes
   with their signed bytes, in memory, plus the spend total on disk. A restart forgets the ledger; the
   vault nonce still prevents a second payment.
 - **Limits.** The client address is the socket's: behind a proxy every client shares one quota. Quotas
-  and the ledger are per process. RPC answers are trusted for the preflight and the outcome, as in the
-  wallet. The spend bound assumes the inclusion block's gas price stays under the ceiling, which the
-  headroom makes likely but cannot force. Testnet only.
+  and the ledger are per process. RPC answers are trusted for the preflight, the gas price, the account
+  balance and the outcome, as in the wallet. The reservation is an estimate; only the account balance
+  is enforced, and only if nobody tops the account up. Testnet only.
 
 ## Why the factory
 

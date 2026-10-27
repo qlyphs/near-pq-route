@@ -32,6 +32,7 @@ export function loadConfig(env = process.env) {
   if (!isAccountId(env.RELAYER_ACCOUNT ?? '')) throw new Error('RELAYER_ACCOUNT must be a NEAR account id');
   if (!env.RELAYER_KEY_FILE) throw new Error('RELAYER_KEY_FILE is required');
   if (env.RELAYER_GAS_PRICE_YOCTO !== undefined) throw new Error('RELAYER_GAS_PRICE_YOCTO was replaced by RELAYER_MAX_GAS_PRICE_YOCTO');
+  const stateDir = env.RELAYER_STATE_DIR ?? fileURLToPath(new URL('./.state', import.meta.url));
   return {
     deployment,
     host: env.HOST ?? '127.0.0.1',
@@ -44,8 +45,13 @@ export function loadConfig(env = process.env) {
     // purchase floor, so the default bound charges every gas unit at the price testnet prepays receipts at.
     maxGasPriceYocto: big(env, 'RELAYER_MAX_GAS_PRICE_YOCTO', 10n ** 9n),
     spendCapYocto: big(env, 'RELAYER_SPEND_CAP_YOCTO', 3n * NEAR / 10n),
-    // Where the reserved spend survives restarts. One file per relayer account and network.
-    stateFile: join(env.RELAYER_STATE_DIR ?? fileURLToPath(new URL('./.state', import.meta.url)), `spend-${deployment.network}-${env.RELAYER_ACCOUNT}.json`),
+    // The hard budget: the relayer does not start if its account could spend more than this (account.mjs).
+    maxAccountSpendableYocto: big(env, 'RELAYER_MAX_ACCOUNT_SPENDABLE', 5n * NEAR / 10n),
+    // Where the reserved spend survives restarts. One file per relayer account and network, one writer
+    // per directory (lock.mjs).
+    stateDir,
+    stateFile: join(stateDir, `spend-${deployment.network}-${env.RELAYER_ACCOUNT}.json`),
+    clearStaleLock: env.RELAYER_CLEAR_STALE_LOCK === '1',
     outcomeConcurrency: int(env, 'RELAYER_OUTCOME_CONCURRENCY', 4),
     outcomeQueue: int(env, 'RELAYER_OUTCOME_QUEUE', 32),
     outcomePerMinute: int(env, 'RELAYER_OUTCOME_PER_MINUTE', 60),

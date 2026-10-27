@@ -28,8 +28,14 @@ export async function readProtocolCosts(rpc, { network }) {
   if (!Array.isArray(ratio) || ratio.length !== 2 || String(ratio[0]) !== String(ratio[1])) {
     throw new Error('protocol config: pessimistic gas price inflation is not 1; the spend bound does not cover it');
   }
+  const rate = c.gas_price_adjustment_rate;
+  if (!Array.isArray(rate) || rate.length !== 2) throw new Error('protocol config: gas_price_adjustment_rate missing');
+  const priceStep = { num: big(rate[0], 'gas_price_adjustment_rate[0]'), den: big(rate[1], 'gas_price_adjustment_rate[1]') };
+  if (priceStep.den === 0n || priceStep.num >= priceStep.den) throw new Error('protocol config: gas_price_adjustment_rate out of range');
   return {
     protocolVersion: c.protocol_version,
+    priceStep,
+    storageAmountPerByte: big(rc.storage_amount_per_byte, 'storage_amount_per_byte'),
     maxGasPrice: big(c.max_gas_price, 'max_gas_price'),
     minGasPurchasePrice: big(rc.min_gas_purchase_price, 'min_gas_purchase_price'),
     receipt: fee(t.action_receipt_creation_config, 'action_receipt_creation_config'),
@@ -48,10 +54,12 @@ export async function readProtocolCosts(rpc, { network }) {
  * which is the gas price raised to `min_gas_purchase_price` when lower (1e9 yocto/gas on testnet today,
  * the price earlier runs observed). With an inflation ratio of 1 nothing else multiplies it. So charging
  * every gas unit (send + execution + prepaid) at max(`maxGasPriceYocto`, min_gas_purchase_price) is at
- * least the real charge whenever the inclusion block's gas price is at most `maxGasPriceYocto`; the
- * relay refuses to sign when today's price leaves less than 2x headroom under it (prices move at most
- * 1 % per block, `gas_price_adjustment_rate` 1/100 on testnet, so doubling takes about 70 blocks). The
- * deposit is 0, and gas refunds are never credited back, so actual spend stays below the reservation.
+ * least the real charge whenever the inclusion block's gas price is at most `maxGasPriceYocto`. Nothing
+ * in a NEAR transaction caps the price it pays, so this is an estimate, not an enforcement: the submitter
+ * refuses to sign when the price of the block it signs against leaves less than 2x headroom, and never
+ * re-broadcasts once that block is too old for the headroom to hold (`priceSafeBlocks`). The deposit is
+ * 0, and gas refunds are never credited back, so actual spend stays below the reservation. The bound
+ * that holds whatever the price does is the relayer account's own balance (account.mjs).
  */
 export function costBound(costs, { argsLen, prepaidGas, maxGasPriceYocto, method = 'execute' }) {
   const bytes = BigInt(method.length + argsLen);
@@ -59,4 +67,21 @@ export function costBound(costs, { argsLen, prepaidGas, maxGasPriceYocto, method
   const exec = costs.receipt.exec + costs.functionCall.exec + costs.perByte.exec * bytes;
   const price = maxGasPriceYocto > costs.minGasPurchasePrice ? maxGasPriceYocto : costs.minGasPurchasePrice;
   return (send + exec + prepaidGas) * price;
+}
+
+/**
+ * How many blocks after a block priced `price` the gas price is certain to stay at most `ceiling`: the
+ * protocol moves it by at most `step` (num/den, 1/100 on testnet) per block. Each step is rounded up, so
+ * the answer errs short. 0 when `price` is already above the ceiling.
+ */
+export function priceSafeBlocks(price, ceiling, step, limit = 100000n) {
+  let p = price, n = 0n;
+  if (p > ceiling) return 0n;
+  while (n < limit) {
+    const next = (p * (step.den + step.num) + step.den - 1n) / step.den;
+    if (next > ceiling) break;
+    p = next;
+    n++;
+  }
+  return n;
 }

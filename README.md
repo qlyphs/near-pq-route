@@ -72,22 +72,27 @@ twice for one authorization.
   `unknown`. A refused transaction or refused `execute` is `unknown` with `"attemptRejected": true`:
   it proves only that this attempt failed (a replay of an authorization accepted elsewhere is refused
   too), so it is never a reason to sign again. A timeout is `unknown`, never `failed`.
-- `GET /health`: network, factory, relayer account, protocol version, reserved spend, the cap and the
-  reservation for one NEAR transfer.
+- `GET /health`: network, factory, relayer account, protocol version, reserved spend, the cap, the
+  reservation for one NEAR transfer, and the account's spendable balance at start with its limit.
 
 Before any gas, in this order: strict parse of the message (`docs/PROTOCOL.md`; a NEAR transfer must
 carry an empty token field and a zero gas byte), vault a direct child of the pinned factory,
 `checkVault` at a final block, nonce equal to the vault's, window containing the final height, the
 ML-DSA-87 signature verified locally with `@noble/post-quantum` against the stored key, and the current
 gas price at most half of `RELAYER_MAX_GAS_PRICE_YOCTO`. Then quotas (per vault and per client
-address, counted only for valid signatures), then the spend cap. It signs `execute` with 30 Tgas, or
-30 Tgas plus the signed `ft_transfer` gas, and no deposit, records the hash and signed bytes, and only
-then broadcasts.
+address, counted only for valid signatures), then the spend cap. After its wait in the serial
+submission queue it reads the final block it signs against and signs nothing if that block's gas price
+is above half the ceiling (503; the reservation and quotas go back). It signs `execute` with 30 Tgas,
+or 30 Tgas plus the signed `ft_transfer` gas, and no deposit, records the hash, the signed bytes and the
+last height at which they may be re-broadcast, and only then broadcasts.
 
 One message per (vault, nonce). The ledger tracks each submission as uncertain (broadcast without a
 definitive answer), submitted, rejected (its `execute` was refused), accepted, delivered or delivery
-failed. A repeat of an uncertain one re-broadcasts the same signed transaction; only an explicit
-validation refusal from the node frees a slot on the spot. A rejected message is sent again only after
+failed (accepted moves on to delivered or delivery failed; those never change). A repeat of an
+uncertain one re-broadcasts the same signed transaction, but only while the final height is within the
+signing block's price window (the blocks the price needs to pass the ceiling at the protocol's fastest
+rate, 1 % per block, less 10); after that it is marked stopped, answered 504 and only followed. Only an
+explicit validation refusal from the node frees a slot on the spot. A rejected message is sent again only after
 a fresh chain read shows the vault nonce unchanged and its window still open. Another message takes
 over a slot only once the old message's window has closed at a final height with the vault nonce
 unchanged; the old record stays in the history.
@@ -102,21 +107,30 @@ unchanged; the old record stays in the history.
 | `signature.mjs` | local ML-DSA-87 verification |
 | `ledger.mjs` | idempotence by message hash, (vault, nonce) slots and their states |
 | `limits.mjs` | quotas, persistent spend cap, bounded queues |
-| `cost.mjs` | protocol fees from `EXPERIMENTAL_protocol_config`, the per-transaction spend bound |
-| `submitter.mjs` | signs, broadcasts and re-broadcasts `execute` |
+| `cost.mjs` | protocol fees from `EXPERIMENTAL_protocol_config`, the per-transaction spend estimate, the price window |
+| `account.mjs` | the hard budget: refuses to start when the relayer account could spend too much |
+| `lock.mjs` | one relayer per state directory |
+| `submitter.mjs` | checks the signing block's gas price, signs, broadcasts and re-broadcasts `execute` |
 | `outcome.mjs` | reads and classifies a final outcome; bounded, coalesced `/outcome` reader |
 | `relay.mjs` | the order of the checks |
 
 Environment: `RELAYER_ACCOUNT` and `RELAYER_KEY_FILE` (one line, `ed25519:<base58>`), `HOST` (default
 `127.0.0.1`), `PORT` (8787), `NEAR_RPC`, `RELAYER_SPEND_CAP_YOCTO` (default 0.3 NEAR),
-`RELAYER_MAX_GAS_PRICE_YOCTO` (1e9, the gas price the spend bound assumes), `RELAYER_STATE_DIR`
-(default `relayer/.state/`, holds `spend-<network>-<account>.json`), `RELAYER_VAULT_PER_HOUR` (10),
+`RELAYER_MAX_GAS_PRICE_YOCTO` (1e9, the gas price the spend bound assumes),
+`RELAYER_MAX_ACCOUNT_SPENDABLE` (yoctoNEAR, default 0.5 NEAR: the most the relayer account may be able
+to spend, balance minus storage stake, at start), `RELAYER_STATE_DIR` (default `relayer/.state/`, holds
+`spend-<network>-<account>.json` and the `relayer.lock` of the running instance),
+`RELAYER_CLEAR_STALE_LOCK` (`1` clears a lock left by a process that is no longer running),
+`RELAYER_VAULT_PER_HOUR` (10),
 `RELAYER_IP_PER_HOUR` (30), `RELAYER_CONCURRENCY` (4), `RELAYER_QUEUE` (32),
 `RELAYER_OUTCOME_PER_MINUTE` (60 per client), `RELAYER_OUTCOME_GLOBAL_PER_MINUTE` (600),
 `RELAYER_OUTCOME_CONCURRENCY` (4), `RELAYER_OUTCOME_QUEUE` (32). It refuses to start unless the pinned
-deployment is testnet (`RELAYER_ALLOW_NETWORK` must name any other network explicitly), or when it
-cannot read the protocol config. Once the spend file records a reached cap, the relayer stays paused
-across restarts until someone deletes that file or starts it with a higher cap.
+deployment is testnet (`RELAYER_ALLOW_NETWORK` must name any other network explicitly), when it cannot
+read the protocol config or the relayer account, when the account could spend more than
+`RELAYER_MAX_ACCOUNT_SPENDABLE`, or when another live process holds the state directory's lock. Fund
+the relayer account minimally and do not top it up automatically: its balance is the budget that holds
+whatever the gas price does. Once the spend file records a reached cap, the relayer stays paused across
+restarts until someone deletes that file or starts it with a higher cap.
 
 ## Layout
 

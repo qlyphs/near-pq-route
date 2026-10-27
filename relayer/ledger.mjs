@@ -15,13 +15,16 @@ export const slotId = (message) => sha256(message.subarray(16, 81), message.suba
 /**
  * States of a message's current submission:
  * - pending: being checked, signed and broadcast right now;
- * - uncertain: signed and broadcast without a definitive answer; the hash and the signed bytes are kept;
+ * - uncertain: signed and broadcast without a definitive answer; the hash and the signed bytes are kept.
+ *   `stopped` once its price window passed: it is then never broadcast again;
  * - submitted: RPC accepted the transaction; no outcome read yet;
  * - rejected: this transaction (or its `execute`) was refused; that alone does not say the nonce is unspent;
  * - accepted, delivered, delivery_failed: `execute` accepted the message, so the nonce is spent for good.
+ *   Only accepted moves on, to delivered or delivery_failed; those two are final.
  */
 export const SPENT = new Set(['accepted', 'delivered', 'delivery_failed']);
 const FROM_OUTCOME = { accepted: 'accepted', delivered: 'delivered', failed: 'delivery_failed' };
+const DELIVERY = new Set(['delivered', 'delivery_failed']);
 
 function remember(map, key, value, max) {
   map.delete(key);
@@ -72,15 +75,18 @@ export class Ledger {
     if (prior && (prior.pending || prior.state !== 'rejected' || chain.nonce !== prior.nonce)) return false;
     const history = prior ? [...prior.history, { tx: prior.tx, state: prior.state }] : [];
     remember(this.bySlot, slot, msg, this.max);
-    remember(this.byMessage, msg, { slot, nonce, expiry, state: 'pending', pending, tx: null, signed: null, history }, this.max);
+    remember(this.byMessage, msg, { slot, nonce, expiry, state: 'pending', pending, tx: null, signed: null, rebroadcastUntil: null, stopped: false, history }, this.max);
     return true;
   }
 
-  /** The transaction is signed and about to be broadcast: from now on its hash and bytes are kept. */
-  signed(msg, tx, signed) {
+  /**
+   * The transaction is signed and about to be broadcast: from now on its hash and bytes are kept, with
+   * the last final height at which they may be broadcast again (submitter.mjs).
+   */
+  signed(msg, tx, signed, rebroadcastUntil = null) {
     const e = this.byMessage.get(msg);
     if (!e) return;
-    Object.assign(e, { tx, signed, state: 'uncertain' });
+    Object.assign(e, { tx, signed, rebroadcastUntil, stopped: false, state: 'uncertain' });
     remember(this.byTx, tx, msg, this.max);
   }
 
@@ -90,6 +96,14 @@ export class Ledger {
     if (!e) return;
     e.pending = null;
     if (e.state === 'uncertain' || e.state === 'submitted') e.state = state;
+  }
+
+  /** The price window of an uncertain transaction passed: it stays uncertain and is never sent again. */
+  stop(msg) {
+    const e = this.byMessage.get(msg);
+    if (!e) return;
+    e.pending = null;
+    if (e.state === 'uncertain' || e.state === 'submitted') Object.assign(e, { state: 'uncertain', stopped: true });
   }
 
   /**
@@ -103,19 +117,27 @@ export class Ledger {
     if (e.tx) this.#archive(msg, e, 'refused by the node before execution');
     const last = e.history.at(-1);
     if (last) {
-      Object.assign(e, { state: 'rejected', tx: last.tx, signed: null, pending: null, history: e.history.slice(0, -1) });
+      Object.assign(e, { state: 'rejected', tx: last.tx, signed: null, rebroadcastUntil: null, stopped: false, pending: null, history: e.history.slice(0, -1) });
       return;
     }
     if (this.bySlot.get(slot) === msg) this.bySlot.delete(slot);
     this.byMessage.delete(msg);
   }
 
-  /** Learns from an outcome read (outcome.mjs `classify`) of the current transaction of a message. */
+  /**
+   * Learns from an outcome read (outcome.mjs `classify`) of the current transaction of a message. A spent
+   * nonce never goes back: accepted only moves on to a delivery state, and a delivery state is final.
+   */
   observe(tx, result) {
     const msg = this.byTx.get(tx);
     const e = msg === undefined ? null : this.byMessage.get(msg);
-    if (!e || e.tx !== tx || e.pending || SPENT.has(e.state)) return;
-    if (FROM_OUTCOME[result?.status]) e.state = FROM_OUTCOME[result.status];
+    if (!e || e.tx !== tx || e.pending) return;
+    const next = FROM_OUTCOME[result?.status];
+    if (SPENT.has(e.state)) {
+      if (e.state === 'accepted' && DELIVERY.has(next)) e.state = next;
+      return;
+    }
+    if (next) e.state = next;
     else if (result?.status === 'unknown' && result.attemptRejected === true) e.state = 'rejected';
   }
 

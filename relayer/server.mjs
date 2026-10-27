@@ -2,11 +2,12 @@
 import { createServer } from 'node:http';
 import { pathToFileURL } from 'node:url';
 import { mkdirSync } from 'node:fs';
-import { dirname } from 'node:path';
+import { checkRelayerAccount } from './account.mjs';
 import { createChain } from './chain.mjs';
 import { loadConfig } from './config.mjs';
 import { costBound, readProtocolCosts } from './cost.mjs';
 import { Limiter, Quota, SpendCap } from './limits.mjs';
+import { acquireLock } from './lock.mjs';
 import { REQUEST_LEN } from './message.mjs';
 import { createOutcomeReader, outcome } from './outcome.mjs';
 import { attachedGas, createRelay } from './relay.mjs';
@@ -76,17 +77,33 @@ export function createRelayerServer({ relay, outcomeOf, health }) {
   return server;
 }
 
-/** Wires the real chain, key and limits from the environment. Refuses to start without the protocol config. */
+/**
+ * Wires the real chain, key and limits from the environment. Takes the state directory's lock first, so a
+ * second instance on the same directory refuses before it reads the spend file. Refuses to start without
+ * the protocol config, or when the relayer account could spend more than RELAYER_MAX_ACCOUNT_SPENDABLE.
+ * Closing the server releases the lock.
+ */
 export async function startFromEnv(env = process.env) {
   const cfg = loadConfig(env);
+  mkdirSync(cfg.stateDir, { recursive: true, mode: 0o700 });
+  const release = acquireLock(cfg.stateDir, { clearStale: cfg.clearStaleLock });
+  try {
+    return await start(cfg, release);
+  } catch (e) {
+    release();
+    throw e;
+  }
+}
+
+async function start(cfg, release) {
   const rpc = createRpc(cfg.rpcUrl);
   const costs = await readProtocolCosts(rpc, cfg.deployment);
   if (cfg.maxGasPriceYocto > costs.maxGasPrice) throw new Error('RELAYER_MAX_GAS_PRICE_YOCTO is above the protocol max_gas_price');
+  const spendableAtStart = await checkRelayerAccount(rpc, { account: cfg.account, storageAmountPerByte: costs.storageAmountPerByte, maxSpendable: cfg.maxAccountSpendableYocto });
   const costOf = (req) => costBound(costs, { argsLen: REQUEST_LEN, prepaidGas: attachedGas(req), maxGasPriceYocto: cfg.maxGasPriceYocto });
-  mkdirSync(dirname(cfg.stateFile), { recursive: true, mode: 0o700 });
   const cap = new SpendCap(cfg.spendCapYocto, { file: cfg.stateFile });
   const chain = createChain({ rpc, deployment: cfg.deployment });
-  const submitter = createSubmitter({ rpc, accountId: cfg.account, keyPair: loadRelayerKey(cfg.keyFile) });
+  const submitter = createSubmitter({ rpc, accountId: cfg.account, keyPair: loadRelayerKey(cfg.keyFile), maxGasPriceYocto: cfg.maxGasPriceYocto, priceStep: costs.priceStep });
   const { relay, ledger } = createRelay({
     deployment: cfg.deployment,
     readVault: chain.readVault,
@@ -113,9 +130,13 @@ export async function startFromEnv(env = process.env) {
     outcomeOf,
     health: () => ({ ok: !cap.paused, network: cfg.deployment.network, factory: cfg.deployment.factory, relayer: cfg.account,
       paused: cap.paused, spent_yocto: cap.spent.toString(), cap_yocto: cap.cap.toString(),
-      protocol_version: costs.protocolVersion, max_gas_price_yocto: cfg.maxGasPriceYocto.toString(), near_transfer_bound_yocto: nearTransferBound.toString() }),
+      protocol_version: costs.protocolVersion, max_gas_price_yocto: cfg.maxGasPriceYocto.toString(), near_transfer_bound_yocto: nearTransferBound.toString(),
+      account_spendable_at_start_yocto: spendableAtStart.toString(), max_account_spendable_yocto: cfg.maxAccountSpendableYocto.toString() }),
   });
-  return new Promise((ok) => server.listen(cfg.port, cfg.host, () => ok({ server, address: server.address(), stateFile: cfg.stateFile })));
+  server.once('close', release);
+  await new Promise((ok, fail) => { server.once('error', fail); server.listen(cfg.port, cfg.host, ok); });
+  // The ledger is returned for in-process inspection (tests); it is never served.
+  return { server, address: server.address(), stateFile: cfg.stateFile, ledger };
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {

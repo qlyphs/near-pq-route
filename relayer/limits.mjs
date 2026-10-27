@@ -92,6 +92,17 @@ export class SpendCap {
     }
     return true;
   }
+
+  /**
+   * Gives back a reservation whose transaction was certainly never signed. A failed write keeps the
+   * higher total on disk and pauses: erring high only stops the relayer early.
+   */
+  refund(yocto) {
+    this.spent = this.spent > yocto ? this.spent - yocto : 0n;
+    if (this.file) {
+      try { this.#save(); } catch { this.spent += yocto; this.paused = true; }
+    }
+  }
 }
 
 export class Busy extends Error {}

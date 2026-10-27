@@ -1,0 +1,173 @@
+{
+  "network": "testnet",
+  "factory": "pq87-vaults-r2.qlyphs-grad-c48a-parent.testnet",
+  "relayer": "pq87-spike.qlyphs-grad-c48a-parent.testnet",
+  "funder": "qlyphs-grad-c48a-parent.testnet",
+  "steps": [
+    {
+      "name": "dev extension built, fresh 24-word phrase imported, backup acknowledged, site connected",
+      "ok": true,
+      "detail": "extension 0.9.0, connect [{\"owner\":\"0x670ea41533baf29516822d485c0afbc88d8897e5ddd2fef0c16b425837ad1929\",\"address\":\"qzmnMv9f1A4UVi37ZCcjH2h9zpy4PX14rdGLDhnmLzWZhEUKQ\",\"genesis\":\"0xca0a88635de136b803302f00defdc1f559e5b2a6cf34e817ce0030ba4377e7a3\"}]"
+    },
+    {
+      "name": "window.qlyphs.request forwards nearVaultPublicKey (documented call)",
+      "ok": false,
+      "detail": "{\"code\":\"UNSUPPORTED_METHOD\",\"message\":\"Unsupported wallet method\"}; capabilities lists it: true"
+    },
+    {
+      "name": "nearVaultPublicKey on a fresh key: state derived, vault id is the factory derivation",
+      "ok": true,
+      "detail": "state derived, vault fdb1cd764a1fa2f4.pq87-vaults-r2.qlyphs-grad-c48a-parent.testnet"
+    },
+    {
+      "name": "factory create final, then nearVaultPublicKey reads verified",
+      "ok": true,
+      "tx": "FQraXLk8DDfAM63HaQCodzmuPsGMfFtEk968UENKxPaQ",
+      "detail": "derived -> verified"
+    },
+    {
+      "name": "vault funded with 0.05 test NEAR",
+      "ok": true,
+      "tx": "73GzkQSVZq2BoDRtVqbcmFutV9h9Batzbq1S8BL7ixhj",
+      "detail": "balance 290000000000000000000000 yocto, nonce 0"
+    },
+    {
+      "name": "review window shows recipient, amount and vault",
+      "ok": true,
+      "detail": "Vault payment Recipient pq87-spike.qlyphs-grad-c48a-parent.testnet From vault fdb1cd764a1fa2f4.pq87-vaults-r2.qlyphs-grad-c48a-parent.testnet Asset NEAR Amount 0.01 NEAR (10000000000000000000000 base units) Vault nonce 0 Current NEAR block 274975779 Valid from block 274975776 (now) Valid until block"
+    },
+    {
+      "name": "approved: site gets {publicKey, signature} of the right sizes and key",
+      "ok": true,
+      "detail": "signature 4627 bytes"
+    },
+    {
+      "name": "relayer accepts the wallet signature and returns a transaction hash",
+      "ok": true,
+      "tx": "7WSFBxJHkDNiv5UFvMHmEZHwqDsSD2dqmD1nqrQkrL5U",
+      "detail": "HTTP 200 {\"transaction\":\"7WSFBxJHkDNiv5UFvMHmEZHwqDsSD2dqmD1nqrQkrL5U\"}"
+    },
+    {
+      "name": "wallet reads the outcome as delivered",
+      "ok": true,
+      "tx": "7WSFBxJHkDNiv5UFvMHmEZHwqDsSD2dqmD1nqrQkrL5U",
+      "detail": "wallet unknown -> submitted -> delivered; relayer delivered"
+    },
+    {
+      "name": "vault nonce advanced by exactly 1",
+      "ok": true,
+      "detail": "0 -> 1, balance 290000000000000000000000 -> 280000000000000000000000"
+    },
+    {
+      "name": "journal: message A signed at the new nonce (not submitted)",
+      "ok": true,
+      "detail": "nonce 1"
+    },
+    {
+      "name": "journal: different message B at the same nonce refused after approval, nothing signed",
+      "ok": true,
+      "detail": "{\"code\":\"VERIFICATION_FAILED\",\"message\":\"Qlyphs: verification failed. No automatic write retry.\"}"
+    },
+    {
+      "name": "journal: message A signed again",
+      "ok": true,
+      "detail": "ok"
+    },
+    {
+      "name": "nonce untouched by the journal checks (nothing submitted)",
+      "ok": true,
+      "detail": "nonce 1"
+    },
+    {
+      "name": "12-word account refused by nearVaultPublicKey",
+      "ok": true,
+      "detail": "{\"code\":\"UNAUTHORIZED\",\"message\":\"Qlyphs: unauthorized. No automatic write retry.\"}"
+    }
+  ],
+  "states_seen": {
+    "nearVaultPublicKey": [
+      "derived",
+      "verified"
+    ],
+    "nearVaultAuthorizationStatus": [
+      "unknown",
+      "submitted",
+      "delivered"
+    ]
+  },
+  "extension": {
+    "version": "0.9.0",
+    "developmentFeatures": [
+      "solanaVault",
+      "nearVault"
+    ],
+    "chromeId": "hnbehkbocninnepohoponooocfhdjjpf"
+  },
+  "injected_provider": {
+    "nearVaultPublicKey": {
+      "error": {
+        "code": "UNSUPPORTED_METHOD",
+        "message": "Unsupported wallet method"
+      }
+    },
+    "capabilities_lists_nearVault": true
+  },
+  "vault": "fdb1cd764a1fa2f4.pq87-vaults-r2.qlyphs-grad-c48a-parent.testnet",
+  "wallet_address": "qzmnMv9f1A4UVi37ZCcjH2h9zpy4PX14rdGLDhnmLzWZhEUKQ",
+  "tx_create": "FQraXLk8DDfAM63HaQCodzmuPsGMfFtEk968UENKxPaQ",
+  "tx_fund": "73GzkQSVZq2BoDRtVqbcmFutV9h9Batzbq1S8BL7ixhj",
+  "review_payment": {
+    "title": "NEAR testnet · Quantum vault payment",
+    "button": "Sign payment",
+    "summary": "Vault payment Recipient pq87-spike.qlyphs-grad-c48a-parent.testnet From vault fdb1cd764a1fa2f4.pq87-vaults-r2.qlyphs-grad-c48a-parent.testnet Asset NEAR Amount 0.01 NEAR (10000000000000000000000 base units) Vault nonce 0 Current NEAR block 274975779 Valid from block 274975776 (now) Valid until block 274976376 (in about 6 min) Requested by http://127.0.0.1:4400 Signing with Account 1 · qzmnMv9f…ZhEUKQ"
+  },
+  "tx_payment": "7WSFBxJHkDNiv5UFvMHmEZHwqDsSD2dqmD1nqrQkrL5U",
+  "relayer_outcome": {
+    "transaction": "7WSFBxJHkDNiv5UFvMHmEZHwqDsSD2dqmD1nqrQkrL5U",
+    "status": "delivered",
+    "detail": "NEAR transfer"
+  },
+  "nonce": {
+    "before": "0",
+    "after": "1"
+  },
+  "journal_after_A": [
+    {
+      "vault": "fdb1cd764a1fa2f4.pq87-vaults-r2.qlyphs-grad-c48a-parent.testnet",
+      "nonce": "1",
+      "expiry": "274976411",
+      "origin": "http://127.0.0.1:4400",
+      "is_A": true
+    }
+  ],
+  "refusal_B": {
+    "review": {
+      "title": "NEAR testnet · Quantum vault payment",
+      "button": "Sign payment",
+      "summary": "Vault payment Recipient pq87-spike.qlyphs-grad-c48a-parent.testnet From vault fdb1cd764a1fa2f4.pq87-vaults-r2.qlyphs-grad-c48a-parent.testnet Asset NEAR Amount 0.02 NEAR (20000000000000000000000 base units) Vault nonce 1 Current NEAR block 274975826 Valid from block 274975811 (now) Valid until block 274976411 (in about 6 min) Requested by http://127.0.0.1:4400 Signing with Account 1 · qzmnMv9f…ZhEUKQ",
+      "after": "Qlyphs You already signed another payment with this nonce and it can still run. Signing a new one would not cancel it: wait until it runs or expires NEAR testnet · Quantum vault payment http://127.0.0.1:4400 0.02 NEAR Vault payment Recipient pq87-spike.qlyphs-grad-c48a-parent.testnet From vault fdb1cd764a1fa2f4.pq87-vaults-r2.qlyphs-grad-c48a-parent.testnet Asset NEAR Amount 0.02 NEAR (20000000000"
+    },
+    "answer": {
+      "error": {
+        "code": "VERIFICATION_FAILED",
+        "message": "Qlyphs: verification failed. No automatic write retry."
+      }
+    }
+  },
+  "twelve_words": {
+    "connect": [
+      {
+        "owner": "0xf4b1b0c0160ddcee5f0917f1a6cc1b6bae4c2bfee587e1db61b5281272f1bc13",
+        "address": "qzpz572baykifx59hrMTDraRiLhmCfpMYLoKSBh4MFLgqyeog",
+        "genesis": "0xca0a88635de136b803302f00defdc1f559e5b2a6cf34e817ce0030ba4377e7a3"
+      }
+    ],
+    "nearVaultPublicKey": {
+      "error": {
+        "code": "UNAUTHORIZED",
+        "message": "Qlyphs: unauthorized. No automatic write retry."
+      }
+    }
+  },
+  "passed": "14/15"
+}

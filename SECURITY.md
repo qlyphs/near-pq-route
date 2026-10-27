@@ -16,6 +16,32 @@ Research proof of concept. Not audited. Never use it with real funds.
 - The relayer pays gas and carries public bytes. It can delay or drop a payment. It cannot change what
   is paid, to whom, from which vault or on which network.
 
+## The relayer
+
+`relayer/` is untrusted by design: nothing it does can move funds the owner did not sign for, because
+the vault checks every byte again. What it adds is protection of its own gas budget, and honest reporting.
+
+- **No gas for a request the vault would refuse.** It parses the message as the vault does, runs
+  `checkVault`, checks nonce and window at a final block and verifies the signature locally before it signs
+  anything. A request that only becomes invalid later (the window closes, another relayer spends the nonce
+  first) still costs one failed `execute`.
+- **One payment per authorization.** Requests are keyed by SHA-256 of the message, not of the body,
+  because ML-DSA signing is randomized and the same authorization can arrive with several signatures. One
+  submission per (vault, nonce), claimed only after the signature verified, so a forged request cannot
+  hold a slot. A repeat gets the first hash back. If RPC gives no answer the hash is kept, not resent.
+- **Bounded cost.** Quotas count only verified requests, so garbage cannot use up a vault's quota. Every
+  submission reserves its full prepaid gas (attached gas × `RELAYER_GAS_PRICE_YOCTO`) against a hard cap
+  and is never credited back; at the cap it pauses until restarted. Verification runs in a bounded
+  queue; the body is never read past 4,883 bytes.
+- **No claim beyond the evidence.** `/execute` answers when RPC accepted the transaction. `/outcome` says
+  `delivered` only from a final outcome where the payment receipt succeeded, and `unknown`, never
+  `failed`, when it cannot tell.
+- **Little to steal.** It holds one ed25519 key that can only spend the relayer account's NEAR, never
+  logs it, and keeps only hashes: of messages, of (vault, nonce), of quota keys, and transaction hashes,
+  in memory. A restart forgets them; the vault nonce still prevents a second payment.
+- **Limits.** The client address is the socket's: behind a proxy every client shares one quota. Quotas
+  and the ledger are per process. RPC answers are trusted for the preflight, as in the wallet. Testnet only.
+
 ## Why the factory
 
 An earlier version trusted any account whose state showed the release code and no access key. A review

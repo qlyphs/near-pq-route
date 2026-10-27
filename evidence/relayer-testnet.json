@@ -1,0 +1,44 @@
+{
+  "network": "testnet",
+  "factory": "pq87-vaults-r2.qlyphs-grad-c48a-parent.testnet",
+  "relayer": "pq87-spike.qlyphs-grad-c48a-parent.testnet",
+  "steps": [
+    {
+      "name": "wallet preflight and noble ML-DSA-87 signature",
+      "ok": true,
+      "detail": "vault nonce 2, final height 274973071"
+    },
+    {
+      "name": "relayer accepts and returns a transaction hash",
+      "ok": true,
+      "tx": "AaBoKUePYRbSvBKgRiBUt8iVFZ5myXpDupCaikx1vmvf",
+      "detail": "HTTP 200"
+    },
+    {
+      "name": "outcome followed to delivered",
+      "ok": true,
+      "tx": "AaBoKUePYRbSvBKgRiBUt8iVFZ5myXpDupCaikx1vmvf",
+      "detail": "delivered"
+    },
+    {
+      "name": "on-chain: execute with 30 Tgas and no deposit, then 0.01 NEAR from the vault to the signed receiver",
+      "ok": true,
+      "tx": "AaBoKUePYRbSvBKgRiBUt8iVFZ5myXpDupCaikx1vmvf",
+      "detail": "gas 30000000000000, deposit 0, transfer 10000000000000000000000"
+    },
+    {
+      "name": "repeat returns the same hash, nothing resubmitted",
+      "ok": true,
+      "tx": "AaBoKUePYRbSvBKgRiBUt8iVFZ5myXpDupCaikx1vmvf",
+      "detail": "vault nonce 2 -> 3, relayer access-key nonce 274232351000048 -> 274232351000048"
+    },
+    {
+      "name": "tampered signature refused, no transaction sent",
+      "ok": true,
+      "detail": "HTTP 422 invalid signature; relayer access-key nonce 274232351000048 -> 274232351000048"
+    }
+  ],
+  "vault": "1decab283ca92482.pq87-vaults-r2.qlyphs-grad-c48a-parent.testnet",
+  "spent_budget_yocto": "30000000000000000000000",
+  "cap_yocto": "300000000000000000000000"
+}

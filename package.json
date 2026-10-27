@@ -1,13 +1,15 @@
 {
   "name": "qlyphs-pq87-near",
   "version": "1.0.0",
-  "description": "ML-DSA-87 verification on NEAR: gas spike",
+  "description": "ML-DSA-87 vault on NEAR: contract, SDK and relayer",
   "directories": {
     "test": "tests"
   },
   "scripts": {
     "build": "bash scripts/build.sh",
-    "measure": "node tests/measure.mjs"
+    "measure": "node tests/measure.mjs",
+    "test:relayer": "node --test relayer/",
+    "relayer": "node relayer/server.mjs"
   },
   "author": "",
   "license": "MIT",
@@ -15,5 +17,9 @@
   "devDependencies": {
     "near-workspaces": "^5.0.0"
   },
-  "private": true
+  "private": true,
+  "dependencies": {
+    "@noble/post-quantum": "0.7.1",
+    "near-api-js": "5.1.1"
+  }
 }

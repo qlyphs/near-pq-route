@@ -47,6 +47,7 @@ IMPORT(promise_result) uint64_t promise_result(uint64_t idx, uint64_t reg);
 #define PENDING 'P'
 #define CREATED 'C'
 #define FAILED 'F'  /* creation failed; the deposit is owed to the caller until refund() pays it */
+#define REFUNDING 'R'  /* a refund transfer is on its way; on_refund settles it */
 
 static const uint8_t vault_code[] = {
 #embed VAULT_WASM
@@ -54,8 +55,8 @@ static const uint8_t vault_code[] = {
 
 static uint8_t pk[PK];
 static uint8_t self_id[MAX_ID], who[MAX_ID], vault_id[MAX_ID];
-/* Registry record: key "r" + label; value SHA-256(pk) (32) | status | pending or failed only: deposit (16) |
- * caller len | caller. */
+/* Registry record: key "r" + label; value SHA-256(pk) (32) | status | pending, failed or refunding only:
+ * deposit (16) | caller len | caller. */
 static uint8_t rkey[1 + LABEL], rec[32 + 1 + 16 + 1 + MAX_ID];
 
 static void fail(const char *m) { size_t n = 0; while (m[n]) n++; panic_utf8(n, (uint64_t)(uintptr_t)m); }
@@ -135,16 +136,40 @@ EXPORT(on_create) void on_create(void) {
   log_utf8(37, PTR("vault creation failed, refund pending"));
 }
 
-/* refund(registry key): anyone may call it. Pays a failed creation's recorded deposit to its recorded
- * caller and removes the record, so the key can be tried again. Amount and recipient come from the record
- * only. If the factory cannot pay yet, the whole call fails and the record stays failed: call again later. */
+/* refund(registry key): anyone may call it. Sends a failed creation's recorded deposit to its recorded
+ * caller and marks the record refunding, so no second refund can start meanwhile. The debt is removed only
+ * once on_refund sees the transfer succeed: a transfer can fail (the caller's account was deleted) and its
+ * amount then comes back to the factory, still owed. If the factory cannot pay yet, the whole call fails
+ * and the record stays failed: call again later. */
 EXPORT(refund) void refund(void) {
   size_t n = load_record();
   REQUIRE(n >= 50 && rec[32] == FAILED && n == 50u + rec[49], "no failed creation to refund");
-  storage_remove(sizeof(rkey), PTR(rkey), 0);
+  rec[32] = REFUNDING;
+  storage_write(sizeof(rkey), PTR(rkey), n, PTR(rec), 0);
+  current_account_id(0); size_t slen = read_reg(0, self_id, MAX_ID);
   uint64_t p = promise_batch_create(rec[49], PTR(rec + 50));
   promise_batch_action_transfer(p, PTR(rec + 33));
-  log_utf8(8, PTR("refunded"));
+  uint8_t none[16] = { 0 };
+  promise_then(p, slen, PTR(self_id), 9, PTR("on_refund"), sizeof(rkey), PTR(rkey), PTR(none), 10 * TGAS);
+}
+
+/* Private callback of refund, argument: the registry key. Only rewrites or removes the record, so it
+ * needs no balance. Delivered: the debt is gone. Not delivered: the amount came back and is owed again. */
+EXPORT(on_refund) void on_refund(void) {
+  current_account_id(0); size_t slen = read_reg(0, self_id, MAX_ID);
+  predecessor_account_id(1); size_t plen = read_reg(1, who, MAX_ID);
+  REQUIRE(plen == slen && memcmp(who, self_id, slen) == 0, "private");
+  REQUIRE(promise_results_count() == 1, "one result expected");
+  size_t n = load_record();
+  REQUIRE(n >= 50 && rec[32] == REFUNDING && n == 50u + rec[49], "no refund in progress");
+  if (promise_result(0, 3) == 1) {
+    storage_remove(sizeof(rkey), PTR(rkey), 0);
+    log_utf8(8, PTR("refunded"));
+    return;
+  }
+  rec[32] = FAILED;
+  storage_write(sizeof(rkey), PTR(rkey), n, PTR(rec), 0);
+  log_utf8(32, PTR("refund not delivered, owed again"));
 }
 
 /* View: {"version":..,"chain":..,"vault_sha256":"<hex>"}: the vault code this factory deploys. */

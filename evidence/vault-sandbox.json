@@ -3,11 +3,11 @@
   "deployment": {
     "network": "sandbox",
     "factory": "factory.test.near",
-    "factory_sha256": "9c9507bb076ee2519726504c88ae1415052e35fca14342a0653118dd465855da",
+    "factory_sha256": "2d573083228fd50dfc0f1370b494142b18447425f8d540631a30db1aec234723",
     "vault_sha256": "d4823570153bdcf0a90c61e935d0eb692800b25d880477187be8c54871b1bc7b"
   },
-  "passed": 49,
-  "total": 49,
+  "passed": 53,
+  "total": 53,
   "results": [
     {
       "name": "factory creation audit: CreateAccount, Transfer, DeployContract only",
@@ -21,7 +21,7 @@
     {
       "name": "factory creates the vault at the key-derived address",
       "ok": true,
-      "detail": "66c3b9b56345f779.factory.test.near, 15.569288954364 Tgas total"
+      "detail": "7515f7b836795970.factory.test.near, 15.570694144914 Tgas total"
     },
     {
       "name": "wallet preflight passes on a factory vault",
@@ -36,7 +36,7 @@
     {
       "name": "second vault for the same key refused, deposit returned",
       "ok": true,
-      "detail": "caller net cost 0.0001544887477447 NEAR"
+      "detail": "caller net cost 0.0001545590072722 NEAR"
     },
     {
       "name": "deposit below 0.25 NEAR",
@@ -70,12 +70,12 @@
     {
       "name": "earlier-life child: preflight refuses it (no registry record)",
       "ok": true,
-      "detail": "77128876f0e421e4.factory2.test.near is not in the factory registry as created for this key"
+      "detail": "25fcf28de16df7b5.factory2.test.near is not in the factory registry as created for this key"
     },
     {
       "name": "earlier-life child: creating that key fails and the record waits for a refund",
       "ok": true,
-      "detail": "caller out 2.001268136861448 NEAR until refund"
+      "detail": "caller out 2.001268277380503 NEAR until refund"
     },
     {
       "name": "refund of an unknown key",
@@ -85,7 +85,7 @@
     {
       "name": "refund, sent by a third party, pays the recorded caller",
       "ok": true,
-      "detail": "caller net cost 0.0012681368614479002 NEAR"
+      "detail": "caller net cost 0.0012682773805029 NEAR"
     },
     {
       "name": "second refund of the same record",
@@ -93,14 +93,33 @@
       "detail": "no such record"
     },
     {
+      "name": "refund to a deleted caller is not delivered and stays owed",
+      "ok": true
+    },
+    {
+      "name": "on_refund is private",
+      "ok": true,
+      "detail": "private"
+    },
+    {
+      "name": "once the caller exists again, the owed refund is paid exactly once",
+      "ok": true,
+      "detail": "2 NEAR"
+    },
+    {
+      "name": "no third refund",
+      "ok": true,
+      "detail": "no such record"
+    },
+    {
       "name": "earlier-life child: still refused after the failed creation",
       "ok": true,
-      "detail": "77128876f0e421e4.factory2.test.near is not in the factory registry as created for this key"
+      "detail": "25fcf28de16df7b5.factory2.test.near is not in the factory registry as created for this key"
     },
     {
       "name": "preflight refuses another owner key",
       "ok": true,
-      "detail": "66c3b9b56345f779.factory.test.near is not the pinned factory's address for this key"
+      "detail": "7515f7b836795970.factory.test.near is not the pinned factory's address for this key"
     },
     {
       "name": "preflight refuses a factory with other pinned code",
@@ -230,8 +249,8 @@
     {
       "name": "NEAR payment: receiver gets exactly the signed amount",
       "ok": true,
-      "detail": "call 7.066294526625 Tgas",
-      "call_tgas": 7.066294526625
+      "detail": "call 7.065068620185 Tgas",
+      "call_tgas": 7.065068620185
     },
     {
       "name": "replay of a spent authorization",
@@ -241,19 +260,19 @@
     {
       "name": "NEP-141 payment 123456789012345678901234567: exact ft_transfer call with 1 yocto",
       "ok": true,
-      "detail": "call 7.167091007517 Tgas",
-      "call_tgas": 7.167091007517
+      "detail": "call 7.167892384269 Tgas",
+      "call_tgas": 7.167892384269
     },
     {
       "name": "NEP-141 payment 340282366920938463463374607431768211455: exact ft_transfer call with 1 yocto",
       "ok": true,
-      "detail": "call 7.168678857417 Tgas",
-      "call_tgas": 7.168678857417
+      "detail": "call 7.168602353517 Tgas",
+      "call_tgas": 7.168602353517
     },
     {
       "name": "failed delivery refunds the vault and keeps the nonce spent",
       "ok": true,
-      "detail": "balance delta 185039773476600000000 yocto"
+      "detail": "balance delta 185022322821800000000 yocto"
     }
   ]
 }

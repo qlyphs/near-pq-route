@@ -90,6 +90,10 @@ try {
     const f2 = early.accountId;
     const planted = vaultAddress(victim.publicKey, f2);
     await early.batch(planted).createAccount().transfer(NEAR).deployContract(vaultWasm).functionCall('init', new Uint8Array(victim.publicKey), { gas: 30n * TGAS }).transact();
+    // A second planted child, used below to make a refund transfer fail.
+    const victim2 = Key.generate(join(keys, 'victim2.pem'));
+    const planted2 = vaultAddress(victim2.publicKey, f2);
+    await early.batch(planted2).createAccount().transfer(NEAR).transact();
     await early.delete(root.accountId);
     const again = await root.batch(f2).createAccount().transfer(3n * NEAR).deployContract(factoryWasm).transact();
     await settle();
@@ -105,11 +109,30 @@ try {
     const rk = new Uint8Array(Buffer.from('r' + planted.split('.')[0], 'latin1'));
     await expectRefused('refund of an unknown key', () => bob.callRaw(f2, 'refund', new Uint8Array(Buffer.from('r' + '0'.repeat(16), 'latin1')), { gas: 30n * TGAS }), 'no such record');
     // Anyone may trigger it; the money goes to the recorded caller only.
-    const paid = await bob.callRaw(f2, 'refund', rk, { gas: 30n * TGAS });
+    const paid = await bob.callRaw(f2, 'refund', rk, { gas: 50n * TGAS });
     await settle();
     const net = before - (await total(alice));
     record('refund, sent by a third party, pays the recorded caller', paid.succeeded && paid.logs.some((l) => l.includes('refunded')) && net < NEAR / 100n, { detail: `caller net cost ${Number(net) / 1e24} NEAR` });
     await expectRefused('second refund of the same record', () => bob.callRaw(f2, 'refund', rk, { gas: 30n * TGAS }), 'no such record');
+
+    // Review 2: the refund's transfer fails because the caller's account is gone. The debt must survive.
+    const carol = await root.createSubAccount('carol', { initialBalance: 5n * NEAR });
+    const failing = await carol.callRaw(f2, 'create', new Uint8Array(victim2.publicKey), { gas: 200n * TGAS, attachedDeposit: 2n * NEAR });
+    await settle();
+    await carol.delete(root.accountId);
+    await settle();
+    const rk2 = new Uint8Array(Buffer.from('r' + planted2.split('.')[0], 'latin1'));
+    const undelivered = await bob.callRaw(f2, 'refund', rk2, { gas: 50n * TGAS });
+    await settle();
+    record('refund to a deleted caller is not delivered and stays owed', failing.logs.some((l) => l.includes('refund pending')) && undelivered.logs.some((l) => l.includes('owed again')) && !undelivered.logs.some((l) => l === 'refunded'));
+    await expectRefused('on_refund is private', () => bob.callRaw(f2, 'on_refund', rk2, { gas: 30n * TGAS }), 'private');
+    const back = await root.createSubAccount('carol', { initialBalance: NEAR / 10n });
+    const before2 = await total(back);
+    const paid2 = await bob.callRaw(f2, 'refund', rk2, { gas: 50n * TGAS });
+    await settle();
+    const got = (await total(back)) - before2;
+    record('once the caller exists again, the owed refund is paid exactly once', paid2.logs.some((l) => l === 'refunded') && got === 2n * NEAR, { detail: `${Number(got) / 1e24} NEAR` });
+    await expectRefused('no third refund', () => bob.callRaw(f2, 'refund', rk2, { gas: 50n * TGAS }), 'no such record');
     await expectThrows('earlier-life child: still refused after the failed creation', () => checkVault(provider, d2, { vault: planted, publicKey: victim.publicKey }), 'not in the factory registry');
   }
   await expectThrows('preflight refuses another owner key', () => checkVault(provider, deployment, { vault, publicKey: stranger.publicKey }), "not the pinned factory's address");

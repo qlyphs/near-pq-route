@@ -17,7 +17,7 @@ for the exact rules.
 | Claim | Evidence |
 |---|---|
 | Testnet: vault created by a keyless, audited factory; preflight passes; 0.1 NEAR and 0.05 wNEAR (`wrap.testnet`, a real NEP-141) paid by one ML-DSA-87 signature each; replay, tampered amount and foreign key refused on-chain | `evidence/vault-testnet.json` (every tx hash), `deployments/testnet.json` |
-| Sandbox: 49 checks: factory creation, registry and refunds (failed creation, third-party refund, no double refund); the two attacks found in review (a vault made outside the factory, a vault planted by an earlier life of the factory id) refused by the preflight; every message-field refusal; u128 edge cases; exact `ft_transfer` arguments; failed-delivery refund | `evidence/vault-sandbox.json` |
+| Sandbox: 53 checks: factory creation, registry and refunds (failed creation, third-party refund, no double refund, a refund to a deleted caller stays owed); the two attacks found in review (a vault made outside the factory, a vault planted by an earlier life of the factory id) refused by the preflight; every message-field refusal; u128 edge cases; exact `ft_transfer` arguments; failed-delivery refund | `evidence/vault-sandbox.json` |
 | The verifier is the Solana POC's, unchanged | `core/SOURCE.sha256` |
 | Relayer on testnet: a payment signed with noble (as the wallet will) relayed and followed to delivery; a repeat answered with the same hash and no second transaction; a tampered signature refused before any transaction | `evidence/relayer-testnet.json` |
 | Verification alone costs 6.47 Tgas on testnet, one call, 9/9 vectors | `evidence/testnet.json`, `evidence/gas.json` |

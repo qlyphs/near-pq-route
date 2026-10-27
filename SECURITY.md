@@ -77,7 +77,8 @@ A mainnet profile should carry the full 256-bit hash in the id.
 
 The creation callback only rewrites the record's status. A failed creation is marked `F` and paid back by
 `refund`, which anyone may call, from the record's amount to the record's caller, once the forwarded
-deposit is back. A record is never deleted because time passed: a pending creation may still complete.
+deposit is back. The debt is removed only when the refund transfer is seen to succeed; a transfer that
+fails (the caller's account was deleted) leaves it owed, to be paid once the account exists again. A record is never deleted because time passed: a pending creation may still complete.
 
 ## What it does not protect
 

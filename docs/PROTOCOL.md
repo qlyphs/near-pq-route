@@ -41,10 +41,12 @@ rewrites its status byte, so it needs no balance and cannot fail on funds:
 
 The callback never pays. The deposit forwarded to the failed receipt comes back to the factory in a
 separate refund receipt, which may arrive after the callback; paying from the callback could then fail
-and leave the record pending for good. Instead `refund(registry key)`, which anyone may call, pays a
-failed record's deposit to its recorded caller and removes the record, so the key can be tried again.
-Amount and recipient come from the record only, never from arguments. If the factory cannot pay yet, the
-whole call fails, the record stays `F`, and it can be called again. `init` refuses a second call and any caller other
+and leave the record pending for good. Instead `refund(registry key)`, which anyone may call, sends a
+failed record's deposit to its recorded caller and marks the record `R` (refunding), so no second refund
+can start meanwhile. Its private callback `on_refund` removes the record only if the transfer succeeded;
+if it failed (the caller's account was deleted), the amount came back and the record returns to `F`,
+owed again. Amount and recipient come from the record only, never from arguments. If the factory cannot
+pay yet, the whole call fails, the record stays `F`, and it can be called again. `init` refuses a second call and any caller other
 than the direct parent account.
 
 The vault never has an access key: nobody can sign as the vault, redeploy it or delete it.

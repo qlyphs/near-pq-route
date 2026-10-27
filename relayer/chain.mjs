@@ -1,4 +1,4 @@
-// Chain reads the relayer makes before spending gas: the vault's key, nonce and the final height.
+// Chain reads the relayer makes before spending gas: the vault's key, nonce and final height, and the gas price.
 import { checkVault } from '../sdk/vault.mjs';
 import { Refusal } from './message.mjs';
 import { RpcError, TransportError } from './rpc.mjs';
@@ -30,5 +30,11 @@ export function createChain({ rpc, deployment }) {
     const { header } = await rpc.provider.block({ block_id: pre.block });
     return { publicKey, nonce: pre.nonce, height: BigInt(header.height) };
   }
-  return { readVault };
+  /** The gas price of the latest block, yoctoNEAR per gas unit. */
+  async function gasPrice() {
+    const { gas_price: price } = await rpc.call('gas_price', [null]);
+    if (!/^\d+$/.test(String(price))) throw new TransportError('gas_price: malformed answer');
+    return BigInt(price);
+  }
+  return { readVault, gasPrice };
 }

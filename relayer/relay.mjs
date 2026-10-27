@@ -3,7 +3,7 @@ import { executeArgs } from '../sdk/vault.mjs';
 import { Ledger, messageId, slotId } from './ledger.mjs';
 import { Busy } from './limits.mjs';
 import { Refusal, parseRequest } from './message.mjs';
-import { RpcError, TransportError } from './rpc.mjs';
+import { RpcError, TransportError, isValidationRejection } from './rpc.mjs';
 import { verifyAuthorization } from './signature.mjs';
 
 const TGAS = 10n ** 12n;
@@ -13,19 +13,24 @@ export const BASE_GAS_TGAS = 30n;
 export const attachedGas = ({ action, ftGasTgas }) => (BASE_GAS_TGAS + (action === 1 ? BigInt(ftGasTgas) : 0n)) * TGAS;
 
 /**
- * `deps`: deployment (pinned manifest), readVault (chain.mjs), submit (submitter.mjs), limiter, vaultQuota,
- * ipQuota, cap (limits.mjs), gasPriceYocto (prepaid price per gas unit used for the cap), ledger.
+ * `deps`: deployment (pinned manifest); readVault and gasPrice (chain.mjs); submit and rebroadcast
+ * (submitter.mjs); limiter, vaultQuota, ipQuota, cap (limits.mjs); costOf(req), the yoctoNEAR reserved
+ * against the cap for one submission (cost.mjs); maxGasPriceYocto, the price that bound assumes; ledger.
  * `relay(body, ip)` resolves to { status, body } and never throws.
  */
 export function createRelay(deps) {
-  const { deployment, readVault, submit, limiter, vaultQuota, ipQuota, cap, gasPriceYocto } = deps;
+  const { deployment, readVault, gasPrice, submit, rebroadcast, limiter, vaultQuota, ipQuota, cap, costOf, maxGasPriceYocto } = deps;
   const ledger = deps.ledger ?? new Ledger();
 
+  // Everything read from the chain before a slot is claimed. Returns the finalized { nonce, height }.
   async function checked(req) {
     const vault = await readVault(req.vault);
     if (vault.nonce !== req.nonce) throw new Refusal(422, `nonce is not the vault's next nonce (${vault.nonce})`);
     if (!(req.issued <= vault.height && vault.height < req.expiry)) throw new Refusal(422, 'authorization expired or not yet valid');
     if (!verifyAuthorization(req.signature, req.message, vault.publicKey)) throw new Refusal(422, 'invalid signature');
+    // The spend bound holds only while the price stays under the ceiling; keep 2x headroom (cost.mjs).
+    if ((await gasPrice()) * 2n > maxGasPriceYocto) throw new Refusal(503, 'gas price too close to the relayer ceiling, retry later');
+    return { nonce: vault.nonce, height: vault.height };
   }
 
   async function submitOnce(req, ip, slot, msg) {
@@ -34,24 +39,53 @@ export function createRelay(deps) {
       vaultQuota.untake(req.vault);
       throw new Refusal(429, 'quota reached for this client');
     }
-    const gas = attachedGas(req);
-    if (!cap.reserve(gas * gasPriceYocto)) throw new Refusal(503, 'paused: spend cap reached');
+    if (!cap.reserve(costOf(req))) throw new Refusal(503, 'paused: spend cap reached');
     try {
-      const tx = await submit({ vault: req.vault, args: executeArgs(req.signature, req.message), gas });
-      ledger.submitted(slot, msg, tx);
+      // The hash and the signed bytes are recorded before the broadcast, so no answer is ever lost.
+      const tx = await submit({ vault: req.vault, args: executeArgs(req.signature, req.message), gas: attachedGas(req) },
+        ({ transaction, signed }) => ledger.signed(msg, transaction, signed));
+      ledger.settle(msg, 'submitted');
       return { status: 200, body: { transaction: tx } };
     } catch (e) {
-      if (e instanceof RpcError) {
+      const signed = ledger.lookup(msg)?.tx;
+      if (!signed) throw e; // nothing was signed: the caller frees the slot
+      if (isValidationRejection(e)) {
         ledger.release(slot, msg);
         return { status: 502, body: { error: `rpc refused the transaction: ${e.message}` } };
       }
-      // The node may have taken it: keep the hash so a repeat never pays twice for one message.
-      if (e?.transaction) {
-        ledger.submitted(slot, msg, e.transaction);
-        return { status: 504, body: { error: 'no answer from rpc; follow the transaction', transaction: e.transaction } };
-      }
-      throw e;
+      // A timeout or any other answer: the node may have taken it. Keep the hash, the bytes and the slot.
+      ledger.settle(msg, 'uncertain');
+      return { status: 504, body: { error: 'no definitive answer from rpc; follow the transaction', transaction: signed } };
     }
+  }
+
+  // A repeat of a message whose broadcast had no definitive answer: the same signed bytes go out again.
+  async function resend(entry, msg) {
+    let settle;
+    entry.pending = new Promise((ok) => { settle = ok; });
+    let result;
+    try {
+      await limiter.run(() => rebroadcast(entry.signed));
+      ledger.settle(msg, 'submitted');
+      result = { status: 200, body: { transaction: entry.tx } };
+    } catch (e) {
+      // Even a refusal of a resend may mean it was already included: the state stays uncertain.
+      ledger.settle(msg, 'uncertain');
+      result = e instanceof Busy
+        ? { status: 503, body: { error: 'busy, retry later', transaction: entry.tx } }
+        : { status: 504, body: { error: 'no definitive answer from rpc; follow the transaction', transaction: entry.tx } };
+    }
+    settle(result);
+    return result;
+  }
+
+  // An answer from the ledger alone, or null when the request needs the chain.
+  function known(entry, msg) {
+    if (!entry) return null;
+    if (entry.pending) return entry.pending;
+    if (entry.state === 'uncertain') return resend(entry, msg);
+    if (entry.state === 'rejected') return null; // only the chain can say whether a resend is safe
+    return { status: 200, body: { transaction: entry.tx } };
   }
 
   async function handle(body, ip) {
@@ -59,25 +93,27 @@ export function createRelay(deps) {
     const msg = messageId(req.message);
     const slot = slotId(req.message);
 
-    const seen = ledger.lookup(msg);
-    if (seen?.tx) return { status: 200, body: { transaction: seen.tx } };
-    if (seen?.pending) return seen.pending;
+    const seen = known(ledger.lookup(msg), msg);
+    if (seen) return seen;
     // A repeat costs nothing and is still answered; new work stops once the cap is reached.
     if (cap.paused) throw new Refusal(503, 'paused: spend cap reached');
 
-    await limiter.run(() => checked(req));
+    const chain = await limiter.run(() => checked(req));
 
     // Claimed only after the signature verified, so an invalid request can never hold a slot.
-    const again = ledger.lookup(msg);
-    if (again?.tx) return { status: 200, body: { transaction: again.tx } };
-    if (again?.pending) return again.pending;
+    const again = known(ledger.lookup(msg), msg);
+    if (again) return again;
     let settle;
     const pending = new Promise((ok) => { settle = ok; });
-    if (!ledger.claim(slot, msg, pending)) throw new Refusal(409, 'another message for this vault nonce was already submitted');
+    if (!ledger.claim(slot, msg, { nonce: req.nonce, expiry: req.expiry, pending, chain })) {
+      throw new Refusal(409, 'another message for this vault nonce was already submitted');
+    }
     const result = await submitOnce(req, ip, slot, msg).catch((e) => {
       ledger.release(slot, msg);
       return toResponse(e);
     });
+    const entry = ledger.lookup(msg);
+    if (entry?.pending === pending) entry.pending = null;
     settle(result);
     return result;
   }

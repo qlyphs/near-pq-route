@@ -65,36 +65,58 @@ exist so that it does not burn gas on requests the vault would refuse, and so it
 twice for one authorization.
 
 - `POST /execute`, raw body of exactly 4,883 bytes: signature (4,627) ‖ message (256). Answers
-  `{"transaction": <hash>}` once RPC has accepted the transaction. That is not delivery.
-- `GET /outcome/<hash>`: `submitted`, `accepted` (nonce spent), `delivered` (the Transfer or
-  `ft_transfer` receipt succeeded), `failed` (refused, or the payment receipt failed), or `unknown`.
-  A timeout is `unknown`, never `failed`.
-- `GET /health`: network, factory, relayer account, spend so far and the cap.
+  `{"transaction": <hash>}` once RPC has accepted the transaction. That is not delivery. A 504 still
+  carries the hash: the transaction was signed and may be on its way.
+- `GET /outcome/<hash>`: `submitted`, `accepted` (nonce spent), `delivered` (the payment receipt
+  succeeded), `failed` (an accepted `execute`'s payment receipt failed; the nonce is spent), or
+  `unknown`. A refused transaction or refused `execute` is `unknown` with `"attemptRejected": true`:
+  it proves only that this attempt failed (a replay of an authorization accepted elsewhere is refused
+  too), so it is never a reason to sign again. A timeout is `unknown`, never `failed`.
+- `GET /health`: network, factory, relayer account, protocol version, reserved spend, the cap and the
+  reservation for one NEAR transfer.
 
-Before any gas, in this order: strict parse of the message (`docs/PROTOCOL.md`), vault a direct child of
-the pinned factory, `checkVault` at a final block, nonce equal to the vault's, window containing the final
-height, and the ML-DSA-87 signature verified locally with `@noble/post-quantum` against the stored key.
-Then quotas (per vault and per client address, counted only for valid signatures), then the spend cap.
-It sends `execute` with 30 Tgas, or 30 Tgas plus the signed `ft_transfer` gas, and no deposit.
+Before any gas, in this order: strict parse of the message (`docs/PROTOCOL.md`; a NEAR transfer must
+carry an empty token field and a zero gas byte), vault a direct child of the pinned factory,
+`checkVault` at a final block, nonce equal to the vault's, window containing the final height, the
+ML-DSA-87 signature verified locally with `@noble/post-quantum` against the stored key, and the current
+gas price at most half of `RELAYER_MAX_GAS_PRICE_YOCTO`. Then quotas (per vault and per client
+address, counted only for valid signatures), then the spend cap. It signs `execute` with 30 Tgas, or
+30 Tgas plus the signed `ft_transfer` gas, and no deposit, records the hash and signed bytes, and only
+then broadcasts.
+
+One message per (vault, nonce). The ledger tracks each submission as uncertain (broadcast without a
+definitive answer), submitted, rejected (its `execute` was refused), accepted, delivered or delivery
+failed. A repeat of an uncertain one re-broadcasts the same signed transaction; only an explicit
+validation refusal from the node frees a slot on the spot. A rejected message is sent again only after
+a fresh chain read shows the vault nonce unchanged and its window still open. Another message takes
+over a slot only once the old message's window has closed at a final height with the vault nonce
+unchanged; the old record stays in the history.
 
 | File | Role |
 |---|---|
 | `server.mjs` | HTTP, body size cap, routes; `node relayer/server.mjs` starts it |
 | `config.mjs` | environment, testnet-only guard |
 | `message.mjs` | strict parsing of the request |
-| `chain.mjs` | vault key, `checkVault`, final height |
+| `vectors/messages.json` | parser vectors shared with the wallet; `WALLET_PARSER=<path to near-vault.ts> node tests/relayer-vectors.mjs` runs both parsers on them |
+| `chain.mjs` | vault key, `checkVault`, final height, gas price |
 | `signature.mjs` | local ML-DSA-87 verification |
-| `ledger.mjs` | idempotence by message hash and (vault, nonce) |
-| `limits.mjs` | quotas, spend cap, bounded queue |
-| `submitter.mjs` | signs and sends `execute` |
-| `outcome.mjs` | reads a final outcome |
+| `ledger.mjs` | idempotence by message hash, (vault, nonce) slots and their states |
+| `limits.mjs` | quotas, persistent spend cap, bounded queues |
+| `cost.mjs` | protocol fees from `EXPERIMENTAL_protocol_config`, the per-transaction spend bound |
+| `submitter.mjs` | signs, broadcasts and re-broadcasts `execute` |
+| `outcome.mjs` | reads and classifies a final outcome; bounded, coalesced `/outcome` reader |
 | `relay.mjs` | the order of the checks |
 
 Environment: `RELAYER_ACCOUNT` and `RELAYER_KEY_FILE` (one line, `ed25519:<base58>`), `HOST` (default
-`127.0.0.1`), `PORT` (8787), `NEAR_RPC`, `RELAYER_SPEND_CAP_YOCTO` (default 0.3 NEAR of prepaid gas),
-`RELAYER_GAS_PRICE_YOCTO` (1e9, the testnet prepaid price), `RELAYER_VAULT_PER_HOUR` (10),
-`RELAYER_IP_PER_HOUR` (30), `RELAYER_CONCURRENCY` (4), `RELAYER_QUEUE` (32). It refuses to start unless the
-pinned deployment is testnet (`RELAYER_ALLOW_NETWORK` must name any other network explicitly).
+`127.0.0.1`), `PORT` (8787), `NEAR_RPC`, `RELAYER_SPEND_CAP_YOCTO` (default 0.3 NEAR),
+`RELAYER_MAX_GAS_PRICE_YOCTO` (1e9, the gas price the spend bound assumes), `RELAYER_STATE_DIR`
+(default `relayer/.state/`, holds `spend-<network>-<account>.json`), `RELAYER_VAULT_PER_HOUR` (10),
+`RELAYER_IP_PER_HOUR` (30), `RELAYER_CONCURRENCY` (4), `RELAYER_QUEUE` (32),
+`RELAYER_OUTCOME_PER_MINUTE` (60 per client), `RELAYER_OUTCOME_GLOBAL_PER_MINUTE` (600),
+`RELAYER_OUTCOME_CONCURRENCY` (4), `RELAYER_OUTCOME_QUEUE` (32). It refuses to start unless the pinned
+deployment is testnet (`RELAYER_ALLOW_NETWORK` must name any other network explicitly), or when it
+cannot read the protocol config. Once the spend file records a reached cap, the relayer stays paused
+across restarts until someone deletes that file or starts it with a higher cap.
 
 ## Layout
 

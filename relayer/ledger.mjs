@@ -1,4 +1,4 @@
-// Idempotence: what the relayer already submitted, keyed by hashes of public bytes only.
+// Idempotence and slot ownership: what the relayer submitted for each message, keyed by hashes of public bytes only.
 import { createHash } from 'node:crypto';
 
 const sha256 = (...parts) => {
@@ -12,6 +12,17 @@ export const messageId = (message) => sha256(message);
 /** One slot per (vault, nonce): the vault accepts only one message per nonce, so only one may be in flight. */
 export const slotId = (message) => sha256(message.subarray(16, 81), message.subarray(228, 236));
 
+/**
+ * States of a message's current submission:
+ * - pending: being checked, signed and broadcast right now;
+ * - uncertain: signed and broadcast without a definitive answer; the hash and the signed bytes are kept;
+ * - submitted: RPC accepted the transaction; no outcome read yet;
+ * - rejected: this transaction (or its `execute`) was refused; that alone does not say the nonce is unspent;
+ * - accepted, delivered, delivery_failed: `execute` accepted the message, so the nonce is spent for good.
+ */
+export const SPENT = new Set(['accepted', 'delivered', 'delivery_failed']);
+const FROM_OUTCOME = { accepted: 'accepted', delivered: 'delivered', failed: 'delivery_failed' };
+
 function remember(map, key, value, max) {
   map.delete(key);
   map.set(key, value);
@@ -21,40 +32,94 @@ function remember(map, key, value, max) {
 export class Ledger {
   constructor({ maxEntries = 100000 } = {}) {
     this.max = maxEntries;
-    this.byMessage = new Map(); // message id -> { tx } once submitted, { pending } while submitting
-    this.bySlot = new Map(); // slot id -> message id
-    this.txs = new Set();
+    this.byMessage = new Map(); // message id -> { slot, nonce, expiry, state, tx, signed, pending, history }
+    this.bySlot = new Map(); // slot id -> message id of the owner
+    this.byTx = new Map(); // tx hash -> message id
+    this.released = []; // history: entries that gave up their slot, newest last
   }
 
-  /** The submitted transaction or the in-flight submission for this message, if any. */
   lookup(msg) {
     return this.byMessage.get(msg) ?? null;
   }
 
-  /** Claims the slot for `msg`. False if another message holds it (in flight or already submitted). */
-  claim(slot, msg, pending) {
-    const owner = this.bySlot.get(slot);
-    if (owner !== undefined && owner !== msg) return false;
+  #archive(msg, entry, why) {
+    this.released.push({ msg, slot: entry.slot, nonce: entry.nonce, expiry: entry.expiry, state: entry.state, tx: entry.tx, history: entry.history, why });
+    if (this.released.length > this.max) this.released.shift();
+  }
+
+  /**
+   * Claims `slot` for `msg`. `chain` is the vault's finalized { nonce, height }, read after this request's
+   * signature verified, and the caller has checked that `nonce` is this message's nonce and its window is
+   * open. Returns false if the slot stays taken:
+   * - by another message, unless that one can no longer execute: its window closed at a final height
+   *   (`height >= expiry`) and the finalized vault nonce still equals the slot's nonce, so it never was
+   *   accepted. Its record then moves to the released history;
+   * - by this same message, unless its last transaction was rejected (the chain read shows the nonce is
+   *   still unspent, so the vault never accepted it): then it may be sent once more.
+   */
+  claim(slot, msg, { nonce, expiry, pending, chain }) {
+    const ownerId = this.bySlot.get(slot);
+    if (ownerId !== undefined && ownerId !== msg) {
+      const old = this.byMessage.get(ownerId);
+      if (old) {
+        const stale = !old.pending && !SPENT.has(old.state) && chain.height >= old.expiry && chain.nonce === old.nonce;
+        if (!stale) return false;
+        this.#archive(ownerId, old, 'window closed, nonce unspent');
+        this.byMessage.delete(ownerId);
+      }
+    }
+    const prior = this.byMessage.get(msg);
+    if (prior && (prior.pending || prior.state !== 'rejected' || chain.nonce !== prior.nonce)) return false;
+    const history = prior ? [...prior.history, { tx: prior.tx, state: prior.state }] : [];
     remember(this.bySlot, slot, msg, this.max);
-    remember(this.byMessage, msg, { pending }, this.max);
+    remember(this.byMessage, msg, { slot, nonce, expiry, state: 'pending', pending, tx: null, signed: null, history }, this.max);
     return true;
   }
 
-  /** Records the hash once RPC accepted (or may have accepted) the transaction. */
-  submitted(slot, msg, tx) {
-    remember(this.byMessage, msg, { tx }, this.max);
-    remember(this.bySlot, slot, msg, this.max);
-    this.txs.add(tx);
-    if (this.txs.size > this.max) this.txs.delete(this.txs.values().next().value);
+  /** The transaction is signed and about to be broadcast: from now on its hash and bytes are kept. */
+  signed(msg, tx, signed) {
+    const e = this.byMessage.get(msg);
+    if (!e) return;
+    Object.assign(e, { tx, signed, state: 'uncertain' });
+    remember(this.byTx, tx, msg, this.max);
   }
 
-  /** Frees the slot after a submission that certainly did not reach the network. */
+  /** The broadcast is over: `submitted` (RPC accepted) or `uncertain` (no definitive answer). */
+  settle(msg, state) {
+    const e = this.byMessage.get(msg);
+    if (!e) return;
+    e.pending = null;
+    if (e.state === 'uncertain' || e.state === 'submitted') e.state = state;
+  }
+
+  /**
+   * The submission certainly had no effect: nothing was signed, or the node refused the transaction while
+   * validating it. Frees the slot (a first submission) or returns to the earlier rejection (a resend); a
+   * refused hash stays in the released history.
+   */
   release(slot, msg) {
+    const e = this.byMessage.get(msg);
+    if (!e) return;
+    if (e.tx) this.#archive(msg, e, 'refused by the node before execution');
+    const last = e.history.at(-1);
+    if (last) {
+      Object.assign(e, { state: 'rejected', tx: last.tx, signed: null, pending: null, history: e.history.slice(0, -1) });
+      return;
+    }
     if (this.bySlot.get(slot) === msg) this.bySlot.delete(slot);
-    if (this.byMessage.get(msg)?.pending) this.byMessage.delete(msg);
+    this.byMessage.delete(msg);
+  }
+
+  /** Learns from an outcome read (outcome.mjs `classify`) of the current transaction of a message. */
+  observe(tx, result) {
+    const msg = this.byTx.get(tx);
+    const e = msg === undefined ? null : this.byMessage.get(msg);
+    if (!e || e.tx !== tx || e.pending || SPENT.has(e.state)) return;
+    if (FROM_OUTCOME[result?.status]) e.state = FROM_OUTCOME[result.status];
+    else if (result?.status === 'unknown' && result.attemptRejected === true) e.state = 'rejected';
   }
 
   knows(tx) {
-    return this.txs.has(tx);
+    return this.byTx.has(tx);
   }
 }

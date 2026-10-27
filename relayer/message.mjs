@@ -17,14 +17,10 @@ export class Refusal extends Error {
 
 const refuse = (reason) => { throw new Refusal(400, reason); };
 
-// Same rule as the contract: valid NEAR id, ASCII, zero padding after it. An empty field is all zeros.
-function idAt(m, lenAt, at, name, { optional = false } = {}) {
+// Same rule as the contract: valid NEAR id, ASCII, zero padding after it.
+function idAt(m, lenAt, at, name) {
   const len = m[lenAt];
   const field = m.subarray(at, at + ID_FIELD);
-  if (len === 0 && optional) {
-    if (field.some((b) => b !== 0)) refuse(`${name} must be empty`);
-    return null;
-  }
   if (len > ID_FIELD) refuse(`${name} length out of range`);
   if (field.subarray(len).some((b) => b !== 0)) refuse(`${name} padding is not zero`);
   const id = field.subarray(0, len).toString('latin1');
@@ -52,7 +48,15 @@ export function parseRequest(body, { network, factory }) {
 
   const action = m[81];
   if (action !== 0 && action !== 1) refuse('action must be 0 (NEAR) or 1 (ft_transfer)');
-  const token = idAt(m, 82, 83, 'token', { optional: action === 0 });
+  const ftGasTgas = m[252];
+  let token = null;
+  if (action === 0) {
+    // Same rule as the wallet: a NEAR transfer names no token and no token gas, in any byte.
+    if (m[82] !== 0 || m.subarray(83, 147).some((b) => b !== 0) || ftGasTgas !== 0) refuse('NEAR transfers carry no token fields');
+  } else {
+    token = idAt(m, 82, 83, 'token');
+    if (ftGasTgas < 10 || ftGasTgas > 100) refuse('ft_transfer gas must be 10 to 100 Tgas');
+  }
   const receiver = idAt(m, 147, 148, 'receiver');
   if (receiver === vault) refuse('receiver is the vault');
 
@@ -64,9 +68,6 @@ export function parseRequest(body, { network, factory }) {
   const issued = m.readBigUInt64LE(244);
   if (expiry <= issued || expiry - issued > MAX_TTL_BLOCKS) refuse(`validity window must be 1 to ${MAX_TTL_BLOCKS} blocks`);
 
-  const ftGasTgas = m[252];
-  if (action === 0 && ftGasTgas !== 0) refuse('gas byte must be 0 for a NEAR transfer');
-  if (action === 1 && (ftGasTgas < 10 || ftGasTgas > 100)) refuse('ft_transfer gas must be 10 to 100 Tgas');
   if (m[253] || m[254] || m[255]) refuse('reserved bytes must be zero');
 
   return { signature, message: m, vault, action, token, receiver, amount, nonce, expiry, issued, ftGasTgas };

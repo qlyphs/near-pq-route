@@ -1,12 +1,15 @@
 // HTTP front of the relayer: POST /execute, GET /outcome/<tx>, GET /health. Node http, no framework.
 import { createServer } from 'node:http';
 import { pathToFileURL } from 'node:url';
+import { mkdirSync } from 'node:fs';
+import { dirname } from 'node:path';
 import { createChain } from './chain.mjs';
 import { loadConfig } from './config.mjs';
+import { costBound, readProtocolCosts } from './cost.mjs';
 import { Limiter, Quota, SpendCap } from './limits.mjs';
 import { REQUEST_LEN } from './message.mjs';
-import { TX_HASH, outcome } from './outcome.mjs';
-import { createRelay } from './relay.mjs';
+import { createOutcomeReader, outcome } from './outcome.mjs';
+import { attachedGas, createRelay } from './relay.mjs';
 import { createRpc } from './rpc.mjs';
 import { createSubmitter, loadRelayerKey } from './submitter.mjs';
 
@@ -40,7 +43,8 @@ function readBody(req) {
 }
 
 /**
- * `relay(body, ip)` and `outcomeOf(txHash)` come from relay.mjs and outcome.mjs; `health()` returns
+ * `relay(body, ip)` and `outcomeOf(txHash, ip)` come from relay.mjs and outcome.mjs (both resolve to
+ * { status, body }); `health()` returns
  * public counters. The client address is the socket's: forwarded headers are not trusted.
  */
 export function createRelayerServer({ relay, outcomeOf, health }) {
@@ -58,8 +62,8 @@ export function createRelayerServer({ relay, outcomeOf, health }) {
       if (path === '/health') return reply(req, res, 200, health());
       const m = /^\/outcome\/([^/]+)$/.exec(path);
       if (m) {
-        if (!TX_HASH.test(m[1])) return reply(req, res, 400, { error: 'not a transaction hash' });
-        return reply(req, res, 200, { transaction: m[1], ...(await outcomeOf(m[1])) });
+        const r = await outcomeOf(m[1], req.socket.remoteAddress ?? 'unknown');
+        return reply(req, res, r.status, r.body);
       }
       return reply(req, res, 404, { error: 'not found' });
     } catch {
@@ -72,28 +76,46 @@ export function createRelayerServer({ relay, outcomeOf, health }) {
   return server;
 }
 
-/** Wires the real chain, key and limits from the environment. */
-export function startFromEnv(env = process.env) {
+/** Wires the real chain, key and limits from the environment. Refuses to start without the protocol config. */
+export async function startFromEnv(env = process.env) {
   const cfg = loadConfig(env);
   const rpc = createRpc(cfg.rpcUrl);
-  const cap = new SpendCap(cfg.spendCapYocto);
+  const costs = await readProtocolCosts(rpc, cfg.deployment);
+  if (cfg.maxGasPriceYocto > costs.maxGasPrice) throw new Error('RELAYER_MAX_GAS_PRICE_YOCTO is above the protocol max_gas_price');
+  const costOf = (req) => costBound(costs, { argsLen: REQUEST_LEN, prepaidGas: attachedGas(req), maxGasPriceYocto: cfg.maxGasPriceYocto });
+  mkdirSync(dirname(cfg.stateFile), { recursive: true, mode: 0o700 });
+  const cap = new SpendCap(cfg.spendCapYocto, { file: cfg.stateFile });
+  const chain = createChain({ rpc, deployment: cfg.deployment });
+  const submitter = createSubmitter({ rpc, accountId: cfg.account, keyPair: loadRelayerKey(cfg.keyFile) });
   const { relay, ledger } = createRelay({
     deployment: cfg.deployment,
-    readVault: createChain({ rpc, deployment: cfg.deployment }).readVault,
-    submit: createSubmitter({ rpc, accountId: cfg.account, keyPair: loadRelayerKey(cfg.keyFile) }),
+    readVault: chain.readVault,
+    gasPrice: chain.gasPrice,
+    submit: submitter.submit,
+    rebroadcast: submitter.rebroadcast,
     limiter: new Limiter({ concurrency: cfg.concurrency, queue: cfg.queue }),
     vaultQuota: new Quota({ limit: cfg.vaultPerHour, windowMs: cfg.windowMs }),
     ipQuota: new Quota({ limit: cfg.ipPerHour, windowMs: cfg.windowMs }),
     cap,
-    gasPriceYocto: cfg.gasPriceYocto,
+    costOf,
+    maxGasPriceYocto: cfg.maxGasPriceYocto,
   });
+  const outcomeOf = createOutcomeReader({
+    read: (txHash) => outcome(rpc, { txHash, sender: cfg.account, deployment: cfg.deployment, ours: ledger.knows(txHash) }),
+    limiter: new Limiter({ concurrency: cfg.outcomeConcurrency, queue: cfg.outcomeQueue }),
+    ipQuota: new Quota({ limit: cfg.outcomePerMinute, windowMs: cfg.outcomeWindowMs }),
+    globalQuota: new Quota({ limit: cfg.outcomeGlobalPerMinute, windowMs: cfg.outcomeWindowMs }),
+    observe: (txHash, r) => ledger.observe(txHash, r),
+  });
+  const nearTransferBound = costOf({ action: 0, ftGasTgas: 0 });
   const server = createRelayerServer({
     relay,
-    outcomeOf: (txHash) => outcome(rpc, { txHash, sender: cfg.account, ours: ledger.knows(txHash) }),
+    outcomeOf,
     health: () => ({ ok: !cap.paused, network: cfg.deployment.network, factory: cfg.deployment.factory, relayer: cfg.account,
-      paused: cap.paused, spent_yocto: cap.spent.toString(), cap_yocto: cap.cap.toString() }),
+      paused: cap.paused, spent_yocto: cap.spent.toString(), cap_yocto: cap.cap.toString(),
+      protocol_version: costs.protocolVersion, max_gas_price_yocto: cfg.maxGasPriceYocto.toString(), near_transfer_bound_yocto: nearTransferBound.toString() }),
   });
-  return new Promise((ok) => server.listen(cfg.port, cfg.host, () => ok({ server, address: server.address() })));
+  return new Promise((ok) => server.listen(cfg.port, cfg.host, () => ok({ server, address: server.address(), stateFile: cfg.stateFile })));
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {

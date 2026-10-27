@@ -21,26 +21,57 @@ Research proof of concept. Not audited. Never use it with real funds.
 `relayer/` is untrusted by design: nothing it does can move funds the owner did not sign for, because
 the vault checks every byte again. What it adds is protection of its own gas budget, and honest reporting.
 
-- **No gas for a request the vault would refuse.** It parses the message as the vault does, runs
-  `checkVault`, checks nonce and window at a final block and verifies the signature locally before it signs
-  anything. A request that only becomes invalid later (the window closes, another relayer spends the nonce
-  first) still costs one failed `execute`.
+- **No gas for a request the vault would refuse.** It parses the message as the vault and the wallet do
+  (both parsers agree on the shared vectors in `relayer/vectors/messages.json`; a NEAR transfer names no
+  token in any byte), runs `checkVault`, checks nonce and window at a final block and verifies the
+  signature locally before it signs anything. A request that only becomes invalid later (the window
+  closes, another relayer spends the nonce first) still costs one failed `execute`.
 - **One payment per authorization.** Requests are keyed by SHA-256 of the message, not of the body,
   because ML-DSA signing is randomized and the same authorization can arrive with several signatures. One
   submission per (vault, nonce), claimed only after the signature verified, so a forged request cannot
-  hold a slot. A repeat gets the first hash back. If RPC gives no answer the hash is kept, not resent.
-- **Bounded cost.** Quotas count only verified requests, so garbage cannot use up a vault's quota. Every
-  submission reserves its full prepaid gas (attached gas × `RELAYER_GAS_PRICE_YOCTO`) against a hard cap
-  and is never credited back; at the cap it pauses until restarted. Verification runs in a bounded
-  queue; the body is never read past 4,883 bytes.
+  hold a slot. A repeat gets the first hash back.
+- **No lost hash, no second transaction for one attempt.** The transaction is signed and its hash and
+  bytes recorded before the broadcast. A timeout or any RPC error other than an explicit validation
+  refusal keeps the hash and the slot (state uncertain); a retry re-broadcasts the same signed bytes,
+  which the network includes at most once. Even a refused re-broadcast leaves the state uncertain, since
+  the first copy may already be in.
+- **Slots are released from chain facts only.** A slot passes to another message only when the old
+  message's window has closed at a final height and the finalized vault nonce still equals the slot's
+  nonce, so the old one was never accepted and can no longer be. The same message is sent again only
+  after its last `execute` was seen refused and a fresh read shows the nonce unchanged and the window
+  open. Released records stay in the history.
+- **Bounded cost.** Quotas count only verified requests, so garbage cannot use up a vault's quota. At
+  start the relayer reads `EXPERIMENTAL_protocol_config` (and refuses to start without it, on another
+  chain, or if receipts are priced with a pessimistic inflation other than 1). Every submission reserves
+  (send fees + execution fees + prepaid gas) × max(`RELAYER_MAX_GAS_PRICE_YOCTO`,
+  `min_gas_purchase_price`): nearcore charges the send fees at the block's gas price and the receipt's
+  gas at the purchase price (the gas price raised to `min_gas_purchase_price`, 1e9 yocto/gas on testnet),
+  so this bounds the charge while the inclusion block's price is at most the ceiling. The relay refuses
+  to sign unless today's price is at most half the ceiling; prices move at most 1 % per block, so that
+  headroom lasts about 70 blocks. Reservations are never credited back. Measured on testnet
+  (`evidence/relayer-testnet.json`): a NEAR transfer reserved 0.03144 NEAR, its peak charge was 0.03095
+  NEAR and its net cost after refunds 0.00077 NEAR. The reserved total and the pause are written to
+  `RELAYER_STATE_DIR` (atomically, before the reservation counts) and read back at start, so a restart
+  does not reset an exhausted budget: a human must delete the file or raise the cap. A spend file that
+  cannot be read or written fails closed.
+- **Bounded reads.** `/outcome` reads go through their own bounded queue, a per-client and a global
+  per-minute budget, and concurrent reads of one transaction share a single RPC call. Verification runs
+  in a bounded queue; the body is never read past 4,883 bytes.
 - **No claim beyond the evidence.** `/execute` answers when RPC accepted the transaction. `/outcome` says
-  `delivered` only from a final outcome where the payment receipt succeeded, and `unknown`, never
-  `failed`, when it cannot tell.
+  `delivered` only from a final outcome where the payment receipt (identified among the receipts the
+  `execute` emitted: from the vault, to the receiver or token, with exactly the signed Transfer or
+  `ft_transfer` with 1 yocto) succeeded, and `failed` only when such a receipt of an accepted `execute`
+  failed. A refused `execute` is `unknown` with `attemptRejected`: a replay of an authorization already
+  accepted elsewhere is refused too, and calling it failed would invite a second, real payment (tested on
+  testnet). Anything missing or ambiguous is `unknown`.
 - **Little to steal.** It holds one ed25519 key that can only spend the relayer account's NEAR, never
-  logs it, and keeps only hashes: of messages, of (vault, nonce), of quota keys, and transaction hashes,
-  in memory. A restart forgets them; the vault nonce still prevents a second payment.
+  logs it, and keeps only hashes: of messages, of (vault, nonce), of quota keys, and transaction hashes
+  with their signed bytes, in memory, plus the spend total on disk. A restart forgets the ledger; the
+  vault nonce still prevents a second payment.
 - **Limits.** The client address is the socket's: behind a proxy every client shares one quota. Quotas
-  and the ledger are per process. RPC answers are trusted for the preflight, as in the wallet. Testnet only.
+  and the ledger are per process. RPC answers are trusted for the preflight and the outcome, as in the
+  wallet. The spend bound assumes the inclusion block's gas price stays under the ceiling, which the
+  headroom makes likely but cannot force. Testnet only.
 
 ## Why the factory
 

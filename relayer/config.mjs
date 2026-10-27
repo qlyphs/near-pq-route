@@ -1,9 +1,12 @@
 // Relayer settings from the environment, with the testnet-only guard.
 import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { isAccountId } from '../sdk/vault.mjs';
 
 const NEAR = 10n ** 24n;
-const HOUR = 3600 * 1000;
+const MINUTE = 60 * 1000;
+const HOUR = 60 * MINUTE;
 
 const int = (env, name, fallback) => {
   const v = env[name] ?? String(fallback);
@@ -28,6 +31,7 @@ export function loadConfig(env = process.env) {
   }
   if (!isAccountId(env.RELAYER_ACCOUNT ?? '')) throw new Error('RELAYER_ACCOUNT must be a NEAR account id');
   if (!env.RELAYER_KEY_FILE) throw new Error('RELAYER_KEY_FILE is required');
+  if (env.RELAYER_GAS_PRICE_YOCTO !== undefined) throw new Error('RELAYER_GAS_PRICE_YOCTO was replaced by RELAYER_MAX_GAS_PRICE_YOCTO');
   return {
     deployment,
     host: env.HOST ?? '127.0.0.1',
@@ -35,13 +39,21 @@ export function loadConfig(env = process.env) {
     rpcUrl: env.NEAR_RPC ?? 'https://test.rpc.fastnear.com',
     account: env.RELAYER_ACCOUNT,
     keyFile: env.RELAYER_KEY_FILE,
-    // Prepaid price per gas unit counted against the cap. Testnet prepays receipts at 1e9 yocto/gas
-    // (pessimistic price) even though it burns at 1e8, so this counts what is locked, not what is burnt.
-    gasPriceYocto: big(env, 'RELAYER_GAS_PRICE_YOCTO', 10n ** 9n),
+    // Highest gas price the spend bound assumes (cost.mjs). The relay refuses to sign while the current
+    // price is above half of it. 1e9 yocto/gas is 10x the testnet price today and equals its receipt
+    // purchase floor, so the default bound charges every gas unit at the price testnet prepays receipts at.
+    maxGasPriceYocto: big(env, 'RELAYER_MAX_GAS_PRICE_YOCTO', 10n ** 9n),
     spendCapYocto: big(env, 'RELAYER_SPEND_CAP_YOCTO', 3n * NEAR / 10n),
+    // Where the reserved spend survives restarts. One file per relayer account and network.
+    stateFile: join(env.RELAYER_STATE_DIR ?? fileURLToPath(new URL('./.state', import.meta.url)), `spend-${deployment.network}-${env.RELAYER_ACCOUNT}.json`),
+    outcomeConcurrency: int(env, 'RELAYER_OUTCOME_CONCURRENCY', 4),
+    outcomeQueue: int(env, 'RELAYER_OUTCOME_QUEUE', 32),
+    outcomePerMinute: int(env, 'RELAYER_OUTCOME_PER_MINUTE', 60),
+    outcomeGlobalPerMinute: int(env, 'RELAYER_OUTCOME_GLOBAL_PER_MINUTE', 600),
     vaultPerHour: int(env, 'RELAYER_VAULT_PER_HOUR', 10),
     ipPerHour: int(env, 'RELAYER_IP_PER_HOUR', 30),
     windowMs: HOUR,
+    outcomeWindowMs: MINUTE,
     concurrency: int(env, 'RELAYER_CONCURRENCY', 4),
     queue: int(env, 'RELAYER_QUEUE', 32),
   };

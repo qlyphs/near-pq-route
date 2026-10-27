@@ -1,44 +1,99 @@
 {
   "network": "testnet",
-  "factory": "pq87-vaults-r2.qlyphs-grad-c48a-parent.testnet",
+  "factory": "pq87-vaults-r3.qlyphs-grad-c48a-parent.testnet",
   "relayer": "pq87-spike.qlyphs-grad-c48a-parent.testnet",
   "steps": [
     {
       "name": "wallet preflight and noble ML-DSA-87 signature",
       "ok": true,
-      "detail": "vault nonce 2, final height 274973071"
+      "detail": "vault nonce 2, final height 274978343"
     },
     {
       "name": "relayer accepts and returns a transaction hash",
       "ok": true,
-      "tx": "AaBoKUePYRbSvBKgRiBUt8iVFZ5myXpDupCaikx1vmvf",
+      "tx": "GjSxCPrZMCp3HGEGjdojdMXutLFhskUwTKegpMot1Bz6",
       "detail": "HTTP 200"
     },
     {
       "name": "outcome followed to delivered",
       "ok": true,
-      "tx": "AaBoKUePYRbSvBKgRiBUt8iVFZ5myXpDupCaikx1vmvf",
+      "tx": "GjSxCPrZMCp3HGEGjdojdMXutLFhskUwTKegpMot1Bz6",
       "detail": "delivered"
     },
     {
       "name": "on-chain: execute with 30 Tgas and no deposit, then 0.01 NEAR from the vault to the signed receiver",
       "ok": true,
-      "tx": "AaBoKUePYRbSvBKgRiBUt8iVFZ5myXpDupCaikx1vmvf",
-      "detail": "gas 30000000000000, deposit 0, transfer 10000000000000000000000"
+      "tx": "GjSxCPrZMCp3HGEGjdojdMXutLFhskUwTKegpMot1Bz6",
+      "detail": "gas 30000000000000, deposit 0, transfer 10000000000000000000000 to qlyphs-grad-c48a-parent.testnet"
+    },
+    {
+      "name": "measured peak charge and net cost stay under the reserved bound",
+      "ok": true,
+      "tx": "GjSxCPrZMCp3HGEGjdojdMXutLFhskUwTKegpMot1Bz6",
+      "detail": "peak 30953116503895000000000, net 774436944775500000000, reserved 31440226083610000000000 yocto"
     },
     {
       "name": "repeat returns the same hash, nothing resubmitted",
       "ok": true,
-      "tx": "AaBoKUePYRbSvBKgRiBUt8iVFZ5myXpDupCaikx1vmvf",
-      "detail": "vault nonce 2 -> 3, relayer access-key nonce 274232351000048 -> 274232351000048"
+      "tx": "GjSxCPrZMCp3HGEGjdojdMXutLFhskUwTKegpMot1Bz6",
+      "detail": "vault nonce 2 -> 3, relayer access-key nonce 274232351000058 -> 274232351000058"
+    },
+    {
+      "name": "a fresh relayer refuses the spent authorization at preflight, without a transaction",
+      "ok": true,
+      "detail": "HTTP 422 nonce is not the vault's next nonce (3)"
+    },
+    {
+      "name": "replayed authorization: /outcome is unknown with attemptRejected, not failed; the first stays delivered",
+      "ok": true,
+      "tx": "ANrC8HHzazZz7frfogWByiEVWny55PuM7oMnryQ47wz8",
+      "detail": "replay unknown attemptRejected=true; vault {\"ActionError\":{\"index\":0,\"kind\":{\"FunctionCallError\":{\"ExecutionError\":\"Smart contract panicked: stale or reused nonce\"}}}}; first delivered; vault nonce 3"
     },
     {
       "name": "tampered signature refused, no transaction sent",
       "ok": true,
-      "detail": "HTTP 422 invalid signature; relayer access-key nonce 274232351000048 -> 274232351000048"
+      "detail": "HTTP 422 invalid signature; relayer access-key nonce 274232351000059 -> 274232351000059"
+    },
+    {
+      "name": "reserved spend is persisted to the state file",
+      "ok": true,
+      "detail": "state file 31440226083610000000000 yocto, health 31440226083610000000000"
     }
   ],
-  "vault": "1decab283ca92482.pq87-vaults-r2.qlyphs-grad-c48a-parent.testnet",
-  "spent_budget_yocto": "30000000000000000000000",
+  "vault": "1decab283ca92482.pq87-vaults-r3.qlyphs-grad-c48a-parent.testnet",
+  "receiver": "qlyphs-grad-c48a-parent.testnet",
+  "spend": {
+    "protocol_version": 88,
+    "max_gas_price_yocto": "1000000000",
+    "reserved_per_near_transfer_yocto": "31440226083610000000000",
+    "peak_charge_yocto": "30953116503895000000000",
+    "net_cost_after_refunds_yocto": "774436944775500000000",
+    "heights": "274978343..274978359"
+  },
+  "replay": {
+    "tx": "ANrC8HHzazZz7frfogWByiEVWny55PuM7oMnryQ47wz8",
+    "relayer_outcome": {
+      "transaction": "ANrC8HHzazZz7frfogWByiEVWny55PuM7oMnryQ47wz8",
+      "status": "unknown",
+      "attemptRejected": true,
+      "detail": "execute refused for this attempt; the authorization may be accepted elsewhere"
+    },
+    "vault_error": {
+      "ActionError": {
+        "index": 0,
+        "kind": {
+          "FunctionCallError": {
+            "ExecutionError": "Smart contract panicked: stale or reused nonce"
+          }
+        }
+      }
+    },
+    "first_tx_outcome": {
+      "transaction": "GjSxCPrZMCp3HGEGjdojdMXutLFhskUwTKegpMot1Bz6",
+      "status": "delivered",
+      "detail": "NEAR transfer"
+    }
+  },
+  "spent_budget_yocto": "31440226083610000000000",
   "cap_yocto": "300000000000000000000000"
 }

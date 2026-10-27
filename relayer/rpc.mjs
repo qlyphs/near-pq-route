@@ -9,6 +9,12 @@ export class RpcError extends Error {
   }
 }
 
+/**
+ * True only for the node's explicit refusal of a transaction while validating it (bad nonce, balance,
+ * signature, expired block hash). Any other error, a node-side timeout included, leaves the outcome open.
+ */
+export const isValidationRejection = (e) => e instanceof RpcError && e.rpc?.cause?.name === 'INVALID_TRANSACTION';
+
 /** No usable answer (network, timeout, bad response): the outcome of the request is unknown. */
 export class TransportError extends Error {
   constructor(message) {
@@ -17,7 +23,7 @@ export class TransportError extends Error {
   }
 }
 
-const READS = new Set(['block', 'query', 'gas_price']);
+const READS = new Set(['block', 'query', 'gas_price', 'EXPERIMENTAL_protocol_config']);
 
 export function createRpc(url, { timeoutMs = 15000, retries = 3, fetchImpl = fetch } = {}) {
   let id = 0;

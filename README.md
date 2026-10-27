@@ -22,11 +22,12 @@ for the exact rules.
 | Relayer on testnet: a payment signed with noble (as the wallet will) relayed and followed to delivery; a repeat answered with the same hash and no second transaction; a tampered signature refused before any transaction | `evidence/relayer-testnet.json` |
 | Verification alone costs 6.47 Tgas on testnet, one call, 9/9 vectors | `evidence/testnet.json`, `evidence/gas.json` |
 
-Testnet accounts: factory `pq87-vaults-r2.qlyphs-grad-c48a-parent.testnet`, vault
-`1decab283ca92482.pq87-vaults-r2.qlyphs-grad-c48a-parent.testnet`. Earlier deployments predate review
+Testnet accounts: factory `pq87-vaults-r3.qlyphs-grad-c48a-parent.testnet`, vault
+`1decab283ca92482.pq87-vaults-r3.qlyphs-grad-c48a-parent.testnet`. Earlier deployments predate review
 fixes and are not trusted: `pq87-vault.…` and `pq87-factory.…` (`deployments/superseded-testnet-r1.json`),
 and `pq87-vaults.…`, whose factory refunded failed creations from its callback
-(`deployments/superseded-testnet-r2.json`).
+(`deployments/superseded-testnet-r2.json`), and `pq87-vaults-r2.…`, whose refund removed the debt before
+the transfer was delivered (`deployments/superseded-testnet-r3.json`).
 
 ## How it works
 

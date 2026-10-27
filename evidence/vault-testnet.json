@@ -1,50 +1,50 @@
 {
   "network": "testnet",
-  "factory": "pq87-vaults-r2.qlyphs-grad-c48a-parent.testnet",
-  "vault": "1decab283ca92482.pq87-vaults-r2.qlyphs-grad-c48a-parent.testnet",
+  "factory": "pq87-vaults-r3.qlyphs-grad-c48a-parent.testnet",
+  "vault": "1decab283ca92482.pq87-vaults-r3.qlyphs-grad-c48a-parent.testnet",
   "steps": [
     {
       "name": "factory creation audit: CreateAccount, Transfer, DeployContract only",
       "ok": true,
-      "tx": "7n12Jwd1s2RMv5X3RGoKpg1xb3Wi2ogG8rzwURXUEKsB",
+      "tx": "13KyFPvPPWZVYB355Gcr12JNLSTg2DdRxyT9RueaHWqg",
       "detail": "2 receipts"
     },
     {
       "name": "factory creates the vault at the key-derived address",
       "ok": true,
-      "tx": "4ZuT3EgmCWFTVKnPjRcb2v36QrgxpAEBDequZjUDQ79S"
+      "tx": "EAsaEKre5t6XKMPGHTVA3NMnV1341dVztzbzxcjDJH6Z"
     },
     {
       "name": "wallet preflight: pinned factory, registry record, code, zero keys, exact storage",
       "ok": true,
-      "detail": "nonce 0 at block 6y2j2YMLKGdMbasBWRAiKBMZ4dGGZThPNtJ5hihresGZ"
+      "detail": "nonce 0 at block EFH67j9uetyfqiJc763MLL6s2vdhi1vaubD4JdXf8An2"
     },
     {
       "name": "NEAR payment of 0.1 NEAR to the signed receiver",
       "ok": true,
-      "tx": "4Ga95c7VWAAcUN8ajizoXLQrNExzwxWKoWue1wKnMUpm",
-      "detail": "6.974249565309 Tgas"
+      "tx": "wmdX1zRFwdz3X473TBvVx6PqT4o6cj8c6fQKdyZqMHG",
+      "detail": "6.979776303609 Tgas"
     },
     {
       "name": "replay refused on-chain",
       "ok": true,
-      "tx": "EF5AiqaSWopujJycjhqSy55PrAnLwbN4bL7FuJGYew1a"
+      "tx": "GvNtgpxHp8LiVBqGNEjrb3N1gPPRT5uFoXtpYm52bVgk"
     },
     {
       "name": "tampered amount refused on-chain",
       "ok": true,
-      "tx": "7kSCsP4mGKBrHVhJzpgB7NrRTeRyEedf295TLxf1FrR9"
+      "tx": "QibJvKmxJzKfrLbk55YLpiqX86P29nivMXWx7LYJef2"
     },
     {
       "name": "foreign ML-DSA-87 key refused on-chain",
       "ok": true,
-      "tx": "7LdQo4UmccL6wxMNasVK1e933wQnkdzP5moVN1VRw81K"
+      "tx": "3e3FHwndVgUBibCf44X4ryN1H2sQfzB85kM3qwpo3hTe"
     },
     {
       "name": "wNEAR (NEP-141) payment of 0.05 out of the vault",
       "ok": true,
-      "tx": "3ykmDadEjoBsNy9j4mTkW5MkUz9H46EzrBCtsc1d1kkA",
-      "detail": "7.068671296289 Tgas, vault wNEAR 50000000000000000000000"
+      "tx": "GxpgCc4hQcHar1yk999b6wqyL4P31ERUUPrtLv8BTJHX",
+      "detail": "7.072624925117 Tgas, vault wNEAR 50000000000000000000000"
     }
   ]
 }

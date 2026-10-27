@@ -1,11 +1,11 @@
 {
   "network": "testnet",
-  "factory": "pq87-vaults-r2.qlyphs-grad-c48a-parent.testnet",
-  "factory_sha256": "f8d1bed9227fe2e7456dc65ce33dd53ffb9bb6c940710998f3a765d94af97a22",
+  "factory": "pq87-vaults-r3.qlyphs-grad-c48a-parent.testnet",
+  "factory_sha256": "a480757ceda6f8dc7ea19cc2f3a99f32bf2e0804ebaa87ded48ad7c1b8defa72",
   "vault_sha256": "374af7b0bcda42b81a04b12b36f8574efe40c04bc39b220cc7d15c1791b7f8d3",
   "factory_creation": {
-    "tx": "7n12Jwd1s2RMv5X3RGoKpg1xb3Wi2ogG8rzwURXUEKsB",
+    "tx": "13KyFPvPPWZVYB355Gcr12JNLSTg2DdRxyT9RueaHWqg",
     "sender": "qlyphs-grad-c48a-parent.testnet",
-    "block_height": 274971202
+    "block_height": 274976622
   }
 }

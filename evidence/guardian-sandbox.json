@@ -1,0 +1,333 @@
+{
+  "suite": "guardian.sandbox",
+  "guardian_sha256": "886ec53ae9f083daac36c5da0a0c181c8869e472166e1709f16a9d089aa5889c",
+  "token_v1_sha256": "28055301a82bd6b595b99a785f50c62b26ef93fb856a63c7dd08994c3c553037",
+  "token_v2_sha256": "3f5fb76de7df1efc6dad55d7a3d8b19431c4687227b617aecbe11e59e5ccfd2c",
+  "results": [
+    {
+      "name": "Guardian created in one batch: create, fund, deploy, init",
+      "ok": true,
+      "detail": "14.046783585809 Tgas"
+    },
+    {
+      "name": "Guardian account has no access key",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "state reports config hash, target, delay, signer key hashes",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "init only once",
+      "ok": true,
+      "detail": "already initialized"
+    },
+    {
+      "name": "init refuses duplicate signer keys",
+      "ok": true,
+      "detail": "signer keys must be distinct"
+    },
+    {
+      "name": "init refuses a delay under 60 s",
+      "ok": true,
+      "detail": "delay must be"
+    },
+    {
+      "name": "init refuses a window under 1 hour",
+      "ok": true,
+      "detail": "window must be"
+    },
+    {
+      "name": "init refuses the Guardian as its own target",
+      "ok": true,
+      "detail": "cannot guard itself"
+    },
+    {
+      "name": "init only from the direct parent",
+      "ok": true,
+      "detail": "init must come from the parent"
+    },
+    {
+      "name": "target handed to the Guardian",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "one signer twice is not a quorum",
+      "ok": true,
+      "detail": "distinct signers"
+    },
+    {
+      "name": "an outsider key is not a signer",
+      "ok": true,
+      "detail": "invalid approval"
+    },
+    {
+      "name": "approval index pointing at another signer",
+      "ok": true,
+      "detail": "invalid approval"
+    },
+    {
+      "name": "approvals do not transfer to a changed amount",
+      "ok": true,
+      "detail": "invalid approval"
+    },
+    {
+      "name": "wrong network tag",
+      "ok": true,
+      "detail": "wrong network"
+    },
+    {
+      "name": "operation for another Guardian",
+      "ok": true,
+      "detail": "another Guardian"
+    },
+    {
+      "name": "operation for another target",
+      "ok": true,
+      "detail": "another target"
+    },
+    {
+      "name": "operation for another configuration",
+      "ok": true,
+      "detail": "another configuration"
+    },
+    {
+      "name": "expired approvals",
+      "ok": true,
+      "detail": "approvals expired"
+    },
+    {
+      "name": "future nonce",
+      "ok": true,
+      "detail": "stale or future nonce"
+    },
+    {
+      "name": "nonzero reserved byte",
+      "ok": true,
+      "detail": "reserved bytes"
+    },
+    {
+      "name": "non-canonical receiver padding",
+      "ok": true,
+      "detail": "bad receiver"
+    },
+    {
+      "name": "unknown action",
+      "ok": true,
+      "detail": "unknown action"
+    },
+    {
+      "name": "trailing bytes after a mint",
+      "ok": true,
+      "detail": "unexpected trailing"
+    },
+    {
+      "name": "truncated envelope",
+      "ok": true,
+      "detail": "input shorter"
+    },
+    {
+      "name": "propose refuses a cancel operation",
+      "ok": true,
+      "detail": "mint or an upgrade"
+    },
+    {
+      "name": "rejections changed nothing",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "valid mint queued with signers 1 and 2",
+      "ok": true,
+      "detail": "13.430288363808 Tgas"
+    },
+    {
+      "name": "active record exposes the exact message",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "timelock = queue time + 60 s, in nanoseconds",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "second proposal while one is active",
+      "ok": true,
+      "detail": "another operation is active"
+    },
+    {
+      "name": "replay of the queued approvals",
+      "ok": true,
+      "detail": "stale or future nonce"
+    },
+    {
+      "name": "execute before the timelock",
+      "ok": true,
+      "detail": "timelock has not passed"
+    },
+    {
+      "name": "early execute left the operation queued",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "execute with too little gas after the timelock",
+      "ok": true,
+      "detail": "Exceeded the prepaid gas"
+    },
+    {
+      "name": "underfunded execute left the operation queued",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "two racing executes dispatch exactly once",
+      "ok": true,
+      "detail": "ok 6.044415119837 Tgas | {\"ActionError\":{\"index\":0,\"kind\":{\"FunctionCallError\":{\"ExecutionError\":\"Smart contract panicked: no queued operation\"}}"
+    },
+    {
+      "name": "mint applied and settled",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "execute after settlement",
+      "ok": true,
+      "detail": "no queued operation"
+    },
+    {
+      "name": "on_result is private",
+      "ok": true,
+      "detail": "private"
+    },
+    {
+      "name": "former owner cannot mint after handover",
+      "ok": true,
+      "detail": "only the Guardian"
+    },
+    {
+      "name": "cancel naming another proposal",
+      "ok": true,
+      "detail": "another proposal"
+    },
+    {
+      "name": "cancel signed for another Guardian",
+      "ok": true,
+      "detail": "another Guardian"
+    },
+    {
+      "name": "cancel naming another nonce",
+      "ok": true,
+      "detail": "another nonce"
+    },
+    {
+      "name": "cancel needs two signers",
+      "ok": true,
+      "detail": "distinct signers"
+    },
+    {
+      "name": "cancel ends the queued operation and frees the slot",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "cancel replay",
+      "ok": true,
+      "detail": "no queued operation"
+    },
+    {
+      "name": "canceled approvals cannot be queued again",
+      "ok": true,
+      "detail": "stale or future nonce"
+    },
+    {
+      "name": "upgrade code must match the approved hash",
+      "ok": true,
+      "detail": "code length does not match"
+    },
+    {
+      "name": "upgrade code with the right length but other bytes",
+      "ok": true,
+      "detail": "does not match the approved hash"
+    },
+    {
+      "name": "failing upgrade queued with its code",
+      "ok": true,
+      "detail": "14.705847690954 Tgas"
+    },
+    {
+      "name": "failed migration settles Failed, old code and state kept",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "upgrade V1 to V2 through the Guardian",
+      "ok": true,
+      "detail": "execute 9.70178903339 Tgas"
+    },
+    {
+      "name": "balances, supply, Guardian and op high-water mark preserved",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "queued code deleted after settlement",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "expire before the window closes",
+      "ok": true,
+      "detail": "still open"
+    },
+    {
+      "name": "execute after the dispatch window",
+      "ok": true,
+      "detail": "dispatch window closed"
+    },
+    {
+      "name": "expire frees the slot",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "code above the cap",
+      "ok": true,
+      "detail": "register too large"
+    },
+    {
+      "name": "131,072-byte code queued",
+      "ok": true,
+      "detail": "29.182989267639 Tgas"
+    },
+    {
+      "name": "cancel deletes the maximum-size code",
+      "ok": true,
+      "detail": "15.571613180108 Tgas"
+    },
+    {
+      "name": "failed callback: mint stays applied, operation stays executing",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "unresolved operation is not dispatched again",
+      "ok": true,
+      "detail": "no queued operation"
+    },
+    {
+      "name": "unresolved operation cannot be expired",
+      "ok": true,
+      "detail": "no queued operation"
+    },
+    {
+      "name": "no new operation while one is unresolved",
+      "ok": true,
+      "detail": "another operation is active"
+    }
+  ]
+}

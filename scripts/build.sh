@@ -15,10 +15,15 @@ ldflags=(-Wl,--no-entry -Wl,--strip-all -Wl,-z,stack-size=262144
 for chain in sandbox testnet mainnet; do
   "$clang" "${cflags[@]}" -DQP_CHAIN="\"$chain\"" core/pq87.c core/freestanding.c contract/vault.c \
     "${ldflags[@]}" -o "build/vault-$chain.wasm"
+  "$clang" "${cflags[@]}" -DQP_CHAIN="\"$chain\"" core/pq87.c core/freestanding.c contract/guardian.c \
+    "${ldflags[@]}" -o "build/guardian-$chain.wasm"
   # The factory embeds the exact vault bytes it deploys (#embed, C23).
   "$clang" "${cflags[@]}" -std=c23 --embed-dir=build -DQP_CHAIN="\"$chain\"" -DVAULT_WASM="\"vault-$chain.wasm\"" \
     core/freestanding.c contract/factory.c "${ldflags[@]}" -o "build/factory-$chain.wasm"
 done
+# Test-only Guardian whose settlement callback always fails (unresolved-execution test). Sandbox only.
+"$clang" "${cflags[@]}" -DQP_CHAIN='"sandbox"' -DFAIL_CALLBACK core/pq87.c core/freestanding.c contract/guardian.c \
+  "${ldflags[@]}" -o build/guardian-sandbox-failing-callback.wasm
 # Guardian reference target, V1 and V2, plus a V2 whose migrate always fails (rollback test).
 for v in 1 2; do
   "$clang" "${cflags[@]}" -DTOKEN_VERSION=$v core/freestanding.c contract/token.c "${ldflags[@]}" -o "build/token-v$v.wasm"
@@ -27,3 +32,4 @@ done
 # Test-only NEP-141 stand-in for the sandbox suite.
 "$clang" "${cflags[@]}" tests/mock_ft.c "${ldflags[@]}" -o build/mock_ft.wasm
 shasum -a 256 build/*.wasm
+node scripts/check-exports.mjs

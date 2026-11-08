@@ -81,6 +81,8 @@ record('fractional and large amounts format exactly', formatUnits(12345000000000
   record('rpc: HTTP 503 with a JSON body moves to the next URL', (await new Rpc(['a', 'b']).call('block', {})).fine === true && calls.join() === 'a,b');
   calls = answers([[429, { message: 'Too Many Requests' }], [200, ok]]);
   record('rpc: HTTP 429 with a JSON body moves to the next URL', (await new Rpc(['a', 'b']).call('block', {})).fine === true && calls.join() === 'a,b');
+  calls = answers([[200, { jsonrpc: '1.0', id: 'other', result: { fine: true } }]]);
+  record('rpc: wrong version or id is an error, not a result', await new Rpc(['a']).call('block', {}).then(() => false, () => true));
   calls = answers([[200, { hello: 1 }]]);
   record('rpc: a body that is not a JSON-RPC answer is an error, not a result', await new Rpc(['a']).call('block', {}).then(() => false, () => true));
   calls = answers([[503, 'down'], [200, ok]]);

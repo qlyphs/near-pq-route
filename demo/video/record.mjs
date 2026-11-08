@@ -64,12 +64,13 @@ await page.waitForFunction((h) => document.getElementById('exec-result').dataset
 await wait(2500);
 mark('timelock');
 await caption('Approved and queued. Nobody can execute it before the delay ends.');
-await page.waitForFunction(() => !document.getElementById('execute').disabled, null, { timeout: 120000 });
+// Another visitor's request may settle this proposal first: either the button opens or the result is already applied.
+await page.waitForFunction((h) => { const el = document.getElementById('exec-result'); return !document.getElementById('execute').disabled || (el.dataset.proposalHash === h && el.dataset.status === 'applied'); }, expectedHash, { timeout: 120000 });
 mark('execute');
 await caption('After the delay, anyone can execute it.');
 await scrollTo('#t-approved');
 await wait(1200);
-await page.click('#execute');
+if (!(await page.isDisabled('#execute'))) await page.click('#execute');
 await page.waitForFunction((h) => { const el = document.getElementById('exec-result'); return el.dataset.proposalHash === h && el.dataset.status === 'applied'; }, expectedHash, { timeout: 60000 });
 await wait(3500);
 mark('history');

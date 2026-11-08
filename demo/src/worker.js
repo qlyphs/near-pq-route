@@ -60,6 +60,7 @@ async function mint(rpc, env, body, ip) {
   let g = await rpc.view(accounts.guardian, 'state');
   // A visitor who never comes back would hold the single slot: once its delay has passed, anyone may execute it
   // (or close it after its window), so the demo settles it first.
+  // Re-read after any attempt: a failed target receipt still frees the slot once the Guardian records the result.
   if (g.active?.status === 'queued' && (await settleIfDue(rpc, env, g.active))) g = await rpc.view(accounts.guardian, 'state');
   if (g.active) return json({ error: 'Another operation is in the timelock right now. Watch it below, or try again in a minute.', active: g.active }, 409);
   const block = await rpc.block({ finality: 'final' });
@@ -70,13 +71,14 @@ async function mint(rpc, env, body, ip) {
   return json({ ok: r.ok, tx: r.hash, failure: r.failure, proposal_hash: sha256(op).toString('hex'), message_hex: op.toString('hex'), receiver_id: receiver, amount: MINT_AMOUNT.toString() }, r.ok ? 200 : 502);
 }
 
-// Runs execute (or expire after the dispatch window) on a queued operation whose delay has passed; true if sent.
+// Runs execute (or expire after the dispatch window) on a queued operation whose delay has passed; true once a
+// transaction was sent, whatever its receipts: the caller reads the Guardian state again either way.
 async function settleIfDue(rpc, env, a) {
   const now = BigInt((await rpc.block({ finality: 'optimistic' })).header.timestamp_nanosec);
   if (now < BigInt(a.eta_ns)) return false;
   const method = now >= BigInt(a.expires_ns) ? 'expire' : 'execute';
-  const r = await rpc.send(env.RELAYER_ID, edKey(env.RELAYER_KEY), accounts.guardian, [functionCall(method, new Uint8Array(0), method === 'expire' ? 30n * TGAS : 300n * TGAS)]);
-  return r.ok;
+  await rpc.send(env.RELAYER_ID, edKey(env.RELAYER_KEY), accounts.guardian, [functionCall(method, new Uint8Array(0), method === 'expire' ? 30n * TGAS : 300n * TGAS)]);
+  return true;
 }
 
 // Executes the active operation once its delay has passed; after its dispatch window it is closed with expire().

@@ -232,8 +232,8 @@ function render(view) {
     };
     tick(); ticking = setInterval(tick, 500);
     // A message left from an earlier followed operation never stays under this one.
-    if ($('exec-result').dataset.status !== 'executing') setResult('', '', 'queued');
-    else $('exec-result').dataset.proposalHash = current.proposal_hash;
+    const r = $('exec-result'), sameExecution = r.dataset.status === 'executing' && r.dataset.proposalHash === current.proposal_hash;
+    if (!sameExecution) setResult('', '', 'queued');
     return;
   }
   $('execute').disabled = true; $('op-bar').style.width = '100%';
@@ -279,8 +279,8 @@ $('execute').onclick = async () => {
   try {
     const r = await api('/api/execute', { proposal_hash: op.proposal_hash });
     if (r.tx) op.execute_tx = r.tx;
-    if (!r.ok && r.error) setResult('unverified', esc(r.error), 'unknown');
-  } catch (e) { setResult('unverified', `Could not reach the demo: ${esc(e.message)}`, 'unknown'); }
+    if (!r.ok && r.error && current === op) setResult('unverified', esc(r.error), 'unknown');
+  } catch (e) { if (current === op) setResult('unverified', `Could not reach the demo: ${esc(e.message)}`, 'unknown'); }
   finally { inflight = false; await refresh(); follow(); }
 };
 $('rerun').onclick = runReport;

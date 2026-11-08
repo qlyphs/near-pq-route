@@ -47,7 +47,7 @@ The page also lists every transaction of the testnet cutover, each linked to the
 | [`contract/guardian.c`](contract/guardian.c) | The Guardian. Immutable, no owner, no keys. `propose` and `cancel` share one validator (framing, network, Guardian, target, config hash, deadline, two distinct valid ML-DSA-87 approvals). `execute` marks the operation Executing before its single dispatch; a private callback settles it. |
 | [`contract/token.c`](contract/token.c) | The reference target: a small token that starts with a classical owner, hands mint and upgrade to the Guardian once, and upgrades itself in one atomic deploy-and-migrate receipt. |
 | [`sdk/guardian.mjs`](sdk/guardian.mjs) | Message encoding, approvals, the per-deployment creation audit and the `verifyControl` report. |
-| [`tests/`](tests) | Unit checks of the SDK (33) and of the demo's experiment verdicts and followed-operation logic (42), sandbox suites (Guardian 67, token 48) and the testnet ceremony. |
+| [`tests/`](tests) | Unit checks of the SDK (33) and of the demo's experiment verdicts and followed-operation logic (43), sandbox suites (Guardian 67, token 48) and the testnet ceremony. |
 | [`demo/`](demo) | The hosted product page and demo: one Cloudflare Worker, a landing page (`/`) and the guided demo (`/demo`). |
 
 The ML-DSA-87 verifier in [`core/`](core) is the same C code as the Qlyphs vault (below), verified
@@ -92,7 +92,7 @@ Release `qlyphs-guardian.testnet`. Journal of every step: `deployments/guardian-
 | Cancel is bound to Guardian, nonce and proposal hash; every terminal path frees the slot; two racing executes dispatch once; an underfunded execute leaves the operation queued; a failing callback leaves it unresolved, never retried | `evidence/guardian-sandbox.json` |
 | The token reads exactly what `JSON.parse` reads or refuses (duplicates, escapes, non-JSON, trailing data), across the full u128 range | `evidence/token-sandbox.json` (48 checks) |
 | The report passes only when its nine required checks pass; it reports unverified for the regression cases covered (null or malformed views, answers for another block, key-list continuations, placeholder provenance, pending or incomplete transactions, handover executed after deletion, invalid block headers, stale snapshots) | `evidence/sdk-unit.json` (33 checks) |
-| The demo shows an experiment as blocked only for the specific expected refusal; timeouts, unfunded or missing senders, non-final or mismatched evidence and other errors read as unverified; the page follows its own proposal to settlement and never shows another visitor's result as its own | `evidence/demo-unit.json` (42 checks) |
+| The demo shows an experiment as blocked only for the specific expected refusal; timeouts, unfunded or missing senders, non-final or mismatched evidence and other errors read as unverified; the page follows its own proposal to settlement and never shows another visitor's result as its own | `evidence/demo-unit.json` (43 checks) |
 | The release Wasm exports exactly the reviewed entry points | `scripts/check-exports.mjs`, run by `scripts/build.sh` |
 
 Gas on testnet: queue a mint 13.6 Tgas (two ML-DSA-87 verifications), queue an upgrade 15.1 Tgas, execute a
@@ -118,7 +118,7 @@ npm ci
 bash scripts/build.sh                   # every contract, SHA-256, release export check
 node scripts/check-release-hashes.mjs   # Guardian, token V1 and V2 against the testnet release
 node tests/sdk.unit.mjs                 # 33 checks, no network
-node tests/demo.unit.mjs                # 42 checks, no network
+node tests/demo.unit.mjs                # 43 checks, no network
 node tests/token.sandbox.mjs            # 48 checks, local NEAR sandbox
 node tests/guardian.sandbox.mjs         # 67 checks
 ```

@@ -202,6 +202,11 @@
       "detail": ""
     },
     {
+      "name": "rpc: wrong version or id is an error, not a result",
+      "ok": true,
+      "detail": ""
+    },
+    {
       "name": "rpc: a body that is not a JSON-RPC answer is an error, not a result",
       "ok": true,
       "detail": ""

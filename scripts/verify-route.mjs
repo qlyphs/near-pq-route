@@ -51,18 +51,23 @@ const verifierWasm = readFileSync('third_party/near-intents/defuse-32cd1f97.wasm
 const bridgeWasm = readFileSync('build/bridge-testnet.wasm');
 const out = { date: new Date().toISOString(), rpc: RPC, bridges: [] };
 
-const routes = ['deployments/route-testnet.json', 'deployments/route-curve-testnet.json'].map((f) => JSON.parse(readFileSync(f, 'utf8')));
+// The current bridge (curve test chain) must equal the local build; earlier ones must equal the hash they were deployed with.
+const routes = ['deployments/route-curve-testnet.json', 'deployments/superseded-route-curve-r1.json', 'deployments/route-testnet.json']
+  .map((f, i) => ({ ...JSON.parse(readFileSync(f, 'utf8')), current: i === 0 }));
 const { verifier, relayer } = routes[0];
 check(`verifier ${verifier.account} has no access key`, (await keys(verifier.account)).length === 0);
 check('verifier runs the pinned upstream build', (await codeHash(verifier.account)) === b58(sha256(verifierWasm)), `sha256 ${sha256(verifierWasm).toString('hex').slice(0, 16)}…`);
 const relayKeys = await keys(relayer.account);
 check(`relayer ${relayer.account}: its only key is ML-DSA-65`, relayKeys.length === 1 && relayKeys[0] === 'ml-dsa-65-hash');
+const sponsorKeys = await keys('qlyphs-pqroute-c.testnet');
+check('sponsor qlyphs-pqroute-c.testnet (opens recipient accounts): its only key is ML-DSA-65', sponsorKeys.length === 1 && sponsorKeys[0] === 'ml-dsa-65-hash');
 
 for (const route of routes) {
   const b = route.bridge.account;
-  const entry = { bridge: b, quantus_network: route.bridge.quantus_network ?? 'Quantus development network', mints: [], withdrawals: [] };
+  const entry = { bridge: b, current: route.current, quantus_network: route.bridge.quantus_network ?? 'Quantus development network', mints: [], withdrawals: [] };
   check(`${b} has no access key`, (await keys(b)).length === 0);
-  check(`${b} runs build/bridge-testnet.wasm`, (await codeHash(b)) === b58(sha256(bridgeWasm)));
+  const want = Buffer.from(route.bridge.wasm_sha256, 'hex');
+  check(`${b} runs the code it was deployed with${route.current ? ' (= build/bridge-testnet.wasm)' : ' (earlier version)'}`, (await codeHash(b)) === b58(want) && (!route.current || want.equals(sha256(bridgeWasm))));
   const st = await view(b, 'state');
   check(`${b} names the Quantus genesis and the three attester keys`, st.quantus_genesis === route.bridge.quantus_genesis.replace(/^0x/, '') && st.attesters.every((h, i) => h === attesters[i].key_sha256));
   for (const t of (await listTxs(b)).filter((x) => x.methods.includes('mint'))) {

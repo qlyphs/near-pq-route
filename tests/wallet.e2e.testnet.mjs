@@ -3,13 +3,13 @@
 // review, the relayer pays the gas, and the wallet follows the outcome. Also checks the signing journal
 // and the 24-word rule. Writes evidence/wallet-e2e-testnet.json.
 // Usage: PARENT_ACCOUNT=<id> PARENT_KEY_FILE=<ed25519 key file> RELAYER_ACCOUNT=<id> RELAYER_KEY_FILE=<file>
-//        [MONOREPO=~/quantus-otc] [SKIP_BUILD=1] node tests/wallet.e2e.testnet.mjs
+//        MONOREPO=<path to the wallet sources> [SKIP_BUILD=1] node tests/wallet.e2e.testnet.mjs
 import { connect, KeyPair, keyStores } from 'near-api-js';
 import { spawn, execFileSync } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
-import { homedir, tmpdir } from 'node:os';
+import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { checkVault, encodeMessage, vaultAddress } from '../sdk/vault.mjs';
 
@@ -20,7 +20,8 @@ const PORT = 8797;
 const { PARENT_ACCOUNT: parentId, RELAYER_ACCOUNT: relayerId } = process.env;
 if (!parentId || !relayerId || !process.env.PARENT_KEY_FILE || !process.env.RELAYER_KEY_FILE) throw new Error('see Usage');
 
-const monorepo = process.env.MONOREPO ?? join(homedir(), 'quantus-otc');
+const monorepo = process.env.MONOREPO;
+if (!monorepo) throw new Error('set MONOREPO to the wallet sources');
 const extensionDir = join(monorepo, 'apps/extension');
 const requireExt = createRequire(join(extensionDir, 'package.json'));
 const { chromium } = requireExt('@playwright/test');

@@ -1,0 +1,11 @@
+# Public SHA-256 code hashes and NEAR transaction hashes in evidence and deployment records, not secrets.
+deployments/guardian-qlyphs-guardian.json:generic-api-key:127
+deployments/guardian-qlyphs-guardian.json:generic-api-key:146
+deployments/guardian-qlyphs-guardian.json:generic-api-key:44
+deployments/guardian-qlyphs-guardian.json:generic-api-key:53
+deployments/superseded-guardian-r1.json:generic-api-key:12
+deployments/superseded-guardian-r1.json:generic-api-key:18
+deployments/superseded-guardian-r1.json:generic-api-key:41
+evidence/guardian-sandbox.json:generic-api-key:4
+evidence/guardian-sandbox.json:generic-api-key:5
+evidence/token-sandbox.json:generic-api-key:4

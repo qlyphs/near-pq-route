@@ -8,4 +8,4 @@ directory = "./public"
 binding = "ASSETS"
 
 [vars]
-RELAYER_ID = "relayer.qlyphs-guardian-r1.testnet"
+RELAYER_ID = "relayer.qlyphs-guardian.testnet"

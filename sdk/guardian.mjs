@@ -205,7 +205,7 @@ export async function auditCutover(provider, { owner, target, guardian, handover
   if (!da.length || !da.every((a) => kindOf(a) === 'DeleteKey')) throw new Error('key deletion transaction holds other actions');
   const removed = da.map((a) => a.DeleteKey.public_key).sort();
   if (JSON.stringify(removed) !== JSON.stringify([...deletedKeys].sort())) throw new Error('key deletion removed other keys than recorded');
-  const height = async (hash) => (await provider.block({ block_id: hash })).header.height;
+  const height = async (hash) => (await provider.sendJsonRpc('block', { block_id: hash })).header.height;
   const [hh, dh] = await Promise.all([height(h.transaction_outcome.block_hash), height(d.transaction_outcome.block_hash)]);
   if (dh < hh) throw new Error('keys were deleted before the handover');
   const last = Math.max(...await Promise.all(d.receipts_outcome.map((o) => height(o.block_hash))));

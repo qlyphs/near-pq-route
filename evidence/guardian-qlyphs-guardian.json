@@ -1,0 +1,113 @@
+{
+  "network": "testnet",
+  "release": "qlyphs-guardian.testnet",
+  "steps": [
+    {
+      "name": "guardian.qlyphs-guardian.testnet created and audited",
+      "ok": true,
+      "tx": "6gL6FeB2Pgm2bTv8bfqRnrzkLjhdQ4wCjMtgRX4bSBFf",
+      "detail": "CreateAccount,Transfer,DeployContract,FunctionCall, 2 receipts, final"
+    },
+    {
+      "name": "cutover of token.qlyphs-guardian.testnet: handover, then every key deleted",
+      "ok": true,
+      "detail": "handover CxDJg7EMpHjMBTmMGpCrvBw8g3LDwe7jfrcqMzLGA37i, delete 9gHUP4qwthzgr7kGZrgpMpRzfPMadY6BREyADdrjeXSD"
+    },
+    {
+      "name": "after the upgrade: V2 live; balances, Guardian and op high-water mark kept",
+      "ok": true,
+      "detail": "{\"version\":2,\"owner\":null,\"guardian\":\"guardian.qlyphs-guardian.testnet\",\"next_op\":\"2\",\"total_supply\":\"1255000\"}"
+    },
+    {
+      "name": "former owner mint refused: only the Guardian can do this",
+      "ok": true,
+      "tx": "Up1D2h2NJJmeiDvRZmGXGctmZdfzqqbP6ktWNmViGx4"
+    },
+    {
+      "name": "deleted token key refused by the network: InvalidAccessKeyError AccessKeyNotFound",
+      "ok": true,
+      "detail": "{\"name\":\"HANDLER_ERROR\",\"cause\":{\"info\":{},\"name\":\"INVALID_TRANSACTION\"},\"code\":-32000,\"message\":\"Server error\",\"data\":{\"TxExecutionError\":{\"InvalidTxError\":{\"I"
+    },
+    {
+      "name": "guardian-max.qlyphs-guardian.testnet created and audited",
+      "ok": true,
+      "tx": "3v9AhP9EyAbJAMdQ1Tz89VLCMQ1LwA62h4M6irV31mRv",
+      "detail": "CreateAccount,Transfer,DeployContract,FunctionCall, 2 receipts, final"
+    },
+    {
+      "name": "cutover of token-max.qlyphs-guardian.testnet: handover, then every key deleted",
+      "ok": true,
+      "detail": "handover 9R8T2cwUwovzVSALxVt5zaWUYhFtS5gMPMcYoDTUtgC2, delete BTdUZue5eeoeKCsUmLeC7MX13iu8ihjmfwrx3Tx3EtqN"
+    },
+    {
+      "name": "131,072-byte upgrade with a failing migration: settled failed, V1 code kept",
+      "ok": true,
+      "tx": "9NNG4BituLmxucmEdACHwkwMTnq4oo2ykZsjikJdCwZg"
+    },
+    {
+      "name": "131,072-byte upgrade applied and settled",
+      "ok": true,
+      "tx": "4FxwywjkuBqbNDYxLkSVaiBEzwQRPGvfHkVAJSwvN9Vx",
+      "detail": "callback 3.441363758827 of 10 Tgas"
+    }
+  ],
+  "attacks": {
+    "former_owner_mint_tx": "Up1D2h2NJJmeiDvRZmGXGctmZdfzqqbP6ktWNmViGx4",
+    "deleted_key_deploy": "{\"name\":\"HANDLER_ERROR\",\"cause\":{\"info\":{},\"name\":\"INVALID_TRANSACTION\"},\"code\":-32000,\"message\":\"Server error\",\"data\":{\"TxExecutionError\":{\"InvalidTxError\":{\"InvalidAccessKeyError\":{\"AccessKeyNotFoun"
+  },
+  "report": {
+    "block": {
+      "hash": "BinuirGjXqaiCAJR1wect3QEGSAxCXMBr5DtSXtyYLkv",
+      "height": 276779338
+    },
+    "ok": true,
+    "checks": [
+      {
+        "name": "Guardian has no access keys",
+        "status": "pass",
+        "detail": "0 keys"
+      },
+      {
+        "name": "Target has no access keys",
+        "status": "pass",
+        "detail": "0 keys"
+      },
+      {
+        "name": "Guardian runs the reproducible build",
+        "status": "pass",
+        "detail": "1d21064b72d9a366eb50ed79010410b922e50b52a277c64558c5a84e9ef29ef8"
+      },
+      {
+        "name": "Target runs a reviewed build",
+        "status": "pass",
+        "detail": "v2 5deb2e14bb4c60c005ad71df531d8875eb51251164c2965114057ecb9f3bcad9"
+      },
+      {
+        "name": "Guardian config bytes match",
+        "status": "pass",
+        "detail": "config sha256 4e3618aafe9b467977af2b41d4275b5f402350183eabb1c3e840e0bd054cfbf2"
+      },
+      {
+        "name": "Guardian state agrees",
+        "status": "pass",
+        "detail": "2 of 3 signers, delay 60 s, window 86400 s, next nonce 2, active none"
+      },
+      {
+        "name": "Target is guarded by this Guardian, no owner",
+        "status": "pass",
+        "detail": "version 2, next op 2, supply 1255000"
+      },
+      {
+        "name": "Creation audited on chain",
+        "status": "pass",
+        "detail": "tx 6gL6FeB2Pgm2bTv8bfqRnrzkLjhdQ4wCjMtgRX4bSBFf: CreateAccount, Transfer, DeployContract, FunctionCall, exact config, final"
+      },
+      {
+        "name": "Cutover audited on chain",
+        "status": "pass",
+        "detail": "handover CxDJg7EMpHjMBTmMGpCrvBw8g3LDwe7jfrcqMzLGA37i, then 1 key(s) deleted in 9gHUP4qwthzgr7kGZrgpMpRzfPMadY6BREyADdrjeXSD"
+      }
+    ],
+    "statement": "At finalized block 276779338 these accounts had no access keys and ran these reviewed builds with this configuration, after the audited creation and cutover."
+  }
+}

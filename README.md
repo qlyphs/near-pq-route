@@ -30,7 +30,7 @@ Open the [demo](https://qlyphs-guardian-demo.qlyphs.workers.dev) and:
    ones, the token is guarded by this Guardian with no owner. Expect nine green checks.
 2. **Try the old keys.** The former owner's key and the token's deleted deployment key are published on the
    page. Click both buttons. Expect `only the Guardian can do this` from the token, and
-   `AccessKeyNotFound` from the network.
+   `InvalidAccessKeyError: AccessKeyNotFound` from the network.
 3. **Request a mint.** Enter any testnet account id. Two demo signers approve the 320-byte operation with
    ML-DSA-87, the Guardian queues it, and a 60-second timelock starts. Expect the Execute button to stay
    disabled until it ends, then click it. Expect `applied` and 100 demo tokens on that account.
@@ -44,7 +44,7 @@ The page also lists every transaction of the testnet cutover, each linked to the
 | [`contract/guardian.c`](contract/guardian.c) | The Guardian. Immutable, no owner, no keys. `propose` and `cancel` share one validator (framing, network, Guardian, target, config hash, deadline, two distinct valid ML-DSA-87 approvals). `execute` marks the operation Executing before its single dispatch; a private callback settles it. |
 | [`contract/token.c`](contract/token.c) | The reference target: a small token that starts with a classical owner, hands mint and upgrade to the Guardian once, and upgrades itself in one atomic deploy-and-migrate receipt. |
 | [`sdk/guardian.mjs`](sdk/guardian.mjs) | Message encoding, approvals, the per-deployment creation audit and the `verifyControl` report. |
-| [`tests/`](tests) | Sandbox suites (Guardian 65 checks, token 32) and the testnet ceremony. |
+| [`tests/`](tests) | Unit checks of the SDK (23), sandbox suites (Guardian 67, token 48) and the testnet ceremony. |
 | [`demo/`](demo) | The hosted demo: one Cloudflare Worker and one page. |
 
 The ML-DSA-87 verifier in [`core/`](core) is the same C code as the Qlyphs vault (below), verified
@@ -75,22 +75,27 @@ The full rules, the state machine and the trust boundary are in [docs/GUARDIAN.m
 
 ## Claims and evidence
 
+Release `qlyphs-guardian.testnet`. Journal of every step: `deployments/guardian-qlyphs-guardian.json`.
+
 | Claim | Evidence |
 |---|---|
-| The token has no access keys and is guarded by the Guardian; the Guardian has no keys; both run reviewed builds | Live: the demo's report. Recorded: `evidence/guardian-testnet.json` (`report`, final block 276774157) |
-| The Guardian was created by exactly CreateAccount, Transfer, DeployContract (pinned code), init (exact config bytes) | `deployments/guardian-testnet.json` → `guardian_creation.audit`, tx `46aD5edUAvAnJECv9oU39AbEcjprZZTv9s4UkWvYHPAi` |
-| Cutover: handover, then the token's only key deleted | handover `XJ8D1jJ3GG2EeT3voxAv3fVouA7sW3aMZwyXp5ctZUH`, delete key `F8CnfBZ2e1GN5KjzhxBd7dPawN7t3sW15UHELJy9D5fu` |
-| A PQ-approved mint and a PQ-approved upgrade V1 → V2 work after cutover; balances, Guardian and replay state are kept | `deployments/guardian-testnet.json` → `operations` (execute `9HTQBM55…`, `2rF1f6FV…`); `evidence/guardian-testnet.json` |
-| The former owner cannot mint; the deleted key cannot deploy | Live: demo buttons. Recorded: `evidence/guardian-testnet.json` → `attacks` |
-| One signer, an outsider key, a tampered field, another network, Guardian, target or config, an expired deadline, a replay: all refused, with no state change | `evidence/guardian-sandbox.json` |
-| Cancel is bound to Guardian, nonce and proposal hash; every terminal path frees the slot | `evidence/guardian-sandbox.json` |
-| Two racing executes dispatch once; an underfunded execute leaves the operation queued | `evidence/guardian-sandbox.json` |
-| A failing migration rolls the whole upgrade back and the Guardian records `failed` | `evidence/guardian-sandbox.json`, `evidence/token-sandbox.json` |
-| A 131,072-byte upgrade can be queued, read back from chain state (paginated `view_state`) and canceled | testnet propose `8oP1EokH…`, cancel `47v9wpUm…` |
+| The token has no access keys and is guarded by the Guardian; the Guardian has no keys; both run reviewed builds | Live: the demo's report. Recorded: `evidence/guardian-qlyphs-guardian.json` (`report`, final block 276779338) |
+| The Guardian was created by exactly CreateAccount, Transfer, DeployContract (pinned code), init (exact config bytes), with complete final execution | tx `6gL6FeB2Pgm2bTv8bfqRnrzkLjhdQ4wCjMtgRX4bSBFf`, re-audited by every report |
+| Cutover: handover to the Guardian, then the token's only key deleted, in that order | handover `CxDJg7EMpHjMBTmMGpCrvBw8g3LDwe7jfrcqMzLGA37i`, key deletion `9gHUP4qwthzgr7kGZrgpMpRzfPMadY6BREyADdrjeXSD`, re-audited by every report |
+| A PQ-approved mint and a PQ-approved upgrade V1 → V2 work after cutover; early execution is refused; balances, Guardian and replay state are kept | mint execute `FkyuGc7R5n14DBiyq4QQykJ3VKGiCLEw67cLUnrK88Xx`, upgrade execute `6AgZNcgPHbHfD1h9hsp465swo7ZU2V9x9kVJ9VNbMzcN`, early executes in the journal |
+| The former owner cannot mint; the network refuses the deleted key | Live: demo buttons. Recorded: `attacks` in the evidence file |
+| A 131,072-byte upgrade whose migration fails is rolled back and settled `failed`; a 131,072-byte upgrade applies; the callback uses 3.4 of its 10 Tgas | `9NNG4BituLmxucmEdACHwkwMTnq4oo2ykZsjikJdCwZg`, `4FxwywjkuBqbNDYxLkSVaiBEzwQRPGvfHkVAJSwvN9Vx` (second token and Guardian) |
+| One signer, an outsider key, a tampered field, another network, Guardian, target or config, an expired deadline, a replay: all refused, with no state change | `evidence/guardian-sandbox.json` (67 checks) |
+| Cancel is bound to Guardian, nonce and proposal hash; every terminal path frees the slot; two racing executes dispatch once; an underfunded execute leaves the operation queued; a failing callback leaves it unresolved, never retried | `evidence/guardian-sandbox.json` |
+| The token reads exactly what `JSON.parse` reads or refuses (duplicates, escapes, non-JSON, trailing data), across the full u128 range | `evidence/token-sandbox.json` (48 checks) |
+| The report never passes on missing, malformed, mismatched or placeholder evidence | `evidence/sdk-unit.json` (23 checks) |
 | The release Wasm exports exactly the reviewed entry points | `scripts/check-exports.mjs`, run by `scripts/build.sh` |
 
-Gas on testnet: propose a mint 13.4 Tgas (two ML-DSA-87 verifications), propose an upgrade 14.6 Tgas,
-execute a mint 6.0 Tgas, execute an upgrade 9.5 Tgas, cancel 15.5 Tgas.
+Gas on testnet: queue a mint 13.6 Tgas (two ML-DSA-87 verifications), queue an upgrade 15.1 Tgas, execute a
+mint 6.3 Tgas, execute an upgrade 10.0 Tgas, queue or execute a 131,072-byte upgrade about 29 Tgas.
+
+An earlier release (`qlyphs-guardian-r1.testnet`) ran before review fixes to the token and the report; its
+records are kept as `deployments/superseded-guardian-r1.json` and are not evidence for this build.
 
 ## Reproduce
 
@@ -99,15 +104,17 @@ Requirements: Node 22+, LLVM clang and lld with wasm32 (Homebrew `llvm` and `lld
 ```sh
 npm ci
 bash scripts/build.sh            # builds every contract, prints SHA-256, checks release exports
-node tests/token.sandbox.mjs     # 32 checks, local NEAR sandbox
-node tests/guardian.sandbox.mjs  # 65 checks
+node tests/sdk.unit.mjs          # 23 checks, no network
+node tests/token.sandbox.mjs     # 48 checks, local NEAR sandbox
+node tests/guardian.sandbox.mjs  # 67 checks
 ```
 
 The build is deterministic: the hashes printed for `build/guardian-testnet.wasm`, `build/token-v1.wasm`
 and `build/token-v2.wasm` must equal `guardian_sha256` and `reviewed_target_sha256` in
-`deployments/guardian-testnet.json`, which the report compares with the code deployed on testnet.
+`deployments/guardian-qlyphs-guardian.json`, which the report compares with the code deployed on testnet.
 
-To run your own testnet ceremony (fresh account ids, used once):
+To run your own testnet ceremony (fresh account ids, used once; the script stops at the first failed step
+and resumes only from state it recognises on chain):
 
 ```sh
 FUNDER_ACCOUNT=<funded testnet account> FUNDER_KEY_FILE=<its key file> SECRETS_DIR=<a folder outside the repo> \

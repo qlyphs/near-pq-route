@@ -203,7 +203,7 @@ $('rerun').onclick = runReport;
     `<li><b>Token key deleted</b>: the token account has no keys left · ${tx(c.cutover.delete_keys_tx)}</li>`,
     `<li><b>PQ mint</b> approved by signers 0 and 1, executed after the delay · ${tx(op.mint.execute_tx)}</li>`,
     `<li><b>PQ upgrade V1 → V2</b> approved by signers 1 and 2. Balances, Guardian and replay state kept · ${tx(op.upgrade.execute_tx)}</li>`,
-    `<li><b>131,072-byte code</b> queued, read back from chain state, then canceled by two signers · ${tx(c.max_code.cancel_tx)}</li>`,
+    `<li><b>131,072-byte upgrades</b> on a second token and Guardian: a migration that fails is rolled back and settled failed · ${tx(op.max_failing.execute_tx)}; the same size applies · ${tx(op.max_upgrade.execute_tx)}</li>`,
   ].join('');
 })();
 </script>

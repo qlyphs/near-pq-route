@@ -1,7 +1,7 @@
 // Qlyphs Guardian demo Worker (NEAR testnet): the "Verify control" report, live PQ-approved mints anyone can
 // request and execute, and the retired-credential attacks. Static page in demo/public.
 import { ml_dsa87 } from '@noble/post-quantum/ml-dsa.js';
-import deployment from '../../deployments/guardian-testnet.json';
+import deployment from '../../deployments/guardian-qlyphs-guardian.json';
 import { encodeOperation, envelope, sha256, verifyControl, isAccountId, GUARDIAN_CONTEXT } from '../../sdk/guardian.mjs';
 import { Rpc, edKey, functionCall, deployContract } from './near.js';
 
@@ -26,7 +26,7 @@ async function report(rpc) {
 async function state(rpc) {
   const [guardian, token, metadata] = await Promise.all([rpc.view(accounts.guardian, 'state'), rpc.view(accounts.token, 'state'), rpc.view(accounts.token, 'ft_metadata')]);
   const block = await rpc.block({ finality: 'optimistic' });
-  return { guardian, token, metadata, now_ns: block.header.timestamp_nanosec, accounts, ceremony: { parent_tx: deployment.parent_tx, legacy: deployment.legacy, guardian_creation: { tx: deployment.guardian_creation.tx, audit: deployment.guardian_creation.audit }, cutover: deployment.cutover, operations: deployment.operations, max_code: deployment.max_code } };
+  return { guardian, token, metadata, now_ns: block.header.timestamp_nanosec, accounts, ceremony: { parent_tx: deployment.parent_tx, legacy: deployment.legacy, guardian_creation: { tx: deployment.guardian_creation.tx, audit: deployment.guardian_creation.audit }, cutover: deployment.cutover, operations: deployment.operations, max: deployment.max } };
 }
 
 async function mint(rpc, env, body, ip) {

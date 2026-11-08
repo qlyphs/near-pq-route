@@ -38,7 +38,7 @@ const tState = () => ({ version: 2, owner: null, guardian: 'guardian.release.tes
 function provider({ state = {}, query = {}, tx = txs(), blockOf = () => BLOCK } = {}) {
   return {
     block: async (p) => (p.finality ? { header: { hash: BLOCK, height: 100 } } : { header: { hash: p.block_id, height: heights[p.block_id] ?? 0 } }),
-    sendJsonRpc: async (method, params) => { const r = tx[params.tx_hash]; if (!r) throw new Error(`unknown transaction ${params.tx_hash}`); return structuredClone(r); },
+    sendJsonRpc: async (method, params) => { if (method === 'block') return { header: { hash: params.block_id, height: heights[params.block_id] ?? 0 } }; const r = tx[params.tx_hash]; if (!r) throw new Error(`unknown transaction ${params.tx_hash}`); return structuredClone(r); },
     query: async (p) => {
       const base = { block_hash: blockOf(p), block_height: 100 };
       if (p.request_type === 'view_access_key_list') return { ...base, keys: [], ...(query.keys?.[p.account_id] ?? {}) };

@@ -23,9 +23,9 @@ post-quantum today, without new cryptography:
 | Release from the lock | 2 of 3 attesters, enforced by the native Quantus multisig | ML-DSA-87 |
 | Pay gas for the mint | the relayer, which has no authority | ML-DSA-65 (its only key) |
 
-Payment requests and receipts are encrypted with ML-KEM-1024 + AES-256-GCM.
+Payment requests are encrypted with ML-KEM-1024 + AES-256-GCM; receipts with AES-256-GCM under a key derived from the recipient's backup.
 
-**Trust, stated plainly.** The demo uses three separately keyed signer processes operated by the Qlyphs team.
+**Trust, stated plainly.** The demo uses three separate ML-DSA-87 attester keys, all operated by the Qlyphs team in one service.
 It demonstrates 2-of-3 authorization, not independent operators or decentralized custody. The attesters
 check Quantus deposits themselves; NEAR does not verify Quantus consensus. Two compromised attesters could
 mint unbacked tokens or release the reserve. NEAR validator signatures and consensus remain ed25519.
@@ -40,9 +40,17 @@ mint unbacked tokens or release the reserve. NEAR validator signatures and conse
 
 ## Formats
 
-**Route** (208 bytes, signed by the depositor's ML-DSA-87 key, context `qlyphs/near-route/v1`):
-`"QLYPRTE1"` | deposit id (32) | bridge id (length u8 + 64) | receiver id (length u8 + 64) | mode u8 (1 =
-into Intents) | SHA-256(receipt) (32) | zeros.
+**Route** (240 bytes): `"QLYPRTE2"` | deposit id (32) | bridge id (length u8 + 64) | receiver id (length u8 +
+64) | mode u8 (1 = into Intents) | SHA-256(receipt) (32) | SHA-256(the receiver's ML-DSA-65 key handle, ASCII)
+(32) | zeros. The depositor authorizes it with the key that signed the Quantus transfer: either an ML-DSA-87
+signature over it (context `qlyphs/near-route/v1`, command line), or, from the Qlyphs wallet, a site session
+challenge whose nonce is SHA-256 of these bytes, whose service is the lock and whose account is the depositor.
+
+**Receiver readiness**, checked by the payer before locking and by every attester before signing: the receiver
+exists; its only access key is a FullAccess key whose handle is exactly the route's; it has no contract, local or
+global; NEAR Intents holds no signing key for it (`public_keys_of` is empty) and authenticates it by its own
+account (`is_auth_by_predecessor_id_enabled`). So nobody, the sponsor included, can hold the account before the
+tokens arrive.
 
 **Attestation** (288 bytes, signed by two attesters, context `qlyphs/near-bridge/v1`):
 
@@ -67,8 +75,8 @@ minted; it records the deposit id before crediting.
 memo: "WITHDRAW_TO:<64 hex Quantus account id>"})`. The verifier calls the bridge's `ft_transfer` to itself,
 which burns and records `{amount, quantus_to, block, account}` under a sequential redemption id. The attesters
 read redemptions at the final block and release each one once, journaled per redemption id: a restart
-replays the journal and never pays twice. Withdrawals under 0.01 QTC are recorded as refused and not released
-(the burned amount stays burned), so dust cannot hold the queue; a release that keeps failing is set aside
+replays the journal and never pays twice. Withdrawals under 0.01 QTC are refused by the token itself before
+anything changes (direct redeem and WITHDRAW_TO alike; through Intents the verifier keeps the balance); a release that keeps failing is set aside
 after five attempts with its error, for a person to look at.
 
 ## Payment requests (sdk/route-crypto.mjs)
@@ -78,15 +86,20 @@ ML-DSA-87 identity, a spend root and a scan root.
 
 1. The recipient makes a request for one payer: a random 32-byte rid gives a fresh ML-DSA-65 key
    (KMAC256(spend root, network, rid)) and its account name `r<20 hex of SHA-256(key)>.<sponsor>`, and a
-   receipt key (KMAC256(scan root, network, rid)). The request (account, its public key, amount, memo, expiry,
-   the encrypted receipt) is signed with the identity key and sealed to the payer's ML-KEM-1024 key
+   receipt key (KMAC256(scan root, network, rid)). The sponsor (whose only key is ML-DSA-65) creates that
+   account with exactly that key **before** the request is shared. The request (account, its public key, amount,
+   memo, expiry, the encrypted receipt) is signed with the identity key and sealed to the payer's ML-KEM-1024 key
    (AES-256-GCM under KMAC256 of the shared secret).
-2. The payer opens it, checks the signature against the recipient card it expects, locks QTC and signs the
-   route to that account, with the receipt.
+2. The payer opens it against the recipient's whole card, obtained separately and pinned (never taken from the
+   request), checks network, sponsor, amount, expiry and that the account name derives from its key, checks the
+   receiver is ready (above), locks QTC and authorizes the route.
 3. The receipt is published by the mint: rid | nonce | AES-256-GCM(receipt key, padded body), 284 bytes for
-   everyone, so receipts say nothing about their owner.
-4. Restore: from the seed alone the wallet reads every public receipt, derives each candidate's receipt key
-   from its rid, keeps the ones that open, and re-derives each account's ML-DSA-65 key to spend.
+   everyone: fixed-size receipts contain no plaintext permanent recipient identifier (timing, copying and
+transaction metadata stay observable).
+4. Restore: from the seed alone the wallet reads every public receipt, derives only each candidate's receipt key
+   from its rid, keeps the ones that open for its network, once per rid, whose account derives again from the
+   seed. A receipt says a request was made, not that it was paid: balances come from the chain, inside Intents or
+   on the account itself when the verifier refused the deposit.
 
 The payer learns the account and its public key, never the spending key: it is derived from the recipient's
 seed, not from anything the payer sees.

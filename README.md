@@ -40,9 +40,11 @@ Its output is `evidence/route-onchain.json`.
 `/bridge/quantum` in the Qlyphs app (test network build, pull request #353 of the app; the hosted address is in
 `docs/hackathon/SUBMISSION.md`):
 
-1. **Request.** Paste the payer's route card and an amount. Your browser makes a fresh ML-DSA-65 NEAR account
-   for this payment, signs the request with ML-DSA-87 and seals it to the payer with ML-KEM-1024.
-2. **Pay.** The payer opens the link. Their Qlyphs wallet sends the QTC to the 2-of-3 lock, then signs the
+1. **Request.** Paste the payer's route card and an amount. Your browser derives a fresh ML-DSA-65 key, has the
+   sponsor open its NEAR account with only that key, signs the request with ML-DSA-87 and seals it to the payer
+   with ML-KEM-1024.
+2. **Pay.** The payer pins the recipient's card, opens the link, and the page checks the account has only the
+   requested key. Their Qlyphs wallet sends the QTC to the 2-of-3 lock, then signs the
    route: a site session whose nonce is SHA-256 of the exact destination. About two minutes later the QTC is
    inside NEAR Intents for the recipient.
 3. **My payments.** From the backup alone, the browser reads every public receipt, keeps the ones it can open,
@@ -65,16 +67,19 @@ Its output is `evidence/route-onchain.json`.
 | 8 | A queued claim redirecting someone's deposit, without the depositor's key | `address(publicKey) is not the sender of the deposit` |
 | 9 | A second attester service on the same state | `state directory is in use` |
 
-Sandbox: 34 more refusals and edge cases in `tests/bridge.sandbox.mjs`.
+Sandbox: 42 refusals and edge cases in `tests/bridge.sandbox.mjs`. Attester service: fault injection shows a
+crash after a proposal or an approval reached the chain still pays exactly once.
 
 ## On-chain evidence (NEAR testnet)
 
 | What | Where |
 |---|---|
 | Intents verifier, upstream `near/intents@32cd1f97`, unmodified, no key | [`intents.qlyphs-pqroute-b.testnet`](https://testnet.nearblocks.io/address/intents.qlyphs-pqroute-b.testnet) |
-| Bridge token for the Qlyphs app's test chain, no key | [`pqqtc.qlyphs-pqroute-a.testnet`](https://testnet.nearblocks.io/address/pqqtc.qlyphs-pqroute-a.testnet) |
+| Bridge token for the Qlyphs app's test chain, no key (current) | [`qtcpq.qlyphs-pqroute-a.testnet`](https://testnet.nearblocks.io/address/qtcpq.qlyphs-pqroute-a.testnet) |
+| Earlier bridge token, before the contract enforced the minimum withdrawal | [`pqqtc.qlyphs-pqroute-a.testnet`](https://testnet.nearblocks.io/address/pqqtc.qlyphs-pqroute-a.testnet) |
 | Bridge token for the Quantus development network, no key | [`qtc.qlyphs-pqroute-a.testnet`](https://testnet.nearblocks.io/address/qtc.qlyphs-pqroute-a.testnet) |
 | Relayer, ML-DSA-65 key only (pays gas, no authority) | [`relay.qlyphs-pqroute-a.testnet`](https://testnet.nearblocks.io/address/relay.qlyphs-pqroute-a.testnet) |
+| Sponsor that opens recipients' accounts, ML-DSA-65 key only | [`qlyphs-pqroute-c.testnet`](https://testnet.nearblocks.io/address/qlyphs-pqroute-c.testnet) |
 | A full round trip from the app (request, pay, mint into Intents, ML-DSA-65 withdrawal, 2-of-3 release) | `evidence/route-app-run-1.json` |
 | Full round trips from the command line, on both Quantus test chains | `evidence/route-cycle-curve.json`, `evidence/route-cycle-devnet.json` |
 | The existing route's minting key, at a pinned mainnet block | `evidence/bridge-mng-snapshot.json` |
@@ -83,8 +88,8 @@ Sandbox: 34 more refusals and edge cases in `tests/bridge.sandbox.mjs`.
 
 ```sh
 bash scripts/build.sh                 # contracts (LLVM 19+); build/bridge-testnet.wasm is the deployed bridge
-node tests/bridge.sandbox.mjs         # 34 checks: quorum, every signed field, one mint per deposit, receipts, Intents mode, redeem
-node --test tests/route-crypto.unit.mjs   # 10 tests: sealing, tampering, fresh accounts, restore from the seed
+node tests/bridge.sandbox.mjs         # 42 checks: quorum, every signed field, one mint per deposit, receipts, Intents mode, minimum withdrawal, NEP-145 storage
+node --test tests/route-crypto.unit.mjs   # 12 tests: sealing, tampering, pinned recipient, validation, fresh accounts, restore
 ```
 
 `tests/intents.sandbox.mjs` runs the bridge against the verifier, but the sandbox node that near-workspaces
@@ -93,7 +98,7 @@ service is in a separate repository; its formats are in [docs/ROUTE.md](docs/ROU
 
 ## What this is, and is not
 
-- **Trust.** The demo uses three separately keyed signer processes, all operated by the Qlyphs team. It
+- **Trust.** The demo uses three separate ML-DSA-87 attester keys, all operated by the Qlyphs team in one service. It
   demonstrates 2-of-3 post-quantum authorization, not independent operators or decentralized custody. The
   attesters check Quantus deposits themselves; NEAR does not verify Quantus consensus.
 - **Scope.** User accounts, attestations and the lock are post-quantum. NEAR's validators and consensus, and

@@ -20,11 +20,11 @@ const txHash = (r) => r?.result?.transaction?.hash;
 const curve = process.env.ROUTE_QUANTUS === 'curve';
 const file = curve ? 'deployments/route-curve-testnet.json' : 'deployments/route-testnet.json';
 const base = curve && existsSync('deployments/route-testnet.json') ? (({ verifier, relayer }) => ({ network: 'testnet', verifier, relayer }))(JSON.parse(readFileSync('deployments/route-testnet.json', 'utf8'))) : { network: 'testnet' };
-const out = existsSync(file) ? JSON.parse(readFileSync(file, 'utf8')) : base;
+const out = existsSync(file) && !process.env.ROUTE_BRIDGE_NAME ? JSON.parse(readFileSync(file, 'utf8')) : base;
 const save = () => writeFileSync(file, JSON.stringify(out, null, 2) + '\n');
 const sha = (b) => createHash('sha256').update(b).digest('hex');
 
-const verifierId = `intents.${B.id}`, bridgeId = curve ? `pqqtc.${A.id}` : `qtc.${A.id}`, relayId = `relay.${A.id}`;
+const verifierId = `intents.${B.id}`, bridgeId = process.env.ROUTE_BRIDGE_NAME ? `${process.env.ROUTE_BRIDGE_NAME}.${A.id}` : curve ? `pqqtc.${A.id}` : `qtc.${A.id}`, relayId = `relay.${A.id}`;
 const verifierWasm = readFileSync('third_party/near-intents/defuse-32cd1f97.wasm');
 if (!(await exists(verifierId))) {
   const top = await send(C, B.id, [actions.transfer(NEAR(6))]);

@@ -1,9 +1,10 @@
 // Public helper of the post-quantum QTC route (testnet). It holds no authority over funds:
 //  - a mailbox for sealed payment requests (ML-KEM-1024 + AES-256-GCM ciphertext only; it cannot read them),
 //  - the queue of route claims the payer's wallet signed (public data the attesters verify themselves),
-//  - a sponsor that creates a fresh NEAR testnet account whose only key is the ML-DSA-65 key it is given.
+//  - a sponsor that creates a fresh NEAR testnet account whose only key is the ML-DSA-65 key it is given; the
+//    sponsor itself signs with ML-DSA-65 (its only key).
 import { actions, sendTx } from '@fastnear/api';
-import { signerFromPrivateKey } from '@fastnear/utils';
+import { signerFromSeed } from '@fastnear/ml-dsa-65';
 
 const MAX_REQUEST = 32 * 1024;
 const DAY = 86400;
@@ -71,8 +72,9 @@ export default {
         if (typeof publicKey !== 'string' || !/^ml-dsa-65:[1-9A-HJ-NP-Za-km-z]{2600,2700}$/.test(publicKey)) return json(400, { error: 'expects an ml-dsa-65: public key' }, cors);
         if (!(await rateLimit(env, `acct:${ip}`, 5, 3600)) || !(await rateLimit(env, 'acct:all', 200, DAY))) return json(429, { error: 'account limit reached, try again later' }, cors);
         const accountId = await accountFor(publicKey, env.SPONSOR_ID);
-        const r = await sendTx({ signerId: env.SPONSOR_ID, signer: signerFromPrivateKey(env.SPONSOR_KEY), receiverId: accountId, network: 'testnet', waitUntil: 'FINAL',
-          actions: [actions.createAccount(), actions.transfer('250000000000000000000000'), actions.addFullAccessKey({ publicKey })] });
+        const sponsor = signerFromSeed(Uint8Array.from(env.SPONSOR_SEED.match(/../g).map((h) => parseInt(h, 16))));
+        const r = await sendTx({ signerId: env.SPONSOR_ID, signer: sponsor, receiverId: accountId, network: 'testnet', waitUntil: 'FINAL',
+          actions: [actions.createAccount(), actions.transfer('250000000000000000000000'), actions.addFullAccessKey({ publicKey })] }).finally(() => sponsor.destroy());
         const s = JSON.stringify(r);
         const failure = s.match(/"(AccountAlreadyExists|ExecutionError)":?[^}]*/)?.[0];
         return json(failure ? 409 : 200, { accountId, tx: r?.result?.transaction?.hash, failure }, cors);

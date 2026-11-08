@@ -5,6 +5,7 @@
   "description": "Public helper of the post-quantum QTC route (testnet): ciphertext mailbox, route claim queue, sponsor of ML-DSA-65 NEAR accounts",
   "dependencies": {
     "@fastnear/api": "2.5.0",
+    "@fastnear/ml-dsa-65": "2.5.0",
     "@fastnear/utils": "2.5.0"
   },
   "devDependencies": {

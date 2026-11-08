@@ -7,7 +7,7 @@ import { ml_dsa87 } from '@noble/post-quantum/ml-dsa.js';
 import { kmac256 } from '@noble/hashes/sha3-addons.js';
 import { sha256 } from '@noble/hashes/sha2.js';
 import { gcm } from '@noble/ciphers/aes.js';
-import { signerFromSeed } from '@fastnear/ml-dsa-65';
+import { decodePublicKey, signerFromSeed } from '@fastnear/ml-dsa-65';
 
 export const VERSION = 1;
 const enc = new TextEncoder(), dec = new TextDecoder();
@@ -30,14 +30,19 @@ export function wallet(seed) {
 }
 /** The public card a payer needs: ML-KEM-1024 encapsulation key and ML-DSA-87 identity key. */
 export const card = (w) => ({ v: VERSION, kem: hex(w.kem.publicKey), id: hex(w.id.publicKey) });
+/** A short label for showing a card to a person. Never an identity check: compare whole cards with sameCard. */
 export const cardFingerprint = (c) => hex(sha256(cat(unhex(c.kem), unhex(c.id)))).slice(0, 16);
+export const sameCard = (a, b) => !!a && !!b && a.v === b.v && a.kem === b.kem && a.id === b.id;
 
-/** Per payment: the ML-DSA-65 signer of a fresh NEAR account and the receipt key, both from (network, rid). */
+/** Per request: the receipt key only, from (network, rid). Scanning uses this and never touches spending keys. */
+export function receiptKeyFor(w, network, rid) {
+  if (rid.length !== 32) throw new Error('rid is 32 bytes');
+  return kdf(w.scanRoot, 'receipt', [network, rid]);
+}
+/** Per request: the ML-DSA-65 signer of its fresh NEAR account and the receipt key. Destroy the signer after use. */
 export function paymentKeys(w, network, rid) {
   if (rid.length !== 32) throw new Error('rid is 32 bytes');
-  const spendSeed = kdf(w.spendRoot, 'spend', [network, rid]);
-  const receiptKey = kdf(w.scanRoot, 'receipt', [network, rid]);
-  return { signer: signerFromSeed(spendSeed), receiptKey };
+  return { signer: signerFromSeed(kdf(w.spendRoot, 'spend', [network, rid])), receiptKey: receiptKeyFor(w, network, rid) };
 }
 /** The fresh account's name: derived from its ML-DSA-65 public key, under the sponsor that creates it. */
 export function accountFor(publicKey, sponsor) {
@@ -59,11 +64,13 @@ export function sealReceipt(receiptKey, rid, body) {
 export function openReceipt(w, network, receipt) {
   if (receipt.length !== RECEIPT_LEN) return null;
   const rid = receipt.subarray(0, 32), nonce = receipt.subarray(32, 44);
-  const { receiptKey } = paymentKeys(w, network, rid);
+  const receiptKey = receiptKeyFor(w, network, rid);
   try {
     const plain = gcm(receiptKey, nonce, cat(te('qlyphs/route/receipt'), rid)).decrypt(receipt.subarray(44));
     const n = plain[0] | plain[1] << 8;
-    return { rid: Uint8Array.from(rid), body: JSON.parse(dec.decode(plain.subarray(2, 2 + n))) };
+    const body = JSON.parse(dec.decode(plain.subarray(2, 2 + n)));
+    if (body?.v !== VERSION || body.network !== network) return null;
+    return { rid: Uint8Array.from(rid), body };
   } catch { return null; }
 }
 
@@ -89,8 +96,15 @@ export function createRequest(w, payerCard, { network, sponsor, amountPlanck, me
   } finally { signer.destroy(); }
 }
 
-/** The payer opens a request with its own wallet and checks the recipient's signature. Throws on anything wrong. */
-export function openRequest(payer, sealed, { now = Date.now(), expectRecipient } = {}) {
+const U128_MAX = (1n << 128n) - 1n;
+/**
+ * The payer opens a request with its own wallet. `recipient` is the recipient's whole card, obtained by the payer
+ * on its own (never taken from the request): the signature is checked against that pinned card. `network` and
+ * `sponsor` are what the payer expects. Throws on anything wrong.
+ */
+export function openRequest(payer, sealed, { recipient, network, sponsor, now = Date.now() } = {}) {
+  if (!recipient?.kem || !recipient?.id) throw new Error('pin the recipient\'s card before opening a request');
+  if (!network || !sponsor) throw new Error('give the expected network and sponsor');
   const magic = te('QLYPREQ1');
   if (sealed.length < 8 + 1568 + 12 + 16 || dec.decode(sealed.subarray(0, 8)) !== 'QLYPREQ1') throw new Error('not a payment request');
   const ct = sealed.subarray(8, 8 + 1568), nonce = sealed.subarray(8 + 1568, 8 + 1568 + 12);
@@ -99,20 +113,35 @@ export function openRequest(payer, sealed, { now = Date.now(), expectRecipient }
   const n = new DataView(plain.buffer, plain.byteOffset).getUint32(0, true);
   const body = plain.subarray(4, 4 + n), sig = plain.subarray(4 + n);
   const request = JSON.parse(dec.decode(body));
-  if (!ml_dsa87.verify(sig, body, unhex(request.recipient.id), { context: te('qlyphs/route/request') })) throw new Error('the recipient signature does not verify');
-  if (expectRecipient && cardFingerprint(request.recipient) !== expectRecipient) throw new Error('the request is from someone else');
-  if (request.expiresAt && now > request.expiresAt) throw new Error('the request has expired');
+  if (!sameCard(request.recipient, recipient)) throw new Error('the request is from someone else');
+  if (!ml_dsa87.verify(sig, body, unhex(recipient.id), { context: te('qlyphs/route/request') })) throw new Error('the recipient signature does not verify');
+  if (request.v !== VERSION || request.network !== network) throw new Error('the request is for another network or version');
+  if (typeof request.expiresAt !== 'number' || !Number.isFinite(request.expiresAt) || now > request.expiresAt) throw new Error('the request has expired or has no expiry');
+  if (!/^[1-9][0-9]{0,38}$/.test(request.amount) || BigInt(request.amount) > U128_MAX) throw new Error('bad amount');
+  if (typeof request.accountKey !== 'string' || decodePublicKey(request.accountKey).length !== 1952) throw new Error('bad account key');
+  if (request.account !== accountFor(request.accountKey, sponsor)) throw new Error('the account does not match its key and sponsor');
   if (unhex(request.receipt).length !== RECEIPT_LEN) throw new Error('bad receipt size');
-  if (!/^r[0-9a-f]{20}\./.test(request.account) || request.account !== accountFor(request.accountKey, request.account.slice(22))) throw new Error('the account does not match its key');
   return request;
 }
 
-/** Restore: from the seed alone, find this wallet's payments among everyone's public receipts. */
-export function findPayments(w, network, receipts) {
-  const out = [];
+/**
+ * Restore: from the seed alone, find this wallet's requests among everyone's public receipts. A receipt only says a
+ * request was made; whether it was paid, and where the tokens are, comes from the chain. Each rid is kept once, and
+ * its account is derived again and must match the receipt.
+ */
+export function findPayments(w, network, receipts, sponsor) {
+  const out = [], seen = new Set();
   for (const r of receipts) {
     const hit = openReceipt(w, network, r);
-    if (hit) out.push({ ...hit, receipt: r });
+    if (!hit) continue;
+    const id = hex(hit.rid);
+    if (seen.has(id)) continue;
+    if (sponsor) {
+      const { signer } = paymentKeys(w, network, hit.rid);
+      try { if (accountFor(signer.publicKey, sponsor) !== hit.body.account) continue; } finally { signer.destroy(); }
+    }
+    seen.add(id);
+    out.push({ ...hit, receipt: r });
   }
   return out;
 }

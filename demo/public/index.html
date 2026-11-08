@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Qlyphs Guardian · NEAR testnet demo</title>
+<meta name="description" content="Post-quantum admin control for NEAR contracts: 2-of-3 ML-DSA-87 approvals and an on-chain timelock. Verify it yourself on testnet.">
+<style>
+  :root { --bg: #0b0d10; --panel: #13161b; --line: #232831; --text: #e8eaed; --dim: #8b929c; --ok: #5be49b; --bad: #ff6b6b; --warn: #f5c451; --accent: #7aa2ff; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 860px; margin: 0 auto; padding: 0 20px; }
+  section { min-height: 60dvh; padding: 9dvh 0 4dvh; }
+  section.hero { min-height: 72dvh; display: flex; flex-direction: column; justify-content: center; }
+  h1 { font-size: clamp(2.2rem, 6vw, 3.6rem); line-height: 1.05; margin: 0 0 18px; letter-spacing: -0.02em; }
+  h2 { font-size: 1.6rem; margin: 0 0 8px; letter-spacing: -0.01em; }
+  p { margin: 0 0 14px; color: var(--dim); max-width: 640px; }
+  p.lead { font-size: 1.2rem; color: var(--text); }
+  code, .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.86rem; }
+  a { color: var(--accent); text-decoration: none; } a:hover { text-decoration: underline; }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; margin-top: 18px; }
+  .badge { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); font-size: 0.92rem; color: var(--dim); transition: color .4s, border-color .4s; }
+  .badge.ok { color: var(--ok); border-color: color-mix(in srgb, var(--ok) 40%, transparent); }
+  .badge.bad { color: var(--bad); border-color: color-mix(in srgb, var(--bad) 40%, transparent); }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+  .badge.wait .dot { animation: pulse 1.2s infinite; }
+  @keyframes pulse { 50% { opacity: .25; } }
+  ul.checks { list-style: none; padding: 0; margin: 0; }
+  ul.checks li { display: grid; grid-template-columns: 22px 1fr; gap: 10px; padding: 10px 0; border-top: 1px solid var(--line); opacity: 0; transform: translateY(4px); animation: in .35s forwards; }
+  ul.checks li:first-child { border-top: 0; }
+  @keyframes in { to { opacity: 1; transform: none; } }
+  .mark { font-weight: 700; } .mark.pass { color: var(--ok); } .mark.fail { color: var(--bad); } .mark.unverified { color: var(--warn); }
+  .detail { color: var(--dim); font-size: 0.86rem; word-break: break-all; }
+  button { font: inherit; background: var(--text); color: var(--bg); border: 0; border-radius: 10px; padding: 10px 16px; cursor: pointer; transition: transform .1s, opacity .2s; }
+  button:active { transform: scale(.98); } button:disabled { opacity: .4; cursor: default; }
+  button.ghost { background: transparent; color: var(--text); border: 1px solid var(--line); }
+  input { font: inherit; background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; width: min(100%, 360px); }
+  input:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .result { margin-top: 12px; font-size: 0.92rem; min-height: 1.4em; }
+  .result.ok { color: var(--ok); } .result.bad { color: var(--bad); }
+  .bar { height: 6px; background: var(--line); border-radius: 6px; overflow: hidden; margin: 12px 0 6px; }
+  .bar > i { display: block; height: 100%; width: 0; background: var(--accent); transition: width 1s linear; }
+  dl { display: grid; grid-template-columns: max-content 1fr; gap: 6px 16px; margin: 10px 0 0; }
+  dt { color: var(--dim); font-size: 0.9rem; } dd { margin: 0; word-break: break-all; }
+  ol.timeline { padding-left: 20px; margin: 0; } ol.timeline li { padding: 6px 0; color: var(--dim); } ol.timeline li b { color: var(--text); font-weight: 600; }
+  .secret { background: var(--bg); border: 1px dashed var(--line); border-radius: 8px; padding: 8px 10px; margin: 6px 0 12px; word-break: break-all; }
+  footer { padding: 6dvh 0 8dvh; color: var(--dim); font-size: 0.9rem; border-top: 1px solid var(--line); margin-top: 6dvh; }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } ul.checks li { opacity: 1; transform: none; } }
+</style>
+</head>
+<body>
+<main>
+  <section class="hero">
+    <h1>Qlyphs Guardian</h1>
+    <p class="lead">Post-quantum admin control for NEAR contracts.</p>
+    <p>This demo token's admin key was retired. Minting and code upgrades now need two of three ML-DSA-87 approvals and a 60-second on-chain delay, enforced by a Guardian contract that has no keys at all. Don't take our word for it: every claim below is checked live against NEAR testnet.</p>
+    <div class="row" style="margin-top:12px"><span id="badge" class="badge wait"><span class="dot"></span><span id="badge-text">Checking testnet…</span></span></div>
+  </section>
+
+  <section id="verify">
+    <h2>Verify control</h2>
+    <p>One finalized block, every query pinned to it. A check that can't be read shows as unverified, never as a pass.</p>
+    <div class="panel">
+      <ul class="checks" id="checks"></ul>
+      <div class="result" id="statement"></div>
+      <div class="row" style="margin-top:10px"><button class="ghost" id="rerun">Run the checks again</button></div>
+    </div>
+  </section>
+
+  <section id="attack">
+    <h2>Try the old keys</h2>
+    <p>Before the cutover, one owner key could mint and one deployment key could replace the token's code. Both credentials are published here. Use them.</p>
+    <div class="panel">
+      <div><b>Former owner</b> <span class="detail" id="owner-id"></span></div>
+      <div class="secret mono" id="owner-key">loading…</div>
+      <div class="row"><button id="attack-mint">Mint 1,000,000,000 tokens with the owner key</button></div>
+      <div class="result" id="attack-mint-result"></div>
+    </div>
+    <div class="panel">
+      <div><b>Token deployment key</b> <span class="detail" id="token-id"></span></div>
+      <div class="secret mono" id="token-key">loading…</div>
+      <div class="row"><button id="attack-deploy">Deploy new code to the token with this key</button></div>
+      <div class="result" id="attack-deploy-result"></div>
+    </div>
+  </section>
+
+  <section id="mint">
+    <h2>Request a post-quantum mint</h2>
+    <p>Ask for 100 demo tokens. Two demo signers approve the exact operation with ML-DSA-87, the Guardian queues it, and after the delay anyone can execute it. Here, that's you.</p>
+    <div class="panel">
+      <div class="row"><input id="receiver" placeholder="your-account.testnet" autocomplete="off" spellcheck="false"><button id="request">Request mint</button></div>
+      <div class="result" id="mint-result"></div>
+      <div id="op" hidden>
+        <dl id="op-fields"></dl>
+        <div class="bar"><i id="op-bar"></i></div>
+        <div class="detail" id="op-timer"></div>
+        <div class="row" style="margin-top:12px"><button id="execute" disabled>Execute</button></div>
+        <div class="result" id="exec-result"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="history">
+    <h2>What happened on testnet</h2>
+    <p>The full cutover, as recorded transactions you can open in the explorer.</p>
+    <div class="panel"><ol class="timeline" id="timeline"></ol></div>
+  </section>
+
+  <footer>
+    Unaudited testnet prototype. The claim covers minting and upgrades of this reviewed token, after the recorded deployment and cutover. It does not make NEAR consensus, users' keys, or code a quorum approves later post-quantum. The demo server holds two of the three signer keys so that visitors can trigger mints; in a real deployment each signer holds its own key in its own wallet.
+  </footer>
+</main>
+<script>
+const tx = (h) => `<a href="https://testnet.nearblocks.io/txns/${h}" target="_blank" rel="noopener">${h.slice(0, 10)}…</a>`;
+const acct = (id) => `<a href="https://testnet.nearblocks.io/address/${id}" target="_blank" rel="noopener">${id}</a>`;
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+const $ = (id) => document.getElementById(id);
+const api = async (path, body) => { const r = await fetch(path, body ? { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) } : {}); return r.json(); };
+const humanError = (f) => { const m = String(f ?? '').match(/panicked: ([^"\\]+)/); return m ? m[1] : /KeyNotFound|AccessKeyDoesNotExist|InvalidAccessKey|does not exist while viewing/i.test(f) ? 'the key does not exist on the account any more' : String(f ?? '').slice(0, 160); };
+
+async function runReport() {
+  $('checks').innerHTML = ''; $('statement').textContent = 'Reading testnet…'; $('statement').className = 'result';
+  const b = $('badge'); b.className = 'badge wait'; $('badge-text').textContent = 'Checking testnet…';
+  const r = await api('/api/report');
+  if (r.error) { $('statement').textContent = r.error; $('statement').className = 'result bad'; b.className = 'badge bad'; $('badge-text').textContent = 'Could not read testnet'; return; }
+  r.checks.forEach((c, i) => {
+    const li = document.createElement('li'); li.style.animationDelay = `${i * 70}ms`;
+    li.innerHTML = `<span class="mark ${c.status}">${c.status === 'pass' ? '✓' : c.status === 'fail' ? '✕' : '?'}</span><div>${esc(c.name)}<div class="detail">${esc(c.detail ?? '')}</div></div>`;
+    $('checks').appendChild(li);
+  });
+  $('statement').innerHTML = `${esc(r.statement)} <a href="https://testnet.nearblocks.io/blocks/${r.block.hash}" target="_blank" rel="noopener">Block ${r.block.height}</a>`;
+  $('statement').className = `result ${r.ok ? 'ok' : 'bad'}`;
+  b.className = `badge ${r.ok ? 'ok' : 'bad'}`; $('badge-text').textContent = r.ok ? `Verified at block ${r.block.height}` : 'Not verified: see the checks';
+}
+
+async function loadKeys() {
+  const k = await api('/api/retired-keys');
+  $('owner-id').innerHTML = acct(k.owner.account); $('owner-key').textContent = k.owner.secret;
+  $('token-id').innerHTML = `${acct(k.token.account)} · deleted in ${tx(k.token.deleted_in)}`; $('token-key').textContent = k.token.secret;
+}
+
+async function attack(kind, out, btn) {
+  btn.disabled = true; $(out).className = 'result'; $(out).textContent = 'Signing with the old key and sending to testnet…';
+  const r = await api(`/api/attack/${kind}`, {});
+  btn.disabled = false;
+  if (r.ok) { $(out).className = 'result bad'; $(out).innerHTML = `It went through. That should never happen: ${r.tx ? tx(r.tx) : ''}`; return; }
+  $(out).className = 'result ok';
+  $(out).innerHTML = `Refused: ${esc(humanError(r.failure))}${r.tx ? ` · ${tx(r.tx)}` : ''}`;
+}
+
+let timer, current;
+function showOp(a, nowNs) {
+  $('op').hidden = false; current = a.nonce; $('exec-result').textContent = '';
+  $('op-fields').innerHTML = `<dt>Action</dt><dd>${esc(a.action)} ${a.amount ? esc(a.amount) + ' to ' + acct(a.receiver_id) : ''}</dd><dt>Nonce</dt><dd class="mono">${esc(a.nonce)}</dd><dt>Approved by</dt><dd>signers ${[0, 1, 2].filter((i) => a.signers & (1 << i)).join(' and ')} (ML-DSA-87)</dd><dt>Proposal hash</dt><dd class="mono">${esc(a.proposal_hash)}</dd>`;
+  const queued = BigInt(a.queued_at_ns), eta = BigInt(a.eta_ns), offset = BigInt(Date.now()) * 1000000n - BigInt(nowNs);
+  clearInterval(timer);
+  const tick = () => {
+    const now = BigInt(Date.now()) * 1000000n - offset, left = eta > now ? Number((eta - now) / 1000000000n) : 0;
+    $('op-bar').style.width = `${Math.min(100, Number(((now - queued) * 100n) / (eta - queued)))}%`;
+    $('op-timer').textContent = left > 0 ? `Timelock: ${left} s left. Nobody can execute it before.` : 'Timelock passed. Anyone can execute it now.';
+    $('execute').disabled = left > 0 || a.status !== 'queued';
+  };
+  tick(); timer = setInterval(tick, 1000);
+}
+
+async function refreshOp() {
+  const s = await api('/api/state');
+  if (s.guardian?.active) showOp(s.guardian.active, s.now_ns);
+  return s;
+}
+
+$('request').onclick = async () => {
+  const r = await api('/api/mint', { receiver_id: $('receiver').value });
+  $('mint-result').className = `result ${r.ok ? 'ok' : 'bad'}`;
+  $('mint-result').innerHTML = r.ok ? `Queued by the Guardian · ${tx(r.tx)}` : esc(r.error ?? humanError(r.failure));
+  await refreshOp();
+};
+$('execute').onclick = async () => {
+  $('execute').disabled = true; $('exec-result').className = 'result'; $('exec-result').textContent = 'Executing…';
+  const r = await api('/api/execute', {});
+  clearInterval(timer);
+  const s = await api('/api/state');
+  const last = s.guardian.last, mine = last && last.nonce === current;
+  $('exec-result').className = `result ${mine && last.status === 'applied' ? 'ok' : 'bad'}`;
+  $('exec-result').innerHTML = mine
+    ? `${r.ok ? `Executed · ${tx(r.tx)}` : 'Someone executed it first'} · Guardian status: ${esc(last.status)}${last.status === 'applied' ? ' · the tokens are minted' : ''}`
+    : esc(r.error ?? humanError(r.failure));
+};
+$('attack-mint').onclick = () => attack('owner-mint', 'attack-mint-result', $('attack-mint'));
+$('attack-deploy').onclick = () => attack('token-deploy', 'attack-deploy-result', $('attack-deploy'));
+$('rerun').onclick = runReport;
+
+(async () => {
+  runReport(); loadKeys();
+  const s = await refreshOp();
+  const c = s.ceremony, op = c.operations;
+  $('timeline').innerHTML = [
+    `<li><b>Release parent created</b> ${acct(s.accounts.parent)} · ${tx(c.parent_tx)}</li>`,
+    `<li><b>Legacy token</b> ${acct(s.accounts.token)}: its own deployment key, V1 code, owner ${acct(s.accounts.owner)} mints two holders · ${tx(c.legacy.token_tx)}</li>`,
+    `<li><b>Guardian created</b> in one transaction: create, fund, deploy, init. Audited: exactly these four actions and the expected config · ${tx(c.guardian_creation.tx)}</li>`,
+    `<li><b>Handover</b>: the owner gives mint and upgrade to the Guardian, for good · ${tx(c.cutover.handover_tx)}</li>`,
+    `<li><b>Token key deleted</b>: the token account has no keys left · ${tx(c.cutover.delete_keys_tx)}</li>`,
+    `<li><b>PQ mint</b> approved by signers 0 and 1, executed after the delay · ${tx(op.mint.execute_tx)}</li>`,
+    `<li><b>PQ upgrade V1 → V2</b> approved by signers 1 and 2. Balances, Guardian and replay state kept · ${tx(op.upgrade.execute_tx)}</li>`,
+    `<li><b>131,072-byte code</b> queued, read back from chain state, then canceled by two signers · ${tx(c.max_code.cancel_tx)}</li>`,
+  ].join('');
+})();
+</script>
+</body>
+</html>

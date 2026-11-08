@@ -1,0 +1,11 @@
+name = "qlyphs-guardian-demo"
+main = "src/worker.js"
+compatibility_date = "2026-11-01"
+compatibility_flags = ["nodejs_compat"]
+
+[assets]
+directory = "./public"
+binding = "ASSETS"
+
+[vars]
+RELAYER_ID = "relayer.qlyphs-guardian-r1.testnet"

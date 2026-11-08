@@ -63,5 +63,10 @@
     "nonce": "2",
     "propose_tx": "8oP1EokHq9TGP9KuLdeTgbLW4idA9V5HN9UFyzbcXvmp",
     "cancel_tx": "47v9wpUmuaRXKch9219QadkAkmUmpeQm1sVGbNMqnnWV"
-  }
+  },
+  "reviewed_target_sha256": {
+    "v1": "28055301a82bd6b595b99a785f50c62b26ef93fb856a63c7dd08994c3c553037",
+    "v2": "3f5fb76de7df1efc6dad55d7a3d8b19431c4687227b617aecbe11e59e5ccfd2c"
+  },
+  "demo_relayer": null
 }

@@ -1,3 +1,6 @@
 node_modules/
 build/
 relayer/.state/
+demo/.dev.vars
+demo/node_modules/
+demo/.wrangler/

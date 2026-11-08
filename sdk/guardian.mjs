@@ -1,6 +1,11 @@
 // Client side of Qlyphs Guardian (docs/GUARDIAN.md): config bytes, the 320-byte signed operation, the approval envelope.
 import { createHash } from 'node:crypto';
-import { isAccountId, PK_LEN, SIG_LEN } from './vault.mjs';
+
+export const PK_LEN = 2592;
+export const SIG_LEN = 4627;
+// NEAR account id grammar, checked before encoding (a lookalike Unicode id is refused, not changed).
+const ACCOUNT_ID = /^(?=.{2,64}$)[a-z0-9]+([-_.][a-z0-9]+)*$/;
+export const isAccountId = (id) => typeof id === 'string' && ACCOUNT_ID.test(id);
 
 export const GUARDIAN_CONTEXT = Buffer.from('qlyphs/near-guardian/v1');
 export const OP_LEN = 320;
@@ -93,7 +98,8 @@ export function decodeOperation(m) {
   return op;
 }
 
-/** One approval: signer index (0..2) and its signature over the operation. key is a vault.mjs Key. */
+/** One approval: signer index (0..2) and its signature over the operation. key has sign(message, context):
+ * a vault.mjs Key (OpenSSL) in tests, a seed-derived signer in the demo. */
 export const approve = (key, index, op) => ({ index, signature: key.sign(op, GUARDIAN_CONTEXT) });
 
 /** propose/cancel input: operation ‖ two approvals ‖ (upgrade only) the code. */

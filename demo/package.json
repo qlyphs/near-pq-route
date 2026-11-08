@@ -1,0 +1,11 @@
+{
+  "name": "qlyphs-guardian-demo",
+  "private": true,
+  "type": "module",
+  "description": "Hosted demo of Qlyphs Guardian on NEAR testnet (Cloudflare Worker)",
+  "dependencies": {
+    "@noble/curves": "1.8.1",
+    "@noble/hashes": "1.7.1",
+    "@noble/post-quantum": "0.7.1"
+  }
+}

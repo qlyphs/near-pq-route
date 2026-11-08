@@ -59,11 +59,13 @@ async function execute(rpc, env) {
 async function attack(rpc, env, kind) {
   if (kind === 'owner-mint') {
     const r = await rpc.send(accounts.owner, edKey(env.RETIRED_OWNER_KEY), accounts.token, [functionCall('mint', JSON.stringify({ receiver_id: accounts.owner, amount: '1000000000', op_id: '999999' }), 30n * TGAS)]);
-    return json({ attempted: 'The former owner calls mint with its still-valid account key.', tx: r.hash, ok: r.ok, failure: r.failure });
+    return json({ attempted: 'The former owner calls mint with its still-valid account key.', tx: r.hash, ok: r.ok, failure: r.failure,
+      refused_as_expected: !r.ok && /only the Guardian can do this/.test(r.failure ?? '') });
   }
   if (kind === 'token-deploy') {
     const r = await rpc.send(accounts.token, edKey(env.RETIRED_TOKEN_KEY), accounts.token, [deployContract(new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0]))]);
-    return json({ attempted: "Someone signs a code deployment with the token account's deleted key.", tx: r.ok ? r.hash : null, ok: r.ok, failure: r.failure });
+    return json({ attempted: "Someone signs a code deployment with the token account's deleted key.", tx: r.ok ? r.hash : null, ok: r.ok, failure: r.failure,
+      refused_as_expected: !r.ok && /InvalidAccessKeyError/.test(r.failure ?? '') && /AccessKeyNotFound/.test(r.failure ?? '') });
   }
   return json({ error: 'unknown attack' }, 404);
 }

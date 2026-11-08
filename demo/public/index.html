@@ -145,7 +145,9 @@ async function attack(kind, out, btn) {
   const r = await api(`/api/attack/${kind}`, {});
   btn.disabled = false;
   if (r.ok) { $(out).className = 'result bad'; $(out).innerHTML = `It went through. That should never happen: ${r.tx ? tx(r.tx) : ''}`; return; }
-  $(out).className = 'result ok';
+  // Green only for the expected refusal; any other error means the attack could not be tested, not that it failed.
+  if (!r.refused_as_expected) { $(out).className = 'result'; $(out).style.color = 'var(--warn)'; $(out).textContent = `Could not run the attack right now (${humanError(r.failure ?? r.error)}). Try again in a moment.`; return; }
+  $(out).className = 'result ok'; $(out).style.color = '';
   $(out).innerHTML = `Refused: ${esc(humanError(r.failure))}${r.tx ? ` · ${tx(r.tx)}` : ''}`;
 }
 

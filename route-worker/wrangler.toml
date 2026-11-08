@@ -1,0 +1,12 @@
+name = "qlyphs-pq-route"
+main = "src/worker.js"
+compatibility_date = "2026-11-01"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+SPONSOR_ID = "qlyphs-pqroute-c.testnet"
+ALLOWED_ORIGINS = "https://app-testnet.qlyphs.com,http://127.0.0.1:4403,http://localhost:4403"
+
+[[kv_namespaces]]
+binding = "ROUTE"
+id = "7ced1c99e3d74f9abbf4d4bb7aa37ac4"

@@ -1,0 +1,37 @@
+{
+  "network": "testnet",
+  "verifier": {
+    "account": "intents.qlyphs-pqroute-b.testnet",
+    "wasm_sha256": "89e83eab7321f448a10f3ba4b0de333339e24caa24027a785b8d9a4437b9ca1e",
+    "upstream": "github.com/near/intents@32cd1f97",
+    "creation_tx": "5yehsFtzU5xvqorAVXk1vMo7corSfVYpw7TQ5fUcX9yz"
+  },
+  "relayer": {
+    "account": "relay.qlyphs-pqroute-a.testnet",
+    "key": "ML-DSA-65 only",
+    "public_key_handle": "ml-dsa-65-hash:75v7dVY5fD23U7KsMgHPn1BL7ofub9w3RmrToADcVdUZ",
+    "creation_tx": "6stPkj4fifkyoYdGvSxT8Eb9dCJwsQhJbBXDCiwygmhA"
+  },
+  "bridge": {
+    "account": "pqqtc.qlyphs-pqroute-a.testnet",
+    "quantus_network": "curve test chain (Qlyphs DevNet v3, the Qlyphs app Testnet)",
+    "wasm_sha256": "4137f6d7f717292cb5a076105b05a33a4aef4a9b9fff833b39fd01e50469e3fd",
+    "quantus_genesis": "0xca0a88635de136b803302f00defdc1f559e5b2a6cf34e817ce0030ba4377e7a3",
+    "quantus_lock": "qzpPEKhGncdyaUgZSxY1zMq3VvB5ng5LmZBP4arD83PFp46jE",
+    "attesters": [
+      {
+        "address": "qznnCC8jztkB5QJnKcFC9yeBgFjQpRqjvZMzKp18iKGJM5Nwp",
+        "key_sha256": "334cb10882b8b7a76a4da157a96453a460970f04fd638a6e21e2488534005662"
+      },
+      {
+        "address": "qzpGe3yLWLeDs4Tn6VQQDxZSpdcvcUPxNH4v2n7iKWKgG27zi",
+        "key_sha256": "adc86ae962b15ae800a685b703d9e4f0dbf161bae23eec4403a762cb1a9b6dca"
+      },
+      {
+        "address": "qzqE74gFhAqzRMTgDQon49HY5Kz6Lu5GA5T7L3AuemmRBRTtg",
+        "key_sha256": "264b58e249b921f487b18a24a2d31bfe48712227da57c2ef22a926da520e57b3"
+      }
+    ],
+    "creation_tx": "2pNPnPW5HdeJHq9r9EvPqhebYftg1DPbA8VDYzqJC9fT"
+  }
+}

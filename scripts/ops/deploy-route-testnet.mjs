@@ -16,11 +16,15 @@ const rpc = async (method, params) => (await (await fetch('https://rpc.testnet.n
 const exists = async (id) => !!(await rpc('query', { request_type: 'view_account', finality: 'final', account_id: id })).result;
 const send = (from, receiverId, acts) => sendTx({ signerId: from.id, signer: from.signer, receiverId, actions: acts, network: 'testnet', waitUntil: 'FINAL' });
 const txHash = (r) => JSON.stringify(r).match(/"hash":"([^"]+)"/)?.[1];
-const out = existsSync('deployments/route-testnet.json') ? JSON.parse(readFileSync('deployments/route-testnet.json', 'utf8')) : { network: 'testnet' };
-const save = () => writeFileSync('deployments/route-testnet.json', JSON.stringify(out, null, 2) + '\n');
+// ROUTE_QUANTUS=curve: the bridge bound to the curve test chain (the Qlyphs app's Testnet); default: the devnet.
+const curve = process.env.ROUTE_QUANTUS === 'curve';
+const file = curve ? 'deployments/route-curve-testnet.json' : 'deployments/route-testnet.json';
+const base = curve && existsSync('deployments/route-testnet.json') ? (({ verifier, relayer }) => ({ network: 'testnet', verifier, relayer }))(JSON.parse(readFileSync('deployments/route-testnet.json', 'utf8'))) : { network: 'testnet' };
+const out = existsSync(file) ? JSON.parse(readFileSync(file, 'utf8')) : base;
+const save = () => writeFileSync(file, JSON.stringify(out, null, 2) + '\n');
 const sha = (b) => createHash('sha256').update(b).digest('hex');
 
-const verifierId = `intents.${B.id}`, bridgeId = `qtc.${A.id}`, relayId = `relay.${A.id}`;
+const verifierId = `intents.${B.id}`, bridgeId = curve ? `pqqtc.${A.id}` : `qtc.${A.id}`, relayId = `relay.${A.id}`;
 const verifierWasm = readFileSync('third_party/near-intents/defuse-32cd1f97.wasm');
 if (!(await exists(verifierId))) {
   const top = await send(C, B.id, [actions.transfer(NEAR(6))]);
@@ -34,12 +38,12 @@ if (!(await exists(verifierId))) {
 const bridgeWasm = readFileSync('build/bridge-testnet.wasm');
 if (!(await exists(bridgeId))) {
   const att = JSON.parse(readFileSync(process.env.HOME + '/qlyphs-wqtc-attesters/deployment/attesters.json', 'utf8'));
-  const lock = JSON.parse(readFileSync(process.env.HOME + '/qlyphs-wqtc-attesters/deployment/lock.json', 'utf8'));
+  const lock = JSON.parse(readFileSync(process.env.HOME + `/qlyphs-wqtc-attesters/deployment/${curve ? 'lock-curve' : 'lock'}.json`, 'utf8'));
   const cfg = encodeConfig({ quantusGenesis: lock.genesis, keys: att.map((a) => Buffer.from(a.publicKey, 'hex')), verifier: verifierId });
   const r = await send(A, bridgeId, [actions.createAccount(), actions.transfer(NEAR(3)),
     actions.deployContract({ codeBase64: bridgeWasm.toString('base64') }),
     actions.functionCall({ methodName: 'new', argsBase64: cfg.toString('base64'), gas: '50 Tgas', deposit: '0' })]);
-  out.bridge = { account: bridgeId, wasm_sha256: sha(bridgeWasm), quantus_genesis: lock.genesis, quantus_lock: lock.address, attesters: att.map((a) => ({ address: a.address, key_sha256: a.keyHash })), creation_tx: txHash(r) };
+  out.bridge = { account: bridgeId, quantus_network: curve ? 'curve test chain (Qlyphs DevNet v3, the Qlyphs app Testnet)' : 'Quantus development network', wasm_sha256: sha(bridgeWasm), quantus_genesis: lock.genesis, quantus_lock: lock.address, attesters: att.map((a) => ({ address: a.address, key_sha256: a.keyHash })), creation_tx: txHash(r) };
   save(); console.log('bridge', bridgeId, out.bridge.creation_tx);
 }
 if (!(await exists(relayId))) {

@@ -29,6 +29,9 @@ for v in 1 2; do
   "$clang" "${cflags[@]}" -DTOKEN_VERSION=$v core/freestanding.c contract/token.c "${ldflags[@]}" -o "build/token-v$v.wasm"
 done
 "$clang" "${cflags[@]}" -DTOKEN_VERSION=2 -DFAIL_MIGRATE core/freestanding.c contract/token.c "${ldflags[@]}" -o build/token-v2-failing.wasm
+# Maximum-size (131,072-byte) V2 builds for upgrade tests: the reviewed V2 and the failing V2, padded with a custom section.
+node scripts/pad-wasm.mjs build/token-v2.wasm build/token-v2-max.wasm 131072
+node scripts/pad-wasm.mjs build/token-v2-failing.wasm build/token-v2-failing-max.wasm 131072
 # Test-only NEP-141 stand-in for the sandbox suite.
 "$clang" "${cflags[@]}" tests/mock_ft.c "${ldflags[@]}" -o build/mock_ft.wasm
 shasum -a 256 build/*.wasm

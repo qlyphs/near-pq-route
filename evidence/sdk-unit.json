@@ -1,0 +1,120 @@
+{
+  "suite": "sdk.unit",
+  "results": [
+    {
+      "name": "baseline: every required check passes",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "null Guardian and target state: unverified, report not ok",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "answers for another block: unverified",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "empty key list with a continuation marker: unverified",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "one key on the Guardian: fail",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "target state with a numeric next_op: fail",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "target version disagrees with its code hash: fail",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "placeholder provenance and unknown transactions: unverified",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "a manifest for another network: unverified",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "creation audit refuses a pending creation",
+      "ok": true,
+      "detail": "CreateTx: execution is not final (INCLUDED)"
+    },
+    {
+      "name": "creation audit refuses a missing creation receipt",
+      "ok": true,
+      "detail": "CreateTx: receipt r1 is missing from the final evidence"
+    },
+    {
+      "name": "creation audit refuses another signer",
+      "ok": true,
+      "detail": "CreateTx: not the expected transaction"
+    },
+    {
+      "name": "keys deleted before the handover: unverified",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "handover to another Guardian: unverified",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "decode round-trips a mint",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "decode refuses a nonzero reserved byte",
+      "ok": true,
+      "detail": "reserved bytes must be zero"
+    },
+    {
+      "name": "decode refuses an unknown action",
+      "ok": true,
+      "detail": "unknown action"
+    },
+    {
+      "name": "decode refuses a non-canonical receiver",
+      "ok": true,
+      "detail": "receiver: not a canonical account id field"
+    },
+    {
+      "name": "decode refuses a zero mint amount",
+      "ok": true,
+      "detail": "mint amount must be positive"
+    },
+    {
+      "name": "envelope refuses duplicate signer indices",
+      "ok": true,
+      "detail": "two approvals from distinct signers"
+    },
+    {
+      "name": "envelope refuses a short operation",
+      "ok": true,
+      "detail": "the operation is 320 bytes"
+    },
+    {
+      "name": "envelope refuses code on a mint",
+      "ok": true,
+      "detail": "only an upgrade carries code"
+    },
+    {
+      "name": "envelope refuses code that does not match the upgrade",
+      "ok": true,
+      "detail": "code does not match the approved upgrade"
+    }
+  ]
+}

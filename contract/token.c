@@ -87,7 +87,7 @@ static u128 add128(u128 a, u128 b) {
 static u128 sub128(u128 a, u128 b) { REQUIRE(!lt128(a, b), "insufficient balance"); u128 r = { a.lo - b.lo, a.hi - b.hi - (a.lo < b.lo) }; return r; }
 static u128 mul10add(u128 a, unsigned d) {
   /* a * 10 + d, refusing overflow: (a << 3) + (a << 1) + d */
-  REQUIRE(a.hi < (1ULL << 60), "amount overflow");
+  REQUIRE(a.hi < (1ULL << 61), "amount overflow"); /* the shift by 3 needs hi < 2^61; add128 catches the rest */
   u128 a8 = { a.lo << 3, (a.hi << 3) | (a.lo >> 61) }, a2 = { a.lo << 1, (a.hi << 1) | (a.lo >> 63) }, dd = { d, 0 };
   return add128(add128(a8, a2), dd);
 }
@@ -104,39 +104,76 @@ static size_t dec128(u128 x, char out[40]) {
   return n;
 }
 
-/* Minimal JSON input: a flat object of string values, no escapes. Finds "name":"value" and returns the
- * value's span; a name present twice is refused. Values here are account ids or decimal digits, which
- * contain no quote, so the pattern cannot match inside a value. */
-static const uint8_t *json_str(const uint8_t *j, size_t n, const char *name, size_t *vlen) {
-  char pat[24]; size_t p = 0; pat[p++] = '"';
-  for (const char *s = name; *s; s++) pat[p++] = *s;
-  pat[p++] = '"'; pat[p++] = ':'; pat[p++] = '"';
-  const uint8_t *found = 0;
-  for (size_t i = 0; i + p <= n; i++) {
-    if (memcmp(j + i, pat, p) != 0) continue;
-    REQUIRE(!found, "duplicate JSON field");
-    found = j + i + p;
+/* Strict JSON input: one flat object whose values are all strings, fully consumed. Field names are
+ * [a-z_]; values are printable ASCII without quotes or backslashes (no escapes anywhere). Every field must
+ * be one the method allows, and none may appear twice, so the contract reads exactly what JSON.parse reads
+ * or refuses the input. */
+typedef struct { const uint8_t *k, *v; size_t kl, vl; } field;
+#define MAX_FIELDS 4
+static field fields[MAX_FIELDS];
+static size_t nfields;
+static size_t skip_ws(const uint8_t *j, size_t n, size_t i) { while (i < n && (j[i] == ' ' || j[i] == '\t' || j[i] == '\n' || j[i] == '\r')) i++; return i; }
+static size_t str_end(const uint8_t *j, size_t n, size_t i, int name) {
+  while (i < n && j[i] != '"') {
+    uint8_t c = j[i];
+    if (name) REQUIRE((c >= 'a' && c <= 'z') || c == '_', "unsupported JSON field name");
+    else REQUIRE(c >= 0x20 && c < 0x7f && c != '\\', "unsupported character in a JSON string");
+    i++;
   }
-  if (!found) return 0;
-  size_t k = 0;
-  while (found + k < j + n && found[k] != '"') { REQUIRE(found[k] != '\\', "escapes not supported"); k++; }
-  REQUIRE(found + k < j + n, "unterminated JSON string");
-  *vlen = k;
-  return found;
+  REQUIRE(i < n, "unterminated JSON string");
+  return i;
 }
-static size_t json_id(const uint8_t *j, size_t n, const char *name, uint8_t *out) {
-  size_t len; const uint8_t *v = json_str(j, n, name, &len);
-  REQUIRE(v && valid_id(v, len), "missing or invalid account id");
-  memcpy(out, v, len);
-  return len;
+static int name_is(const field *f, const char *name) { size_t l = 0; while (name[l]) l++; return f->kl == l && memcmp(f->k, name, l) == 0; }
+/* allowed: space-separated field names this method accepts. */
+static void parse_json(const uint8_t *j, size_t n, const char *allowed) {
+  nfields = 0;
+  size_t i = skip_ws(j, n, 0);
+  REQUIRE(i < n && j[i] == '{', "expected a JSON object");
+  i = skip_ws(j, n, i + 1);
+  if (i < n && j[i] == '}') i++;
+  else for (;;) {
+    REQUIRE(i < n && j[i] == '"', "expected a JSON field name");
+    size_t ke = str_end(j, n, i + 1, 1);
+    field f = { j + i + 1, 0, ke - i - 1, 0 };
+    i = skip_ws(j, n, ke + 1);
+    REQUIRE(i < n && j[i] == ':', "expected ':'");
+    i = skip_ws(j, n, i + 1);
+    REQUIRE(i < n && j[i] == '"', "JSON values must be strings");
+    size_t ve = str_end(j, n, i + 1, 0);
+    f.v = j + i + 1; f.vl = ve - i - 1;
+    REQUIRE(nfields < MAX_FIELDS, "too many JSON fields");
+    for (size_t k = 0; k < nfields; k++) REQUIRE(!(fields[k].kl == f.kl && memcmp(fields[k].k, f.k, f.kl) == 0), "duplicate JSON field");
+    int ok = 0;
+    for (const char *a = allowed; *a;) {
+      const char *e = a; while (*e && *e != ' ') e++;
+      if ((size_t)(e - a) == f.kl && memcmp(a, f.k, f.kl) == 0) ok = 1;
+      a = *e ? e + 1 : e;
+    }
+    REQUIRE(ok, "unexpected JSON field");
+    fields[nfields++] = f;
+    i = skip_ws(j, n, ve + 1);
+    REQUIRE(i < n, "unterminated JSON object");
+    if (j[i] == ',') { i = skip_ws(j, n, i + 1); continue; }
+    REQUIRE(j[i] == '}', "expected ',' or '}'");
+    i++;
+    break;
+  }
+  REQUIRE(skip_ws(j, n, i) == n, "trailing data after the JSON object");
 }
-static u128 json_u128(const uint8_t *j, size_t n, const char *name, int required, int *present) {
-  size_t len; const uint8_t *v = json_str(j, n, name, &len);
+static const field *get_field(const char *name) { for (size_t k = 0; k < nfields; k++) if (name_is(&fields[k], name)) return &fields[k]; return 0; }
+static size_t json_id(const char *name, uint8_t *out) {
+  const field *f = get_field(name);
+  REQUIRE(f && valid_id(f->v, f->vl), "missing or invalid account id");
+  memcpy(out, f->v, f->vl);
+  return f->vl;
+}
+static u128 json_u128(const char *name, int required, int *present) {
+  const field *f = get_field(name);
   u128 x = { 0, 0 };
-  if (present) *present = v != 0;
-  if (!v) { REQUIRE(!required, "missing number"); return x; }
-  REQUIRE(len >= 1 && len <= 39 && (len == 1 || v[0] != '0'), "bad number");
-  for (size_t i = 0; i < len; i++) { REQUIRE(v[i] >= '0' && v[i] <= '9', "bad number"); x = mul10add(x, v[i] - '0'); }
+  if (present) *present = f != 0;
+  if (!f) { REQUIRE(!required, "missing number"); return x; }
+  REQUIRE(f->vl >= 1 && f->vl <= 39 && (f->vl == 1 || f->v[0] != '0'), "bad number");
+  for (size_t i = 0; i < f->vl; i++) { REQUIRE(f->v[i] >= '0' && f->v[i] <= '9', "bad number"); x = mul10add(x, f->v[i] - '0'); }
   return x;
 }
 
@@ -184,7 +221,8 @@ EXPORT(new) void new_(void) {
   size_t n = read_input(1024); load_ids();
   REQUIRE(same(caller, caller_len, self_id, self_len), "only the token account can initialize it");
   REQUIRE(!has("v"), "already initialized");
-  size_t ol = json_id(in, n, "owner_id", who);
+  parse_json(in, n, "owner_id");
+  size_t ol = json_id("owner_id", who);
   storage_write(1, PTR("o"), ol, PTR(who), 0);
   uint8_t v[4] = { TOKEN_VERSION, 0, 0, 0 };
   storage_write(1, PTR("v"), 4, PTR(v), 0);
@@ -205,13 +243,14 @@ static int require_admin(void) {
 EXPORT(mint) void mint(void) {
   size_t n = read_input(1024); load_ids(); version();
   int guarded = require_admin(), present;
-  u128 op = json_u128(in, n, "op_id", guarded, &present);
+  parse_json(in, n, "receiver_id amount op_id");
+  u128 op = json_u128("op_id", guarded, &present);
   if (guarded) {
     REQUIRE(op.hi == 0 && op.lo >= next_op(), "operation already applied");
     apply_op(op.lo);
   } else REQUIRE(!present, "op_id is for Guardian calls");
-  size_t rl = json_id(in, n, "receiver_id", who);
-  u128 amount = json_u128(in, n, "amount", 1, 0);
+  size_t rl = json_id("receiver_id", who);
+  u128 amount = json_u128("amount", 1, 0);
   REQUIRE(!is0(amount), "amount must be positive");
   set_supply(add128(supply(), amount));
   set_balance(who, rl, add128(balance(who, rl), amount));
@@ -223,7 +262,8 @@ EXPORT(handover) void handover(void) {
   size_t n = read_input(1024); load_ids(); version();
   REQUIRE(!has("g"), "already guarded");
   require_admin();
-  size_t gl = json_id(in, n, "guardian_id", who);
+  parse_json(in, n, "guardian_id");
+  size_t gl = json_id("guardian_id", who);
   REQUIRE(!same(who, gl, self_id, self_len), "the token cannot guard itself");
   storage_write(1, PTR("g"), gl, PTR(who), 0);
   storage_remove(1, PTR("o"), 0);
@@ -271,11 +311,12 @@ EXPORT(ft_transfer) void ft_transfer(void) {
   size_t n = read_input(1024); load_ids(); version();
   uint8_t dep[16]; attached_deposit(PTR(dep));
   REQUIRE(le64(dep) == 1 && le64(dep + 8) == 0, "requires attached deposit of exactly 1 yoctoNEAR");
-  size_t rl = json_id(in, n, "receiver_id", who);
+  parse_json(in, n, "receiver_id amount memo");
+  size_t rl = json_id("receiver_id", who);
   REQUIRE(!same(who, rl, caller, caller_len), "sender and receiver are the same");
   key[0] = 'b'; memcpy(key + 1, who, rl);
   REQUIRE(storage_read(1 + rl, PTR(key), 0) == 1, "receiver is not a registered holder");
-  u128 amount = json_u128(in, n, "amount", 1, 0);
+  u128 amount = json_u128("amount", 1, 0);
   REQUIRE(!is0(amount), "amount must be positive");
   set_balance(caller, caller_len, sub128(balance(caller, caller_len), amount));
   set_balance(who, rl, add128(balance(who, rl), amount));
@@ -284,7 +325,8 @@ EXPORT(ft_transfer) void ft_transfer(void) {
 
 EXPORT(ft_balance_of) void ft_balance_of(void) {
   size_t n = read_input(1024);
-  size_t al = json_id(in, n, "account_id", who);
+  parse_json(in, n, "account_id");
+  size_t al = json_id("account_id", who);
   on = 0; PUT("\""); put_u128(balance(who, al)); PUT("\"");
   value_return(on, PTR(out));
 }
@@ -300,13 +342,13 @@ EXPORT(ft_metadata) void ft_metadata(void) {
   value_return(sizeof(m) - 1, PTR(m));
 }
 
-/* View: {"version":N,"owner":..|null,"guardian":..|null,"next_op":N,"total_supply":".."}. */
+/* View: {"version":N,"owner":..|null,"guardian":..|null,"next_op":"N","total_supply":".."}. */
 EXPORT(state) void state(void) {
   uint8_t id[MAX_ID]; size_t n;
   on = 0; PUT("{\"version\":"); put_u64(version()); PUT(",\"owner\":");
   if ((n = read_id_key("o", id))) { PUT("\""); put_bytes(id, n); PUT("\""); } else PUT("null");
   PUT(",\"guardian\":");
   if ((n = read_id_key("g", id))) { PUT("\""); put_bytes(id, n); PUT("\""); } else PUT("null");
-  PUT(",\"next_op\":"); put_u64(next_op()); PUT(",\"total_supply\":\""); put_u128(supply()); PUT("\"}");
+  PUT(",\"next_op\":\""); put_u64(next_op()); PUT("\""); PUT(",\"total_supply\":\""); put_u128(supply()); PUT("\"}");
   value_return(on, PTR(out));
 }

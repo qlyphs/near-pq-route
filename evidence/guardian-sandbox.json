@@ -1,8 +1,8 @@
 {
   "suite": "guardian.sandbox",
   "guardian_sha256": "886ec53ae9f083daac36c5da0a0c181c8869e472166e1709f16a9d089aa5889c",
-  "token_v1_sha256": "28055301a82bd6b595b99a785f50c62b26ef93fb856a63c7dd08994c3c553037",
-  "token_v2_sha256": "3f5fb76de7df1efc6dad55d7a3d8b19431c4687227b617aecbe11e59e5ccfd2c",
+  "token_v1_sha256": "3ccccdbe127034c9c475a863bcb0ea47280cd9b5a3f084033352b192786fa328",
+  "token_v2_sha256": "5deb2e14bb4c60c005ad71df531d8875eb51251164c2965114057ecb9f3bcad9",
   "results": [
     {
       "name": "Guardian created in one batch: create, fund, deploy, init",
@@ -142,7 +142,7 @@
     {
       "name": "valid mint queued with signers 1 and 2",
       "ok": true,
-      "detail": "13.430288363808 Tgas"
+      "detail": "13.430708792124 Tgas"
     },
     {
       "name": "active record exposes the exact message",
@@ -187,7 +187,7 @@
     {
       "name": "two racing executes dispatch exactly once",
       "ok": true,
-      "detail": "ok 6.044415119837 Tgas | {\"ActionError\":{\"index\":0,\"kind\":{\"FunctionCallError\":{\"ExecutionError\":\"Smart contract panicked: no queued operation\"}}"
+      "detail": "{\"ActionError\":{\"index\":0,\"kind\":{\"FunctionCallError\":{\"ExecutionError\":\"Smart contract panicked: no queued operation\"}} | ok 6.042979646713 Tgas"
     },
     {
       "name": "mint applied and settled",
@@ -257,7 +257,7 @@
     {
       "name": "failing upgrade queued with its code",
       "ok": true,
-      "detail": "14.705847690954 Tgas"
+      "detail": "14.904087421608 Tgas"
     },
     {
       "name": "failed migration settles Failed, old code and state kept",
@@ -267,7 +267,7 @@
     {
       "name": "upgrade V1 to V2 through the Guardian",
       "ok": true,
-      "detail": "execute 9.70178903339 Tgas"
+      "detail": "execute 9.973837887164 Tgas"
     },
     {
       "name": "balances, supply, Guardian and op high-water mark preserved",
@@ -302,12 +302,22 @@
     {
       "name": "131,072-byte code queued",
       "ok": true,
-      "detail": "29.182989267639 Tgas"
+      "detail": "29.182853512899 Tgas"
     },
     {
       "name": "cancel deletes the maximum-size code",
       "ok": true,
-      "detail": "15.571613180108 Tgas"
+      "detail": "15.5735935538 Tgas"
+    },
+    {
+      "name": "131,072-byte upgrade with a failing migration: settled failed, V1 code and state kept",
+      "ok": true,
+      "detail": "propose 29.202380720901 Tgas, execute 29.099227694163 Tgas, callback 3.478285839715 of 10 Tgas"
+    },
+    {
+      "name": "131,072-byte upgrade applies and settles",
+      "ok": true,
+      "detail": "execute 29.70732615594 Tgas, callback 3.518017683217 of 10 Tgas"
     },
     {
       "name": "failed callback: mint stays applied, operation stays executing",

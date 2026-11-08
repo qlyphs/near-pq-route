@@ -7,7 +7,11 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { Key } from '../sdk/vault.mjs';
-import { encodeConfig, encodeOperation, approve, envelope, sha256, MAX_CODE, OP_LEN } from '../sdk/guardian.mjs';
+import { encodeConfig, encodeOperation, approve, sha256, MAX_CODE, OP_LEN } from '../sdk/guardian.mjs';
+
+// Raw envelope, without the SDK's client-side checks: these tests send malformed input on purpose to see
+// what the contract itself refuses (the SDK's own refusals are in tests/sdk.unit.mjs).
+const envelope = (op, approvals, code) => new Uint8Array(Buffer.concat([Buffer.from(op), ...approvals.flatMap(({ index, signature }) => [Buffer.from([index]), Buffer.from(signature)]), ...(code ? [Buffer.from(code)] : [])]));
 
 const TGAS = 10n ** 12n;
 const NEAR = 10n ** 24n;
@@ -127,7 +131,7 @@ try {
   const [e1, e2] = await Promise.all([execute(), relayer2.callRaw(guardian, 'execute', new Uint8Array(0), { gas: 300n * TGAS })]);
   record('two racing executes dispatch exactly once', [e1, e2].filter((r) => r.succeeded).length === 1 && [e1, e2].some((r) => failureText(r).includes('no queued operation')), [e1, e2].map((r) => r.succeeded ? `ok ${gasOf(r)} Tgas` : failureText(r).slice(0, 120)).join(' | '));
   const s1 = await gstate();
-  record('mint applied and settled', s1.active === null && s1.last?.status === 'applied' && s1.last.nonce === '0' && (await token.view('ft_balance_of', { account_id: alice.accountId })) === '1500' && (await tstate()).next_op === 1);
+  record('mint applied and settled', s1.active === null && s1.last?.status === 'applied' && s1.last.nonce === '0' && (await token.view('ft_balance_of', { account_id: alice.accountId })) === '1500' && (await tstate()).next_op === '1');
   await refused('execute after settlement', () => execute(), 'no queued operation');
   await refused('on_result is private', () => relayer.callRaw(guardian, 'on_result', new Uint8Array(8), { gas: 30n * TGAS }), 'private');
   await refused('former owner cannot mint after handover', () => owner.callRaw(token, 'mint', { receiver_id: owner.accountId, amount: '9', op_id: '9' }), 'only the Guardian');
@@ -165,7 +169,7 @@ try {
     await advance(61);
     const ex = await execute();
     const s3 = await gstate();
-    record('failed migration settles Failed, old code and state kept', ex.succeeded && s3.last?.status === 'failed' && s3.active === null && hex(await tcode()) === hex(sha256(v1)) && (await tstate()).version === 1 && (await tstate()).next_op === 1);
+    record('failed migration settles Failed, old code and state kept', ex.succeeded && s3.last?.status === 'failed' && s3.active === null && hex(await tcode()) === hex(sha256(v1)) && (await tstate()).version === 1 && (await tstate()).next_op === '1');
   }
 
   // Successful upgrade V1 -> V2.
@@ -176,7 +180,7 @@ try {
     const ex = await execute();
     const s4 = await gstate(), t4 = await tstate();
     record('upgrade V1 to V2 through the Guardian', ex.succeeded && s4.last?.status === 'applied' && t4.version === 2 && hex(await tcode()) === hex(sha256(v2)), `execute ${gasOf(ex)} Tgas`);
-    record('balances, supply, Guardian and op high-water mark preserved', (await token.view('ft_balance_of', { account_id: alice.accountId })) === '1500' && t4.total_supply === '1500' && t4.guardian === guardian && t4.owner === null && t4.next_op === 4);
+    record('balances, supply, Guardian and op high-water mark preserved', (await token.view('ft_balance_of', { account_id: alice.accountId })) === '1500' && t4.total_supply === '1500' && t4.guardian === guardian && t4.owner === null && t4.next_op === '4');
     const { values } = await provider.query({ request_type: 'view_state', account_id: guardian, prefix_base64: 'Yw==', finality: 'optimistic' });
     record('queued code deleted after settlement', values.length === 0);
   }
@@ -209,6 +213,35 @@ try {
     const cr = await cancel(envelope(c, both(c)));
     const { values } = await provider.query({ request_type: 'view_state', account_id: guardian, prefix_base64: 'Yw==', finality: 'optimistic' });
     record('cancel deletes the maximum-size code', cr.succeeded && values.length === 0, `${gasOf(cr)} Tgas`);
+  }
+
+  // Maximum-size upgrades that really execute: a 131,072-byte V2 whose migration fails (rolled back, settled
+  // failed), then a 131,072-byte V2 that applies. The callback's actual gas is recorded against its budget.
+  {
+    const vmax = readFileSync('build/token-v2-max.wasm'), vbadmax = readFileSync('build/token-v2-failing-max.wasm');
+    const t3 = await parent.createSubAccount('token3', { initialBalance: 10n * NEAR });
+    await t3.deploy(v1); await t3.call(t3, 'new', { owner_id: owner.accountId });
+    await owner.call(t3, 'mint', { receiver_id: alice.accountId, amount: '42' });
+    const cfg3 = encodeConfig({ target: t3.accountId, delaySeconds: 60n, windowSeconds: 3600n, signerKeys: signers.map((k) => k.publicKey) });
+    await parent.batch(`gmax.${parent.accountId}`).createAccount().transfer(5n * NEAR).deployContract(gWasm).functionCall('init', new Uint8Array(cfg3), { gas: 50n * TGAS }).transact();
+    const g3 = `gmax.${parent.accountId}`;
+    await owner.call(t3, 'handover', { guardian_id: g3 });
+    const view3 = () => root.getAccount(g3).view('state');
+    const code3 = async () => sha256(Buffer.from((await provider.query({ request_type: 'view_code', account_id: t3.accountId, finality: 'optimistic' })).code_base64, 'base64'));
+    const callbackGas = (r) => Number(BigInt(r.result.receipts_outcome.find((o) => o.outcome.logs.some((l) => /^(applied|failed), nonce/.test(l)))?.outcome.gas_burnt ?? 0)) / 1e12;
+    const run = async (nonce, code) => {
+      const m = encodeOperation({ chain: 'sandbox', guardian: g3, target: t3.accountId, configHash: sha256(cfg3), deadlineNs: await deadline(), nonce, action: 'upgrade', code, from: 1, to: 2 });
+      const q = await relayer.callRaw(g3, 'propose', envelope(m, both(m), code), { gas: 300n * TGAS });
+      await advance(61);
+      const ex = await relayer.callRaw(g3, 'execute', new Uint8Array(0), { gas: 300n * TGAS });
+      return { q, ex };
+    };
+    const bad = await run(0n, vbadmax);
+    const sb = await view3();
+    record('131,072-byte upgrade with a failing migration: settled failed, V1 code and state kept', bad.q.succeeded && sb.last?.status === 'failed' && hex(await code3()) === hex(sha256(v1)) && (await t3.view('state')).version === 1 && (await t3.view('ft_balance_of', { account_id: alice.accountId })) === '42', `propose ${gasOf(bad.q)} Tgas, execute ${gasOf(bad.ex)} Tgas, callback ${callbackGas(bad.ex)} of 10 Tgas`);
+    const good = await run(1n, vmax);
+    const sg = await view3(), ts = await t3.view('state');
+    record('131,072-byte upgrade applies and settles', good.ex.succeeded && sg.last?.status === 'applied' && hex(await code3()) === hex(sha256(vmax)) && ts.version === 2 && ts.next_op === '2' && (await t3.view('ft_balance_of', { account_id: alice.accountId })) === '42', `execute ${gasOf(good.ex)} Tgas, callback ${callbackGas(good.ex)} of 10 Tgas`);
   }
 
   // A settlement callback that fails: the target's effect stays applied, the Guardian stays unresolved for good.

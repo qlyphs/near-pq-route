@@ -1,7 +1,7 @@
 {
   "suite": "token.sandbox",
-  "token_v1_sha256": "28055301a82bd6b595b99a785f50c62b26ef93fb856a63c7dd08994c3c553037",
-  "token_v2_sha256": "3f5fb76de7df1efc6dad55d7a3d8b19431c4687227b617aecbe11e59e5ccfd2c",
+  "token_v1_sha256": "3ccccdbe127034c9c475a863bcb0ea47280cd9b5a3f084033352b192786fa328",
+  "token_v2_sha256": "5deb2e14bb4c60c005ad71df531d8875eb51251164c2965114057ecb9f3bcad9",
   "results": [
     {
       "name": "new only by the token account",
@@ -50,6 +50,86 @@
     },
     {
       "name": "amount above u128 refused",
+      "ok": true,
+      "detail": "amount overflow"
+    },
+    {
+      "name": "duplicate field hidden by whitespace",
+      "ok": true,
+      "detail": "duplicate JSON field"
+    },
+    {
+      "name": "escaped field name",
+      "ok": true,
+      "detail": "unsupported JSON field name"
+    },
+    {
+      "name": "field picked out of text that is not JSON",
+      "ok": true,
+      "detail": "expected a JSON object"
+    },
+    {
+      "name": "trailing garbage after the object",
+      "ok": true,
+      "detail": "trailing data"
+    },
+    {
+      "name": "nested value",
+      "ok": true,
+      "detail": "JSON values must be strings"
+    },
+    {
+      "name": "numeric value instead of a string",
+      "ok": true,
+      "detail": "JSON values must be strings"
+    },
+    {
+      "name": "unknown field",
+      "ok": true,
+      "detail": "unexpected JSON field"
+    },
+    {
+      "name": "escape inside a value",
+      "ok": true,
+      "detail": "unsupported character"
+    },
+    {
+      "name": "refused JSON changed nothing",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "ordinary whitespace around separators accepted",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "balance view reads the one account field",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "balance view refuses a duplicated account field",
+      "ok": true,
+      "detail": "duplicate JSON field"
+    },
+    {
+      "name": "amount at the old cutoff accepted",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "maximum u128 accepted",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "maximum u128 plus one refused",
+      "ok": true,
+      "detail": "amount overflow"
+    },
+    {
+      "name": "supply overflow refused",
       "ok": true,
       "detail": "amount overflow"
     },
@@ -116,7 +196,7 @@
     {
       "name": "Guardian upgrade V1 to V2",
       "ok": true,
-      "detail": "5.183533835589 Tgas"
+      "detail": "5.422330685313 Tgas"
     },
     {
       "name": "upgraded code is the V2 build",

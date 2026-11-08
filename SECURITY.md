@@ -138,8 +138,9 @@ fails (the caller's account was deleted) leaves it owed, to be paid once the acc
 
 ## What it does not protect
 
-- **NEAR itself is not post-quantum.** Consensus, validators, the relayer's key and every account outside
-  the vault use classical cryptography. Only the authorization to spend from this vault needs ML-DSA-87.
+- **NEAR itself is not post-quantum.** Consensus, validators and the relayer's key use classical
+  cryptography, as do accounts that hold classical keys. Only the authorization to spend from this vault
+  needs ML-DSA-87.
 - **The token is trusted.** A NEP-141 balance is whatever the token contract says. A token with an
   owner who can freeze, mint or upgrade keeps those powers over the vault's balance.
 - **The network tag is compiled in, not learned.** Anyone can start a private chain with an account of
@@ -155,8 +156,9 @@ fails (the caller's account was deleted) leaves it owed, to be paid once the acc
 - **Failed deliveries spend the nonce.** If the payment receipt fails, the funds stay in or return to
   the vault, and the owner must sign again.
 - **Keys.** One ML-DSA-87 key per vault, no rotation and no recovery: losing it locks the funds for good.
-- **The signer is a test script** (`sdk/vault.mjs`, OpenSSL). The Qlyphs wallet does not sign vault
-  authorizations yet.
+- **Signers.** The suites sign with a test script (`sdk/vault.mjs`, OpenSSL). A development build of the
+  Qlyphs wallet signs vault payments on testnet (`evidence/wallet-e2e-testnet.json`); Guardian approvals in
+  the wallet are not built yet.
 
 ## Key material
 

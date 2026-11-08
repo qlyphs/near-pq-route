@@ -1,9 +1,19 @@
 #!/usr/bin/env bash
-# Builds build/vault-<chain>.wasm and build/factory-<chain>.wasm (sandbox, testnet, mainnet) and build/pq87_near.wasm (gas spike), as MVP Wasm.
+# Builds every contract (vault, factory, Guardian, reference token) as MVP Wasm, prints their SHA-256 and checks the
+# release exports. Toolchain: LLVM clang and wasm-ld 19 or later (C23 #embed). The accepted release hashes in
+# deployments/ were produced with LLVM 23.1.4; another LLVM version builds working contracts but may not
+# reproduce those bytes. Override with CLANG=<clang> and WASM_LD_DIR=<folder holding wasm-ld>.
 set -euo pipefail
 cd "$(dirname "$0")/.."
-clang=${CLANG:-/opt/homebrew/opt/llvm/bin/clang}
-export PATH="/opt/homebrew/opt/lld/bin:$PATH"
+find_tool() { for c in "$@"; do if command -v "$c" >/dev/null 2>&1; then command -v "$c"; return; fi; done; }
+clang=${CLANG:-$(find_tool /opt/homebrew/opt/llvm/bin/clang clang-23 clang-22 clang-21 clang-20 clang-19 clang)}
+[ -n "$clang" ] || { echo "no clang found: install LLVM 19+ or set CLANG" >&2; exit 1; }
+ld_dir=${WASM_LD_DIR:-$(dirname "$(find_tool /opt/homebrew/opt/lld/bin/wasm-ld wasm-ld-23 wasm-ld-22 wasm-ld-21 wasm-ld-20 wasm-ld-19 wasm-ld)" 2>/dev/null || true)}
+[ -n "$ld_dir" ] && [ -x "$ld_dir/wasm-ld" ] || { echo "no wasm-ld found: install lld 19+ or set WASM_LD_DIR" >&2; exit 1; }
+export PATH="$ld_dir:$PATH"
+major=$("$clang" -dumpversion | cut -d. -f1)
+[ "$major" -ge 19 ] || { echo "clang $major is too old: #embed needs 19+" >&2; exit 1; }
+echo "toolchain: $("$clang" --version | head -1); $("$ld_dir/wasm-ld" --version | head -1)"
 mkdir -p build
 # -mcpu=mvp: no sign-ext, bulk-memory or reference types, which the NEAR runtime may reject.
 cflags=(--target=wasm32 -mcpu=mvp -O2 -ffreestanding -fno-builtin -nostdlib -Wall -Wextra -Werror

@@ -45,6 +45,8 @@
   dt { color: var(--dim); font-size: 0.9rem; } dd { margin: 0; word-break: break-all; }
   ol.timeline { padding-left: 20px; margin: 0; } ol.timeline li { padding: 6px 0; color: var(--dim); } ol.timeline li b { color: var(--text); font-weight: 600; }
   .secret { background: var(--bg); border: 1px dashed var(--line); border-radius: 8px; padding: 8px 10px; margin: 6px 0 12px; word-break: break-all; }
+  p.note { font-size: 0.9rem; border-left: 3px solid var(--warn); padding-left: 10px; color: var(--text); }
+  .result.unverified { color: var(--warn); }
   footer { padding: 6dvh 0 8dvh; color: var(--dim); font-size: 0.9rem; border-top: 1px solid var(--line); margin-top: 6dvh; }
   @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } ul.checks li { opacity: 1; transform: none; } }
 </style>
@@ -54,7 +56,8 @@
   <section class="hero">
     <h1>Qlyphs Guardian</h1>
     <p class="lead">Post-quantum admin control for NEAR contracts.</p>
-    <p>This demo token's admin key was retired. Minting and code upgrades now need two of three ML-DSA-87 approvals and a 60-second on-chain delay, enforced by a Guardian contract that has no keys at all. Don't take our word for it: every claim below is checked live against NEAR testnet.</p>
+    <p>This demo token's admin key was retired. Minting and code upgrades now need two of three ML-DSA-87 approvals and a 60-second on-chain delay, enforced by a Guardian contract that has no keys at all. The token's current control is verified live at a finalized NEAR block; the recorded cutover, mint, upgrade and rollback transactions are linked below.</p>
+    <p id="repo" hidden></p>
     <div class="row" style="margin-top:12px"><span id="badge" class="badge wait"><span class="dot"></span><span id="badge-text">Checking testnet…</span></span></div>
   </section>
 
@@ -74,7 +77,7 @@
     <div class="panel">
       <div><b>Former owner</b> <span class="detail" id="owner-id"></span></div>
       <div class="secret mono" id="owner-key">loading…</div>
-      <div class="row"><button id="attack-mint">Mint 1,000,000,000 tokens with the owner key</button></div>
+      <div class="row"><button id="attack-mint">Mint 1,000,000,000 GDEMO with the owner key</button></div>
       <div class="result" id="attack-mint-result"></div>
     </div>
     <div class="panel">
@@ -87,7 +90,8 @@
 
   <section id="mint">
     <h2>Request a post-quantum mint</h2>
-    <p>Ask for 100 demo tokens. Two demo signers approve the exact operation with ML-DSA-87, the Guardian queues it, and after the delay anyone can execute it. Here, that's you.</p>
+    <p>Ask for 100 GDEMO. Two signers approve the exact operation with ML-DSA-87, the Guardian queues it, and after the delay anyone can execute it. Here, that's you.</p>
+    <p class="note">Demo mode: this server holds two of the three signer keys so that visitors can trigger mints. In a real deployment each signer keeps its own key in its own wallet.</p>
     <div class="panel">
       <div class="row"><input id="receiver" placeholder="your-account.testnet" autocomplete="off" spellcheck="false"><button id="request">Request mint</button></div>
       <div class="result" id="mint-result"></div>
@@ -116,78 +120,116 @@ const tx = (h) => `<a href="https://testnet.nearblocks.io/txns/${h}" target="_bl
 const acct = (id) => `<a href="https://testnet.nearblocks.io/address/${id}" target="_blank" rel="noopener">${id}</a>`;
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 const $ = (id) => document.getElementById(id);
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const api = async (path, body) => { const r = await fetch(path, body ? { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) } : {}); return r.json(); };
-const humanError = (f) => { const m = String(f ?? '').match(/panicked: ([^"\\]+)/); return m ? m[1] : /KeyNotFound|AccessKeyDoesNotExist|InvalidAccessKey|does not exist while viewing/i.test(f) ? 'the key does not exist on the account any more' : String(f ?? '').slice(0, 160); };
+const humanError = (f) => { const m = String(f ?? '').match(/panicked: ([^"\\]+)/); return m ? m[1] : String(f ?? 'no answer').slice(0, 160); };
+let decimals = 18;
+const units = (raw) => { const v = BigInt(raw), d = 10n ** BigInt(decimals), w = v / d, f = (v % d).toString().padStart(decimals, '0').replace(/0+$/, ''); return `${w.toLocaleString('en-US')}${f ? `.${f}` : ''} GDEMO`; };
+const show = (el, cls, html, attrs = {}) => { el.className = `result ${cls}`; el.innerHTML = html; for (const [k, v] of Object.entries(attrs)) el.dataset[k] = v; };
 
 async function runReport() {
-  $('checks').innerHTML = ''; $('statement').textContent = 'Reading testnet…'; $('statement').className = 'result';
+  $('checks').innerHTML = ''; show($('statement'), '', 'Reading testnet…', { ok: 'pending' });
   const b = $('badge'); b.className = 'badge wait'; $('badge-text').textContent = 'Checking testnet…';
-  const r = await api('/api/report');
-  if (r.error) { $('statement').textContent = r.error; $('statement').className = 'result bad'; b.className = 'badge bad'; $('badge-text').textContent = 'Could not read testnet'; return; }
-  r.checks.forEach((c, i) => {
-    const li = document.createElement('li'); li.style.animationDelay = `${i * 70}ms`;
-    li.innerHTML = `<span class="mark ${c.status}">${c.status === 'pass' ? '✓' : c.status === 'fail' ? '✕' : '?'}</span><div>${esc(c.name)}<div class="detail">${esc(c.detail ?? '')}</div></div>`;
-    $('checks').appendChild(li);
-  });
-  $('statement').innerHTML = `${esc(r.statement)} <a href="https://testnet.nearblocks.io/blocks/${r.block.hash}" target="_blank" rel="noopener">Block ${r.block.height}</a>`;
-  $('statement').className = `result ${r.ok ? 'ok' : 'bad'}`;
-  b.className = `badge ${r.ok ? 'ok' : 'bad'}`; $('badge-text').textContent = r.ok ? `Verified at block ${r.block.height}` : 'Not verified: see the checks';
+  try {
+    const r = await api('/api/report');
+    if (r.error || !Array.isArray(r.checks)) throw new Error(r.error ?? 'no report');
+    r.checks.forEach((c, i) => {
+      const li = document.createElement('li'); li.style.animationDelay = `${i * 70}ms`; li.dataset.status = c.status;
+      li.innerHTML = `<span class="mark ${c.status}">${c.status === 'pass' ? '✓' : c.status === 'fail' ? '✕' : '?'}</span><div>${esc(c.name)}<div class="detail">${esc(c.detail ?? '')}</div></div>`;
+      $('checks').appendChild(li);
+    });
+    show($('statement'), r.ok ? 'ok' : 'bad', `${esc(r.statement)} <a href="https://testnet.nearblocks.io/blocks/${r.block.hash}" target="_blank" rel="noopener">Block ${r.block.height}</a>`, { ok: String(r.ok) });
+    b.className = `badge ${r.ok ? 'ok' : 'bad'}`; $('badge-text').textContent = r.ok ? `Verified at block ${r.block.height}` : 'Not verified: see the checks';
+  } catch (e) {
+    show($('statement'), 'unverified', `Could not read testnet right now (${esc(e.message)}). Try again in a moment.`, { ok: 'false' });
+    b.className = 'badge bad'; $('badge-text').textContent = 'Could not read testnet';
+  }
 }
 
 async function loadKeys() {
-  const k = await api('/api/retired-keys');
-  $('owner-id').innerHTML = acct(k.owner.account); $('owner-key').textContent = k.owner.secret;
-  $('token-id').innerHTML = `${acct(k.token.account)} · deleted in ${tx(k.token.deleted_in)}`; $('token-key').textContent = k.token.secret;
+  try {
+    const k = await api('/api/retired-keys');
+    $('owner-id').innerHTML = acct(k.owner.account); $('owner-key').textContent = k.owner.secret ?? 'not published by this copy of the demo';
+    $('token-id').innerHTML = `${acct(k.token.account)} · deleted in ${tx(k.token.deleted_in)}`; $('token-key').textContent = k.token.secret ?? 'not published by this copy of the demo';
+  } catch { $('owner-key').textContent = $('token-key').textContent = 'could not load'; }
 }
 
+// Green only for the specific expected defense; anything else is shown as unverified, never as a pass.
 async function attack(kind, out, btn) {
-  btn.disabled = true; $(out).className = 'result'; $(out).textContent = 'Signing with the old key and sending to testnet…';
-  const r = await api(`/api/attack/${kind}`, {});
-  btn.disabled = false;
-  if (r.ok) { $(out).className = 'result bad'; $(out).innerHTML = `It went through. That should never happen: ${r.tx ? tx(r.tx) : ''}`; return; }
-  // Green only for the expected refusal; any other error means the attack could not be tested, not that it failed.
-  if (!r.refused_as_expected) { $(out).className = 'result'; $(out).style.color = 'var(--warn)'; $(out).textContent = `Could not run the attack right now (${humanError(r.failure ?? r.error)}). Try again in a moment.`; return; }
-  $(out).className = 'result ok'; $(out).style.color = '';
-  $(out).innerHTML = `Refused: ${esc(humanError(r.failure))}${r.tx ? ` · ${tx(r.tx)}` : ''}`;
+  btn.disabled = true; show($(out), '', 'Signing with the old key and sending to testnet…', { verdict: 'pending' });
+  try {
+    const r = await api(`/api/attack/${kind}`, {});
+    if (r.verdict === 'blocked_as_expected') show($(out), 'ok', `Refused: ${esc(r.reason)}${r.tx ? ` · ${tx(r.tx)}` : ''}`, { verdict: r.verdict });
+    else if (r.verdict === 'unexpected_success') show($(out), 'bad', `It went through. That should never happen${r.tx ? `: ${tx(r.tx)}` : ''}`, { verdict: r.verdict });
+    else show($(out), 'unverified', `Not verified right now: ${esc(humanError(r.reason ?? r.failure ?? r.error))}. The recorded refusal is in the timeline below.`, { verdict: 'unverified' });
+  } catch (e) {
+    show($(out), 'unverified', `Not verified right now: ${esc(e.message)}.`, { verdict: 'unverified' });
+  } finally { btn.disabled = false; }
 }
 
-let timer, current;
-function showOp(a, nowNs) {
-  $('op').hidden = false; current = a.nonce; $('exec-result').textContent = '';
-  $('op-fields').innerHTML = `<dt>Action</dt><dd>${esc(a.action)} ${a.amount ? esc(a.amount) + ' to ' + acct(a.receiver_id) : ''}</dd><dt>Nonce</dt><dd class="mono">${esc(a.nonce)}</dd><dt>Approved by</dt><dd>signers ${[0, 1, 2].filter((i) => a.signers & (1 << i)).join(' and ')} (ML-DSA-87)</dd><dt>Proposal hash</dt><dd class="mono">${esc(a.proposal_hash)}</dd>`;
-  const queued = BigInt(a.queued_at_ns), eta = BigInt(a.eta_ns), offset = BigInt(Date.now()) * 1000000n - BigInt(nowNs);
-  clearInterval(timer);
-  const tick = () => {
-    const now = BigInt(Date.now()) * 1000000n - offset, left = eta > now ? Number((eta - now) / 1000000000n) : 0;
-    $('op-bar').style.width = `${Math.min(100, Number(((now - queued) * 100n) / (eta - queued)))}%`;
-    $('op-timer').textContent = left > 0 ? `Timelock: ${left} s left. Nobody can execute it before.` : 'Timelock passed. Anyone can execute it now.';
-    $('execute').disabled = left > 0 || a.status !== 'queued';
-  };
-  tick(); timer = setInterval(tick, 1000);
+// The operation this page is following, refreshed until it settles.
+let current = null, inflight = false, offset = 0n, ticking = null, polling = null;
+function render(a, last) {
+  $('op').hidden = false;
+  if (a) {
+    $('op-fields').innerHTML = `<dt>Action</dt><dd>${esc(a.action)} ${a.amount ? units(a.amount) + ' to ' + acct(a.receiver_id) : ''}</dd><dt>Nonce</dt><dd class="mono">${esc(a.nonce)}</dd><dt>Approved by</dt><dd>signers ${[0, 1, 2].filter((i) => a.signers & (1 << i)).join(' and ')} (ML-DSA-87)</dd><dt>Proposal hash</dt><dd class="mono">${esc(a.proposal_hash)}</dd>`;
+  }
+  clearInterval(ticking);
+  const status = a ? a.status : last?.proposal_hash === current?.proposal_hash ? last.status : null;
+  $('exec-result').dataset.status = status ?? 'unknown';
+  if (status === 'queued') {
+    const queued = BigInt(a.queued_at_ns), eta = BigInt(a.eta_ns), expires = BigInt(a.expires_ns);
+    const tick = () => {
+      const now = BigInt(Date.now()) * 1000000n - offset, waiting = now < eta, left = waiting ? (eta - now + 999999999n) / 1000000000n : 0n;
+      $('op-bar').style.width = `${Math.min(100, Number(((now - queued) * 100n) / (eta - queued)))}%`;
+      $('op-timer').textContent = now >= expires ? 'Dispatch window closed: executing now closes it as expired.' : waiting ? `Timelock: ${left} s left. Nobody can execute it before.` : 'Timelock passed. Anyone can execute it now.';
+      $('execute').disabled = waiting || inflight;
+    };
+    tick(); ticking = setInterval(tick, 500);
+  } else {
+    $('execute').disabled = true;
+    $('op-bar').style.width = '100%';
+    $('op-timer').textContent = status === 'executing' ? 'Executing: waiting for the token and the Guardian to settle.' : status ? '' : 'This operation is no longer active.';
+    if (status && status !== 'executing') {
+      const ok = status === 'applied';
+      show($('exec-result'), ok ? 'ok' : 'bad', `Guardian status: ${esc(status)}${ok ? ' · the tokens are minted' : ''}${current?.execute_tx ? ` · ${tx(current.execute_tx)}` : ''}`, { status });
+      clearInterval(polling); polling = null;
+    }
+  }
 }
-
-async function refreshOp() {
-  const s = await api('/api/state');
-  if (s.guardian?.active) showOp(s.guardian.active, s.now_ns);
-  return s;
+async function refresh() {
+  try {
+    const s = await api('/api/state');
+    decimals = Number(s.metadata?.decimals ?? 18);
+    offset = BigInt(Date.now()) * 1000000n - BigInt(s.now_ns);
+    if (s.repo_url) { $('repo').hidden = false; $('repo').innerHTML = `Source, tests and every transaction: <a href="${esc(s.repo_url)}" target="_blank" rel="noopener">${esc(s.repo_url.replace(/^https:\/\//, ''))}</a>`; }
+    if (!s.writable) { $('request').disabled = true; show($('mint-result'), 'unverified', 'This copy of the demo is read-only. Use the hosted demo to request a mint.'); }
+    const a = s.guardian?.active;
+    if (a && (!current || current.proposal_hash !== a.proposal_hash)) current = { proposal_hash: a.proposal_hash };
+    if (current) render(a && a.proposal_hash === current.proposal_hash ? a : null, s.guardian?.last);
+    return s;
+  } catch { return null; }
 }
+const follow = () => { if (!polling) polling = setInterval(refresh, 4000); };
 
 $('request').onclick = async () => {
-  const r = await api('/api/mint', { receiver_id: $('receiver').value });
-  $('mint-result').className = `result ${r.ok ? 'ok' : 'bad'}`;
-  $('mint-result').innerHTML = r.ok ? `Queued by the Guardian · ${tx(r.tx)}` : esc(r.error ?? humanError(r.failure));
-  await refreshOp();
+  $('request').disabled = true;
+  try {
+    const r = await api('/api/mint', { receiver_id: $('receiver').value });
+    show($('mint-result'), r.ok ? 'ok' : 'bad', r.ok ? `Queued by the Guardian · ${tx(r.tx)}` : esc(r.error ?? humanError(r.failure)));
+    if (r.ok) { current = { proposal_hash: r.proposal_hash }; $('exec-result').textContent = ''; }
+    else if (r.active) current = { proposal_hash: r.active.proposal_hash };
+  } catch (e) { show($('mint-result'), 'unverified', `Could not reach the demo: ${esc(e.message)}`); }
+  finally { $('request').disabled = false; await refresh(); follow(); }
 };
 $('execute').onclick = async () => {
-  $('execute').disabled = true; $('exec-result').className = 'result'; $('exec-result').textContent = 'Executing…';
-  const r = await api('/api/execute', {});
-  clearInterval(timer);
-  const s = await api('/api/state');
-  const last = s.guardian.last, mine = last && last.nonce === current;
-  $('exec-result').className = `result ${mine && last.status === 'applied' ? 'ok' : 'bad'}`;
-  $('exec-result').innerHTML = mine
-    ? `${r.ok ? `Executed · ${tx(r.tx)}` : 'Someone executed it first'} · Guardian status: ${esc(last.status)}${last.status === 'applied' ? ' · the tokens are minted' : ''}`
-    : esc(r.error ?? humanError(r.failure));
+  inflight = true; $('execute').disabled = true; show($('exec-result'), '', 'Executing…', { status: 'executing' });
+  try {
+    const r = await api('/api/execute', { proposal_hash: current?.proposal_hash });
+    if (r.tx) current.execute_tx = r.tx;
+    if (!r.ok && r.error) show($('exec-result'), 'unverified', esc(r.error), { status: 'unknown' });
+  } catch (e) { show($('exec-result'), 'unverified', `Could not reach the demo: ${esc(e.message)}`, { status: 'unknown' }); }
+  finally { inflight = false; await refresh(); follow(); }
 };
 $('attack-mint').onclick = () => attack('owner-mint', 'attack-mint-result', $('attack-mint'));
 $('attack-deploy').onclick = () => attack('token-deploy', 'attack-deploy-result', $('attack-deploy'));
@@ -195,14 +237,16 @@ $('rerun').onclick = runReport;
 
 (async () => {
   runReport(); loadKeys();
-  const s = await refreshOp();
+  const s = await refresh();
+  if (current) follow();
+  if (!s) return;
   const c = s.ceremony, op = c.operations;
   $('timeline').innerHTML = [
     `<li><b>Release parent created</b> ${acct(s.accounts.parent)} · ${tx(c.parent_tx)}</li>`,
     `<li><b>Legacy token</b> ${acct(s.accounts.token)}: its own deployment key, V1 code, owner ${acct(s.accounts.owner)} mints two holders · ${tx(c.legacy.token_tx)}</li>`,
-    `<li><b>Guardian created</b> in one transaction: create, fund, deploy, init. Audited: exactly these four actions and the expected config · ${tx(c.guardian_creation.tx)}</li>`,
+    `<li><b>Guardian created</b> in one transaction: create, fund, deploy, init. Verified: exactly these four actions and the expected config · ${tx(c.guardian_creation.tx)}</li>`,
     `<li><b>Handover</b>: the owner gives mint and upgrade to the Guardian, for good · ${tx(c.cutover.handover_tx)}</li>`,
-    `<li><b>Token key deleted</b>: the token account has no keys left · ${tx(c.cutover.delete_keys_tx)}</li>`,
+    `<li><b>Token key deleted</b> after the handover executed: the token account has no keys left · ${tx(c.cutover.delete_keys_tx)}</li>`,
     `<li><b>PQ mint</b> approved by signers 0 and 1, executed after the delay · ${tx(op.mint.execute_tx)}</li>`,
     `<li><b>PQ upgrade V1 → V2</b> approved by signers 1 and 2. Balances, Guardian and replay state kept · ${tx(op.upgrade.execute_tx)}</li>`,
     `<li><b>131,072-byte upgrades</b> on a second token and Guardian: a migration that fails is rolled back and settled failed · ${tx(op.max_failing.execute_tx)}; the same size applies · ${tx(op.max_upgrade.execute_tx)}</li>`,

@@ -82,11 +82,11 @@ export class Rpc {
     return text ? JSON.parse(text) : null;
   }
   /** Signs and sends one transaction, waits for its execution; returns { hash, ok, failure, outcome }. */
-  async send(signerId, key, receiverId, actions) {
+  async send(signerId, key, receiverId, actions, waitUntil = 'EXECUTED_OPTIMISTIC') {
     for (let attempt = 0; ; attempt++) {
       let ak;
       try { ak = await this.query({ request_type: 'view_access_key', finality: 'optimistic', account_id: signerId, public_key: key.publicKey }); }
-      catch (e) { return { hash: null, ok: false, failure: `access key ${key.publicKey} on ${signerId}: ${e.message}`, outcome: null }; }
+      catch (e) { return { hash: null, ok: false, failure: `access key ${key.publicKey} on ${signerId}: ${e.message}`, rpcError: e.rpc ?? null, outcome: null }; }
       // The RPC reports a missing key as a result with an error field, not as a JSON-RPC error.
       // A key that is gone still gets its transaction signed and sent, so the network itself refuses it.
       if (ak.error || ak.nonce === undefined) ak = { nonce: 0 };
@@ -95,12 +95,12 @@ export class Rpc {
       const hash = sha256(tx), sig = ed25519.sign(hash, key.seed);
       const signed = new Uint8Array(tx.length + 65); signed.set(tx); signed[tx.length] = 0; signed.set(sig, tx.length + 1);
       try {
-        const out = await this.call('send_tx', { signed_tx_base64: toBase64(signed), wait_until: 'EXECUTED_OPTIMISTIC' });
+        const out = await this.call('send_tx', { signed_tx_base64: toBase64(signed), wait_until: waitUntil });
         const failures = [out.status, ...out.receipts_outcome.map((o) => o.outcome.status)].filter((s) => s && 'Failure' in s).map((s) => s.Failure);
         return { hash: b58encode(hash), ok: failures.length === 0, failure: failures.length ? JSON.stringify(failures[0]) : null, outcome: out };
       } catch (e) {
         if (attempt < 2 && /InvalidNonce/.test(e.message)) continue;
-        return { hash: b58encode(hash), ok: false, failure: e.message, outcome: null };
+        return { hash: b58encode(hash), ok: false, failure: e.message, rpcError: e.rpc ?? null, outcome: null };
       }
     }
   }

@@ -1,0 +1,95 @@
+{
+  "suite": "demo.unit",
+  "results": [
+    {
+      "name": "owner mint refused by the token for the Guardian rule: blocked",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "owner mint that succeeded: unexpected success",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "generic API failure: unverified",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "timeout before any outcome: unverified",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "former owner account unfunded: unverified",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "wrong nonce: unverified",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "former owner key missing: unverified",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "mint refused for another reason (out of gas): unverified",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "refusal from another account: unverified",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "another call or signer: unverified",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "execution not final: unverified",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "deleted key refused with AccessKeyNotFound for this account and key: blocked",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "deployment that succeeded: unexpected success",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "AccessKeyNotFound for another key: unverified",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "AccessKeyNotFound for another account: unverified",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "timeout or untyped error: unverified",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "100 GDEMO formats from base units",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "fractional and large amounts format exactly",
+      "ok": true,
+      "detail": ""
+    }
+  ]
+}

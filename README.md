@@ -16,7 +16,8 @@ Unaudited testnet prototype. Read [Limits](#limits) before drawing conclusions.
 
 On the day a classical key can be broken, an attacker does not need to rob users one by one. One admin
 key, the owner of a token, the upgrade authority of a protocol, a bridge's multisig, can mint, upgrade or
-drain a whole protocol. Those keys are classical today. NEAR already supports native ML-DSA-65 access keys;
+drain a whole protocol. For protocols whose admin paths still rely on classical signatures, that key is the
+weak point. NEAR already supports native ML-DSA-65 access keys;
 what is missing is an admin *workflow* that a protocol can adopt without losing its contract, its
 balances or its ability to upgrade: a quorum, a delay, a cancel path, and a way for anyone to check that no
 classical bypass is left.
@@ -33,7 +34,8 @@ Open the [demo](https://qlyphs-guardian-demo.qlyphs.workers.dev) and:
    `InvalidAccessKeyError: AccessKeyNotFound` from the network.
 3. **Request a mint.** Enter any testnet account id. Two demo signers approve the 320-byte operation with
    ML-DSA-87, the Guardian queues it, and a 60-second timelock starts. Expect the Execute button to stay
-   disabled until it ends, then click it. Expect `applied` and 100 demo tokens on that account.
+   disabled until it ends, then click it. Expect `applied` and 100 GDEMO (the token has 18 decimals) on that
+   account. The demo server holds two of the three signer keys; the page says so next to the button.
 
 The page also lists every transaction of the testnet cutover, each linked to the explorer.
 
@@ -44,7 +46,7 @@ The page also lists every transaction of the testnet cutover, each linked to the
 | [`contract/guardian.c`](contract/guardian.c) | The Guardian. Immutable, no owner, no keys. `propose` and `cancel` share one validator (framing, network, Guardian, target, config hash, deadline, two distinct valid ML-DSA-87 approvals). `execute` marks the operation Executing before its single dispatch; a private callback settles it. |
 | [`contract/token.c`](contract/token.c) | The reference target: a small token that starts with a classical owner, hands mint and upgrade to the Guardian once, and upgrades itself in one atomic deploy-and-migrate receipt. |
 | [`sdk/guardian.mjs`](sdk/guardian.mjs) | Message encoding, approvals, the per-deployment creation audit and the `verifyControl` report. |
-| [`tests/`](tests) | Unit checks of the SDK (23), sandbox suites (Guardian 67, token 48) and the testnet ceremony. |
+| [`tests/`](tests) | Unit checks of the SDK (33) and of the demo's experiment verdicts (18), sandbox suites (Guardian 67, token 48) and the testnet ceremony. |
 | [`demo/`](demo) | The hosted demo: one Cloudflare Worker and one page. |
 
 The ML-DSA-87 verifier in [`core/`](core) is the same C code as the Qlyphs vault (below), verified
@@ -80,15 +82,16 @@ Release `qlyphs-guardian.testnet`. Journal of every step: `deployments/guardian-
 | Claim | Evidence |
 |---|---|
 | The token has no access keys and is guarded by the Guardian; the Guardian has no keys; both run reviewed builds | Live: the demo's report. Recorded: `evidence/guardian-qlyphs-guardian.json` (`report`, final block 276781808) |
-| The Guardian was created by exactly CreateAccount, Transfer, DeployContract (pinned code), init (exact config bytes), with complete final execution | tx `6gL6FeB2Pgm2bTv8bfqRnrzkLjhdQ4wCjMtgRX4bSBFf`, re-audited by every report |
-| Cutover: handover to the Guardian, then the token's only key deleted, in that order | handover `CxDJg7EMpHjMBTmMGpCrvBw8g3LDwe7jfrcqMzLGA37i`, key deletion `9gHUP4qwthzgr7kGZrgpMpRzfPMadY6BREyADdrjeXSD`, re-audited by every report |
+| The Guardian was created by exactly CreateAccount, Transfer, DeployContract (pinned code), init (exact config bytes), with complete final execution | tx `6gL6FeB2Pgm2bTv8bfqRnrzkLjhdQ4wCjMtgRX4bSBFf`, re-checked by every report |
+| Cutover: handover to the Guardian, then the token's only key deleted, in that order of execution (blocks 276778628, then 276778634) | handover `CxDJg7EMpHjMBTmMGpCrvBw8g3LDwe7jfrcqMzLGA37i`, key deletion `9gHUP4qwthzgr7kGZrgpMpRzfPMadY6BREyADdrjeXSD`, re-checked by every report |
 | A PQ-approved mint and a PQ-approved upgrade V1 → V2 work after cutover; early execution is refused; balances, Guardian and replay state are kept | mint execute `FkyuGc7R5n14DBiyq4QQykJ3VKGiCLEw67cLUnrK88Xx`, upgrade execute `6AgZNcgPHbHfD1h9hsp465swo7ZU2V9x9kVJ9VNbMzcN`, early executes in the journal |
 | The former owner cannot mint; the network refuses the deleted key | Live: demo buttons. Recorded: `attacks` in the evidence file |
 | A 131,072-byte upgrade whose migration fails is rolled back and settled `failed`; a 131,072-byte upgrade applies; the callback uses 3.4 of its 10 Tgas | `9NNG4BituLmxucmEdACHwkwMTnq4oo2ykZsjikJdCwZg`, `4FxwywjkuBqbNDYxLkSVaiBEzwQRPGvfHkVAJSwvN9Vx` (second token and Guardian) |
 | One signer, an outsider key, a tampered field, another network, Guardian, target or config, an expired deadline, a replay: all refused, with no state change | `evidence/guardian-sandbox.json` (67 checks) |
 | Cancel is bound to Guardian, nonce and proposal hash; every terminal path frees the slot; two racing executes dispatch once; an underfunded execute leaves the operation queued; a failing callback leaves it unresolved, never retried | `evidence/guardian-sandbox.json` |
 | The token reads exactly what `JSON.parse` reads or refuses (duplicates, escapes, non-JSON, trailing data), across the full u128 range | `evidence/token-sandbox.json` (48 checks) |
-| The report never passes on missing, malformed, mismatched or placeholder evidence | `evidence/sdk-unit.json` (23 checks) |
+| The report passes only when its nine required checks pass; it reports unverified for the regression cases covered (null or malformed views, answers for another block, key-list continuations, placeholder provenance, pending or incomplete transactions, handover executed after deletion, invalid block headers, stale snapshots) | `evidence/sdk-unit.json` (33 checks) |
+| The demo shows an experiment as blocked only for the specific expected refusal; timeouts, unfunded or missing senders and other errors read as unverified | `evidence/demo-unit.json` (18 checks) |
 | The release Wasm exports exactly the reviewed entry points | `scripts/check-exports.mjs`, run by `scripts/build.sh` |
 
 Gas on testnet: queue a mint 13.6 Tgas (two ML-DSA-87 verifications), queue an upgrade 15.1 Tgas, execute a
@@ -99,21 +102,25 @@ records are kept as `deployments/superseded-guardian-r1.json` and are not eviden
 
 ## Reproduce
 
-Requirements: Node 22+, LLVM clang and lld with wasm32 (Homebrew `llvm` and `lld`), OpenSSL 3.5+ (ML-DSA).
+Requirements: Node 22+, OpenSSL 3.5+ (ML-DSA, for the test signers), and LLVM clang and wasm-ld 19 or later
+(C23 `#embed`). The release artifacts were built on macOS arm64 with Homebrew LLVM 23.1.4 (clang and lld);
+`scripts/build.sh` finds `clang`/`wasm-ld` on the PATH (or `CLANG=` and `WASM_LD_DIR=`) and prints the
+toolchain it used. A different LLVM version builds working contracts but may not reproduce the release bytes.
+On Linux, install LLVM 23 from apt.llvm.org and run `CLANG=clang-23 WASM_LD_DIR=/usr/lib/llvm-23/bin bash
+scripts/build.sh`; this route has not been run by us yet, so compare the hashes before relying on it.
+
 The sandbox suites download the NEAR sandbox binary on first run (network needed). Running a suite rewrites
 its `evidence/*.json` file; gas figures in it vary slightly from run to run.
 
 ```sh
 npm ci
-bash scripts/build.sh            # builds every contract, prints SHA-256, checks release exports
-node tests/sdk.unit.mjs          # 23 checks, no network
-node tests/token.sandbox.mjs     # 48 checks, local NEAR sandbox
-node tests/guardian.sandbox.mjs  # 67 checks
+bash scripts/build.sh                   # every contract, SHA-256, release export check
+node scripts/check-release-hashes.mjs   # Guardian, token V1 and V2 against the testnet release
+node tests/sdk.unit.mjs                 # 33 checks, no network
+node tests/demo.unit.mjs                # 18 checks, no network
+node tests/token.sandbox.mjs            # 48 checks, local NEAR sandbox
+node tests/guardian.sandbox.mjs         # 67 checks
 ```
-
-The build is deterministic: the hashes printed for `build/guardian-testnet.wasm`, `build/token-v1.wasm`
-and `build/token-v2.wasm` must equal `guardian_sha256` and `reviewed_target_sha256` in
-`deployments/guardian-qlyphs-guardian.json`, which the report compares with the code deployed on testnet.
 
 To run your own testnet ceremony (fresh account ids, used once; the script stops at the first failed step
 and resumes only from state it recognises on chain):
@@ -123,8 +130,9 @@ FUNDER_ACCOUNT=<funded testnet account> FUNDER_KEY_FILE=<its key file> SECRETS_D
 RELEASE_PARENT=<new-name>.testnet node tests/guardian.testnet.mjs
 ```
 
-The demo runs locally with `cd demo && npm ci && npx wrangler dev` and a `demo/.dev.vars` holding
-`SIGNER_A`, `SIGNER_B` (signer seeds), `RELAYER_KEY`, `RETIRED_OWNER_KEY`, `RETIRED_TOKEN_KEY`.
+The demo page runs locally against the public testnet release, read-only: `cd demo && npm ci && npx wrangler
+dev`, then open http://localhost:8787. The report, the state and the recorded evidence work; requesting a mint
+and the retired-key experiments need the operator's keys and answer 503. The hosted demo is the place to act.
 
 ## Limits
 
@@ -145,7 +153,8 @@ The demo runs locally with `cd demo && npm ci && npx wrangler dev` and a `demo/.
 
 ## Hackathon scope
 
-Built for the NEAR Hackathon (Nov 2026). Every commit in this repository is from 22 Oct 2026 or later.
+Built for the NEAR Hackathon (Nov 2026). Every commit in this repository is from 22 Oct 2026 or later; the
+tag `hackathon-submission` marks the submitted commit.
 The ML-DSA-87 verifier, the vault and its factory (22–27 Oct) are reused; Guardian, the token, the
 SDK additions, the suites, the testnet ceremony and the demo were built from 8 Nov. The Qlyphs wallet,
 an existing product, is not part of this repository.

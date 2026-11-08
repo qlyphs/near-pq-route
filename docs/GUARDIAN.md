@@ -201,10 +201,12 @@ fields (receiver and amount, or code hash, length and versions), `queued_at`, `e
 decimal strings), and the signer bitmap; plus the last terminal record (nonce, proposal hash, status).
 Queued code is read with RPC `view_state` paginated (`block_id` = a pinned finalized block,
 `prefix_base64` = `Yw==`, `limit` = 1, available from nearcore 2.13): an unpaginated request fails once the
-account state exceeds 50,000 bytes. The SDK requires the returned key to be exactly `c` and checks the
-length and hash against the message. Config bytes (`C`) are read the same way.
+account state exceeds 50,000 bytes. A reader must require the returned key to be exactly `c` and check its
+length and SHA-256 against the operation (the testnet ceremony does this for a 131,072-byte code). The
+report reads the config bytes (`C`) the same way.
 
-The wallet renders an operation from the 320 bytes it signs, never from separate metadata.
+Wallet integration requirement: a signer's wallet must render an operation from the 320 bytes it signs
+(`decodeOperation`), never from separate metadata. Guardian signing in the Qlyphs wallet is on the roadmap.
 
 ## Verification report
 
@@ -226,5 +228,7 @@ with this configuration, under the recorded deployment and cutover assumptions."
 
 A build step lists the exports of each release Wasm and compares them with an allowlist: Guardian
 `init propose cancel execute on_result expire state`; token `new mint handover upgrade migrate ft_transfer
-ft_balance_of ft_total_supply ft_metadata state`. Test-only builds (`token-v2-failing.wasm`, the padded `*-max.wasm`, `guardian-sandbox-failing-callback.wasm`) are never
-deployed outside the sandbox.
+ft_balance_of ft_total_supply ft_metadata state`. The failing-callback Guardian (`guardian-sandbox-failing-callback.wasm`) and `token-v2-failing.wasm` are
+sandbox-only. The padded maximum-size token builds (`token-v2-max.wasm`, `token-v2-failing-max.wasm`) are
+used in the sandbox and on the dedicated testnet validation deployment (`token-max`), separate from the
+demo token.

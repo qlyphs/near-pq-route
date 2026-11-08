@@ -43,7 +43,7 @@ class Writer {
 export const functionCall = (method, args, gas, deposit = 0n) => ({ kind: 2, method, args: typeof args === 'string' ? new TextEncoder().encode(args) : Uint8Array.from(args), gas: BigInt(gas), deposit: BigInt(deposit) });
 export const deployContract = (code) => ({ kind: 1, code: Uint8Array.from(code) });
 
-function encodeTx({ signerId, pub, nonce, receiverId, blockHash, actions }) {
+export function encodeTx({ signerId, pub, nonce, receiverId, blockHash, actions }) {
   const w = new Writer();
   w.str(signerId); w.u8(0); w.bytes(pub); w.u64(nonce); w.str(receiverId); w.bytes(blockHash);
   w.u32(actions.length);
@@ -57,7 +57,7 @@ function encodeTx({ signerId, pub, nonce, receiverId, blockHash, actions }) {
 }
 
 // Base64 in bounded chunks: spreading a large array into one call can exceed engine argument limits.
-function toBase64(bytes) { let s = ''; for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000)); return btoa(s); }
+export function toBase64(bytes) { let s = ''; for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000)); return btoa(s); }
 
 export class Rpc {
   /** urls: one RPC URL or several; a rate limit, a server error or a network failure moves to the next one. */

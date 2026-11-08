@@ -4,7 +4,7 @@
 import { ml_dsa87 } from '@noble/post-quantum/ml-dsa.js';
 import deployment from '../../deployments/guardian-qlyphs-guardian.json';
 import evidence from '../../evidence/guardian-qlyphs-guardian.json';
-import { encodeOperation, envelope, sha256, verifyControl, isAccountId, GUARDIAN_CONTEXT } from '../../sdk/guardian.mjs';
+import { encodeOperation, envelope, sha256, verifyControl, isAccountId, GUARDIAN_CONTEXT, PK_LEN } from '../../sdk/guardian.mjs';
 import { Rpc, edKey, functionCall, deployContract } from './near.js';
 import { ownerMintVerdict, deletedKeyVerdict, UNVERIFIED } from './verdicts.js';
 
@@ -50,25 +50,55 @@ async function state(rpc, env) {
     ceremony: { parent_tx: deployment.parent_tx, legacy: deployment.legacy, guardian_creation: { tx: deployment.guardian_creation.tx, audit: deployment.guardian_creation.audit }, cutover: deployment.cutover, operations: deployment.operations, max: deployment.max, attacks: evidence.attacks ?? null } };
 }
 
-async function mint(rpc, env, body, ip) {
-  if (!writable(env)) return readOnly();
+// Builds one mint operation and its two ML-DSA-87 approvals, without sending anything. Shared by the relayed
+// mint (/api/mint) and the wallet flow (/api/mint/prepare), where the visitor's own NEAR account carries it.
+async function prepareMint(rpc, env, body, ip) {
+  if (!writable(env)) return { error: readOnly() };
   const receiver = String(body?.receiver_id ?? '').trim().toLowerCase();
-  if (!isAccountId(receiver)) return json({ error: 'Enter a valid NEAR account id (testnet), for example alice.testnet.' }, 400);
+  if (!isAccountId(receiver)) return { error: json({ error: 'Enter a valid NEAR account id (testnet), for example alice.testnet.' }, 400) };
   const last = recent.get(ip) ?? 0;
-  if (Date.now() - last < 30000) return json({ error: 'One request every 30 seconds, please.' }, 429);
+  if (Date.now() - last < 30000) return { error: json({ error: 'One request every 30 seconds, please.' }, 429) };
   recent.set(ip, Date.now());
   let g = await rpc.view(accounts.guardian, 'state');
   // A visitor who never comes back would hold the single slot: once its delay has passed, anyone may execute it
   // (or close it after its window), so the demo settles it first.
   // Re-read after any attempt: a failed target receipt still frees the slot once the Guardian records the result.
   if (g.active?.status === 'queued' && (await settleIfDue(rpc, env, g.active))) g = await rpc.view(accounts.guardian, 'state');
-  if (g.active) return json({ error: 'Another operation is in the timelock right now. Watch it below, or try again in a minute.', active: g.active }, 409);
+  if (g.active) return { error: json({ error: 'Another operation is in the timelock right now. Watch it below, or try again in a minute.', active: g.active }, 409) };
   const block = await rpc.block({ finality: 'final' });
   const op = encodeOperation({ chain: 'testnet', guardian: accounts.guardian, target: accounts.token, configHash, nonce: BigInt(g.next_nonce), action: 'mint',
     deadlineNs: BigInt(block.header.timestamp_nanosec) + 600n * 10n ** 9n, receiver, amount: MINT_AMOUNT });
   const approvals = [{ index: 0, signature: signer(env.SIGNER_A).sign(op, GUARDIAN_CONTEXT) }, { index: 1, signature: signer(env.SIGNER_B).sign(op, GUARDIAN_CONTEXT) }];
-  const r = await rpc.send(env.RELAYER_ID, edKey(env.RELAYER_KEY), accounts.guardian, [functionCall('propose', envelope(op, approvals), 300n * TGAS)]);
-  return json({ ok: r.ok, tx: r.hash, failure: r.failure, proposal_hash: sha256(op).toString('hex'), message_hex: op.toString('hex'), receiver_id: receiver, amount: MINT_AMOUNT.toString() }, r.ok ? 200 : 502);
+  return { op, approvals, receiver, nonce: g.next_nonce };
+}
+// The three signer public keys, straight from the Guardian configuration (target 65 bytes, delay 8, window 8, then the keys).
+const signerKeys = () => [0, 1, 2].map((i) => config.subarray(81 + i * PK_LEN, 81 + (i + 1) * PK_LEN).toString('hex'));
+
+async function mint(rpc, env, body, ip) {
+  const m = await prepareMint(rpc, env, body, ip);
+  if (m.error) return m.error;
+  const r = await rpc.send(env.RELAYER_ID, edKey(env.RELAYER_KEY), accounts.guardian, [functionCall('propose', envelope(m.op, m.approvals), 300n * TGAS)]);
+  return json({ ok: r.ok, tx: r.hash, failure: r.failure, proposal_hash: sha256(m.op).toString('hex'), message_hex: m.op.toString('hex'), receiver_id: m.receiver, amount: MINT_AMOUNT.toString() }, r.ok ? 200 : 502);
+}
+
+// The wallet flow: the approvals are produced here and shown to the visitor, who then signs the propose
+// transaction with their own NEAR account. The Guardian accepts propose from any sender; only the approvals count.
+async function prepare(rpc, env, body, ip) {
+  const m = await prepareMint(rpc, env, body, ip);
+  if (m.error) return m.error;
+  return json({ proposal_hash: sha256(m.op).toString('hex'), message_hex: m.op.toString('hex'), nonce: m.nonce, receiver_id: m.receiver, amount: MINT_AMOUNT.toString(),
+    approvals: m.approvals.map((a) => ({ index: a.index, signature_hex: a.signature.toString('hex') })), signers: signerKeys(), context: GUARDIAN_CONTEXT.toString(),
+    envelope_base64: Buffer.from(envelope(m.op, m.approvals)).toString('base64'), guardian: accounts.guardian, gas: (300n * TGAS).toString() });
+}
+
+// What a browser needs to build a transaction for a NEAR account: one full-access key, its next nonce, a recent
+// block hash. The wallet signs it; this server never sees that key.
+async function txContext(rpc, accountId) {
+  if (!isAccountId(accountId)) return json({ error: 'not a NEAR account id' }, 400);
+  const [keys, block] = await Promise.all([rpc.query({ request_type: 'view_access_key_list', finality: 'final', account_id: accountId }), rpc.block({ finality: 'final' })]);
+  const full = (keys.keys ?? []).find((k) => k.access_key.permission === 'FullAccess');
+  if (!full) return json({ error: `${accountId} has no full-access key, or does not exist on testnet.` }, 404);
+  return json({ account_id: accountId, public_key: full.public_key, nonce: (BigInt(full.access_key.nonce) + 1n).toString(), block_hash: block.header.hash });
 }
 
 // Runs execute (or expire after the dispatch window) on a queued operation whose delay has passed; true once a
@@ -118,6 +148,7 @@ export default {
     try {
       if (url.pathname === '/api/report') return json(await cached('report', 20000, () => report(rpc)));
       if (url.pathname === '/api/state') return json(await cached('state', 2000, () => state(rpc, env)));
+      if (url.pathname === '/api/tx-context') return await txContext(rpc, String(url.searchParams.get('account') ?? '').trim().toLowerCase());
       if (url.pathname === '/api/retired-keys') {
         return json({ owner: { account: accounts.owner, secret: env.RETIRED_OWNER_KEY ?? null }, token: { account: accounts.token, secret: env.RETIRED_TOKEN_KEY ?? null, deleted_in: deployment.cutover.delete_keys_tx } });
       }
@@ -125,6 +156,7 @@ export default {
         const ip = request.headers.get('cf-connecting-ip') ?? 'local';
         const body = await request.json().catch(() => ({}));
         if (url.pathname === '/api/mint') return await mint(rpc, env, body, ip);
+        if (url.pathname === '/api/mint/prepare') return await prepare(rpc, env, body, ip);
         if (url.pathname === '/api/execute') return await execute(rpc, env, body);
         if (url.pathname.startsWith('/api/attack/')) return await attack(rpc, env, url.pathname.slice(12));
       }

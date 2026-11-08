@@ -90,6 +90,23 @@ record('fractional and large amounts format exactly', formatUnits(12345000000000
   globalThis.fetch = realFetch;
 }
 
+
+// The wallet flow: the browser's transaction encoder (demo/public/tx.js) must produce the exact bytes the Worker's
+// encoder does, and the wallet URLs must carry what MyNearWallet reads back.
+{
+  const { encodeTx: browserTx, loginUrl, signUrl, toBase64 } = await import('../demo/public/tx.js');
+  const { encodeTx: workerTx, edKey, b58encode, b58decode } = await import('../demo/src/near.js');
+  const key = edKey(`ed25519:${b58encode(Uint8Array.from({ length: 32 }, () => 7))}`); // a throwaway test seed
+  const args = Uint8Array.from({ length: 9576 }, (_, i) => i % 251), block = 'CdhmtQonjbPTtZaxqeHG3P4EQBaHFQD36Lz9ErqLDh5U';
+  const a = browserTx({ signerId: 'alice.testnet', publicKey: key.publicKey, nonce: 42n, receiverId: 'guardian.qlyphs-guardian.testnet', blockHash: block, actions: [{ method: 'propose', args, gas: 300n * 10n ** 12n, deposit: 0n }] });
+  const b = workerTx({ signerId: 'alice.testnet', pub: key.pub, nonce: 42n, receiverId: 'guardian.qlyphs-guardian.testnet', blockHash: b58decode(block), actions: [{ kind: 2, method: 'propose', args, gas: 300n * 10n ** 12n, deposit: 0n }] });
+  record('browser transaction encoder matches the Worker encoder byte for byte', Buffer.from(a).equals(Buffer.from(b)), `${a.length} bytes`);
+  const login = new URL(loginUrl('https://demo.example/demo'));
+  record('wallet login URL points at MyNearWallet testnet with success and failure URLs', login.origin === 'https://testnet.mynearwallet.com' && login.pathname === '/login/' && login.searchParams.get('success_url') === 'https://demo.example/demo' && login.searchParams.get('failure_url') === 'https://demo.example/demo');
+  const sign = new URL(signUrl([a, a], 'https://demo.example/demo', 'propose'));
+  record('wallet sign URL carries base64 transactions, the callback and the meta tag', sign.pathname === '/sign' && sign.searchParams.get('transactions') === `${toBase64(a)},${toBase64(a)}` && sign.searchParams.get('callbackUrl') === 'https://demo.example/demo' && sign.searchParams.get('meta') === 'propose');
+}
+
 writeFileSync('evidence/demo-unit.json', JSON.stringify({ suite: 'demo.unit', results }, null, 2) + '\n');
 console.log(`${results.length - failures}/${results.length} passed`);
 process.exit(failures ? 1 : 0);

@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Qlyphs Guardian · Try it on testnet</title>
+<title>Qlyphs Guardian · Mint with post-quantum approvals</title>
 <link rel="icon" href="/icon.svg" type="image/svg+xml">
-<meta name="description" content="Post-quantum admin control for NEAR contracts: 2-of-3 ML-DSA-87 approvals and an on-chain timelock. Check it yourself on testnet in two minutes.">
+<meta name="description" content="Two ML-DSA-87 signers approve a mint; you carry it to NEAR testnet with your own wallet; the chain enforces the delay. Try it in two minutes.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400..650&family=Geist+Mono:wght@500;600&display=swap" rel="stylesheet">
@@ -14,80 +14,66 @@
     --sans: "Geist", ui-sans-serif, system-ui, -apple-system, sans-serif; --mono: "Geist Mono", ui-monospace, Menlo, monospace; --ease: cubic-bezier(.2,.8,.2,1); }
   * { box-sizing: border-box; }
   html, body { margin: 0; background: var(--bg); color: var(--text); font: 400 16px/1.55 var(--sans); -webkit-font-smoothing: antialiased; }
-  a { color: var(--text); text-decoration: underline; text-decoration-color: var(--line-2); text-underline-offset: 3px; transition: text-decoration-color .2s; }
+  a { color: var(--text); text-decoration: underline; text-decoration-color: var(--line-2); text-underline-offset: 3px; }
   a:hover { text-decoration-color: var(--text); }
   code, .mono { font-family: var(--mono); font-size: .82rem; }
   :focus-visible { outline: 2px solid var(--q); outline-offset: 3px; border-radius: 8px; }
 
-  nav { display: flex; align-items: center; justify-content: space-between; padding: 20px clamp(18px, 3.2vw, 40px); }
+  nav { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 20px clamp(18px, 3.2vw, 40px); }
   .brand { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; font-weight: 650; font-size: 1.15rem; letter-spacing: -0.02em; }
   .brand small { font: 500 .72rem/1 var(--mono); color: var(--dim); }
-  nav a.back { font: 500 .86rem/1 var(--sans); color: var(--dim); text-decoration: none; }
-  nav a.back:hover { color: var(--text); }
+  .wallet { display: inline-flex; align-items: center; gap: 10px; font: 500 .84rem/1 var(--mono); color: var(--dim); }
+  .wallet button { padding: 9px 14px; font-size: .86rem; }
+  .wallet .acct { display: inline-flex; align-items: center; gap: 8px; color: var(--text); padding: 8px 12px; border: 1px solid var(--line-2); border-radius: 999px; }
+  .wallet .acct i { width: 7px; height: 7px; border-radius: 50%; background: var(--ok); }
 
   main { max-width: 760px; margin: 0 auto; padding: 0 20px 10dvh; }
-  header { padding: 6dvh 0 4dvh; }
+  header { padding: 5dvh 0 3dvh; }
   .eyebrow { font: 600 .74rem/1 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--dim); }
-  h1 { font-size: clamp(2.4rem, 6vw, 3.8rem); line-height: 1; letter-spacing: -0.045em; font-weight: 650; margin: 14px 0 18px; text-wrap: balance; }
-  h2 { font-size: 1.35rem; letter-spacing: -0.02em; font-weight: 650; margin: 0; }
+  h1 { font-size: clamp(2.3rem, 5.6vw, 3.6rem); line-height: 1; letter-spacing: -0.045em; font-weight: 650; margin: 14px 0 16px; text-wrap: balance; }
+  h2 { font-size: 1.3rem; letter-spacing: -0.02em; font-weight: 650; margin: 0; }
   p { margin: 0 0 12px; color: var(--dim); }
-  p.lead { font-size: 1.12rem; color: #B9B5AD; max-width: 56ch; }
+  p.lead { font-size: 1.1rem; color: #B9B5AD; max-width: 58ch; }
   p.lead b { color: var(--text); font-weight: 600; }
-  #repo { font-size: .92rem; }
 
-  /* Progress rail */
-  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 30px; }
-  .pill { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--line); color: var(--dim); font-size: .9rem; font-weight: 500; transition: color .4s var(--ease), border-color .4s var(--ease), background .4s var(--ease); }
-  .pill b { flex: none; display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid var(--line-2); font: 600 .72rem/1 var(--mono); color: var(--dim); transition: inherit; }
-  .pill.done { color: var(--text); border-color: color-mix(in srgb, var(--ok) 35%, transparent); background: color-mix(in srgb, var(--ok) 6%, transparent); }
-  .pill.done b { background: var(--ok); border-color: var(--ok); color: #0B0B0A; }
-
-  /* Steps */
-  .card { position: relative; background: var(--panel); border: 1px solid var(--line); border-radius: 20px; padding: 28px 28px 26px; margin: 16px 0; transition: border-color .5s var(--ease); }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 20px; padding: 28px 28px 26px; margin: 16px 0; transition: border-color .5s var(--ease); }
   .card.done { border-color: color-mix(in srgb, var(--ok) 30%, var(--line)); }
   .card-head { display: flex; align-items: center; gap: 14px; margin-bottom: 8px; }
-  .num { flex: none; font: 600 .78rem/1 var(--mono); letter-spacing: .08em; color: var(--q); min-width: 2.2em; transition: color .4s; }
+  .num { flex: none; font: 600 .78rem/1 var(--mono); letter-spacing: .08em; color: var(--q); min-width: 2.2em; }
   .card.done .num { color: var(--ok); }
   .card > p { max-width: 60ch; }
-  .big { display: flex; align-items: center; gap: 10px; font-size: 1.1rem; font-weight: 600; margin: 18px 0 6px; min-height: 1.6em; letter-spacing: -0.01em; }
-  .big::before { content: ""; flex: none; width: 9px; height: 9px; border-radius: 50%; background: var(--faint); transition: background .4s, box-shadow .4s; }
-  .big.ok { color: var(--ok); } .big.ok::before { background: var(--ok); box-shadow: 0 0 0 4px color-mix(in srgb, var(--ok) 18%, transparent); }
-  .big.bad { color: var(--bad); } .big.bad::before { background: var(--bad); }
-  .big.wait { color: var(--dim); } .big.wait::before { animation: pulse 1.2s ease-in-out infinite; }
-  @keyframes pulse { 50% { opacity: .3; } }
-  ul.plain, ul.checks { list-style: none; padding: 0; margin: 10px 0 0; }
-  ul.plain li, ul.checks li { display: grid; grid-template-columns: 22px 1fr; gap: 10px; padding: 9px 0; border-top: 1px solid var(--line); font-size: .95rem; }
-  ul.plain li:first-child { border-top: 0; }
-  .mark { display: inline-grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; font: 700 .7rem/1 var(--mono); margin-top: 3px; }
-  .mark.pass { background: color-mix(in srgb, var(--ok) 16%, transparent); color: var(--ok); }
-  .mark.fail { background: color-mix(in srgb, var(--bad) 16%, transparent); color: var(--bad); }
-  .mark.unverified { background: color-mix(in srgb, var(--warn) 16%, transparent); color: var(--warn); }
-  .detail { color: var(--dim); font-size: .82rem; word-break: break-all; font-family: var(--mono); }
-  .hint { color: var(--dim); font-size: .86rem; margin-top: 8px; }
-  details { margin-top: 14px; border-top: 1px solid var(--line); padding-top: 12px; }
-  summary { cursor: pointer; color: var(--dim); font-size: .9rem; list-style: none; display: flex; align-items: center; gap: 8px; }
-  summary::-webkit-details-marker { display: none; }
-  summary::before { content: ""; width: 6px; height: 6px; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; transform: rotate(-45deg); transition: transform .25s var(--ease); margin-left: 2px; }
-  details[open] summary::before { transform: rotate(45deg); }
-  summary:hover { color: var(--text); }
-
+  .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 14px; }
   button { font: 600 .95rem/1 var(--sans); background: var(--text); color: #0B0B0A; border: 0; border-radius: 999px; padding: 13px 20px; cursor: pointer; transition: transform .3s cubic-bezier(.3,1.6,.5,1), background .2s, opacity .2s; }
-  button:hover { background: #fff; }
-  button:active { transform: scale(.95); } button:disabled { opacity: .35; cursor: default; transform: none; }
+  button:hover { background: #fff; } button:active { transform: scale(.95); } button:disabled { opacity: .35; cursor: default; transform: none; }
   button.ghost { background: transparent; color: var(--text); border: 1px solid var(--line-2); font-weight: 500; }
   button.ghost:hover { background: transparent; border-color: var(--dim); }
   button.primary { background: var(--q); color: #1d0c04; } button.primary:hover { background: #ff8a5a; }
-  input { font: 500 .95rem/1 var(--mono); background: var(--bg); color: var(--text); border: 1px solid var(--line-2); border-radius: 999px; padding: 12px 16px; width: min(100%, 340px); transition: border-color .2s; }
+  input { font: 500 .95rem/1 var(--mono); background: var(--bg); color: var(--text); border: 1px solid var(--line-2); border-radius: 999px; padding: 12px 16px; width: min(100%, 320px); }
   input:focus { border-color: var(--dim); outline: none; }
-  .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 14px; }
-  .result { font-size: .92rem; min-height: 1.4em; margin-top: 6px; color: var(--dim); }
+  .result { font-size: .92rem; min-height: 1.4em; margin-top: 8px; color: var(--dim); }
   .result.ok { color: var(--ok); } .result.bad { color: var(--bad); } .result.unverified { color: var(--warn); }
   .result a { color: inherit; }
-  .attempt { padding: 12px 0; border-top: 1px solid var(--line); }
-  .attempt:first-of-type { border-top: 0; margin-top: 10px; }
-  .attempt > div:first-child { font-weight: 500; }
+  .hint { color: var(--dim); font-size: .86rem; margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line); }
 
-  ol.track { list-style: none; padding: 0; margin: 18px 0 0; position: relative; }
+  /* The signed operation and its approvals */
+  .op { margin-top: 18px; border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+  .op dl { display: grid; grid-template-columns: max-content 1fr; gap: 6px 18px; margin: 0; padding: 14px 16px; font-size: .9rem; border-bottom: 1px solid var(--line); }
+  .op dt { color: var(--dim); } .op dd { margin: 0; word-break: break-all; }
+  .sig { padding: 14px 16px; border-bottom: 1px solid var(--line); }
+  .sig:last-child { border-bottom: 0; }
+  .sig .h { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-size: .9rem; }
+  .sig .h b { font-weight: 600; }
+  .sig .v { font: 600 .74rem/1 var(--mono); letter-spacing: .04em; color: var(--dim); }
+  .sig .v.ok { color: var(--ok); } .sig .v.bad { color: var(--bad); }
+  .sig .hex { margin-top: 8px; font: 500 .74rem/1.5 var(--mono); color: var(--dim); word-break: break-all; max-height: 3em; overflow: hidden; position: relative; transition: max-height .4s var(--ease); }
+  .sig .hex.open { max-height: 80em; }
+  .sig .hex::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 1.2em; background: linear-gradient(transparent, var(--panel)); }
+  .sig .hex.open::after { display: none; }
+  .sig .more { font: 500 .78rem/1 var(--sans); color: var(--dim); background: none; border: 0; padding: 6px 0 0; cursor: pointer; }
+  .sig .more:hover { color: var(--text); background: none; }
+  .sig.off { color: var(--faint); } .sig.off .h b { color: var(--dim); }
+
+  ol.track { list-style: none; padding: 0; margin: 18px 0 0; }
   ol.track li { display: grid; grid-template-columns: 26px 1fr; gap: 12px; padding: 10px 0; color: var(--dim); position: relative; }
   ol.track li::before { content: ""; position: absolute; left: 8px; top: 30px; bottom: -10px; width: 2px; background: var(--line); }
   ol.track li:last-child::before { display: none; }
@@ -97,88 +83,102 @@
   ol.track li.bad .dot { border-color: var(--bad); background: var(--bad); }
   .bar { height: 4px; background: var(--line); border-radius: 4px; overflow: hidden; margin: 10px 0 6px; }
   .bar > i { display: block; height: 100%; width: 0; background: var(--q); transition: width .5s linear; }
-  dl { display: grid; grid-template-columns: max-content 1fr; gap: 8px 18px; margin: 10px 0 0; font-size: .92rem; }
-  dt { color: var(--dim); } dd { margin: 0; word-break: break-all; }
-  p.note { font-size: .86rem; color: var(--dim); margin: 18px 0 0; padding-top: 14px; border-top: 1px solid var(--line); }
-  .secret { background: var(--bg); border: 1px dashed var(--line-2); border-radius: 10px; padding: 10px 12px; margin: 6px 0 10px; word-break: break-all; color: var(--dim); }
+  .detail { color: var(--dim); font-size: .82rem; word-break: break-all; font-family: var(--mono); }
+
+  details { margin-top: 14px; border-top: 1px solid var(--line); padding-top: 12px; }
+  summary { cursor: pointer; color: var(--dim); font-size: .9rem; list-style: none; display: flex; align-items: center; gap: 8px; }
+  summary::-webkit-details-marker { display: none; }
+  summary::before { content: ""; width: 6px; height: 6px; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; transform: rotate(-45deg); transition: transform .25s var(--ease); margin-left: 2px; }
+  details[open] summary::before { transform: rotate(45deg); }
+  summary:hover { color: var(--text); }
+  ul.plain, ul.checks { list-style: none; padding: 0; margin: 10px 0 0; }
+  ul.plain li, ul.checks li { display: grid; grid-template-columns: 22px 1fr; gap: 10px; padding: 9px 0; border-top: 1px solid var(--line); font-size: .95rem; }
+  ul.plain li:first-child { border-top: 0; }
+  .mark { display: inline-grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; font: 700 .7rem/1 var(--mono); margin-top: 3px; }
+  .mark.pass { background: color-mix(in srgb, var(--ok) 16%, transparent); color: var(--ok); }
+  .mark.fail { background: color-mix(in srgb, var(--bad) 16%, transparent); color: var(--bad); }
+  .mark.unverified { background: color-mix(in srgb, var(--warn) 16%, transparent); color: var(--warn); }
+  .big { display: flex; align-items: center; gap: 10px; font-size: 1.05rem; font-weight: 600; margin: 14px 0 4px; min-height: 1.6em; }
+  .big::before { content: ""; flex: none; width: 9px; height: 9px; border-radius: 50%; background: var(--faint); }
+  .big.ok { color: var(--ok); } .big.ok::before { background: var(--ok); box-shadow: 0 0 0 4px color-mix(in srgb, var(--ok) 18%, transparent); }
+  .big.bad { color: var(--bad); } .big.bad::before { background: var(--bad); }
+  .big.wait { color: var(--dim); } .big.wait::before { animation: pulse 1.2s ease-in-out infinite; }
+  @keyframes pulse { 50% { opacity: .3; } }
+  .attempt { padding: 12px 0; border-top: 1px solid var(--line); }
+  .attempt:first-of-type { border-top: 0; margin-top: 10px; }
+  .attempt > div:first-child { font-weight: 500; }
   ol.timeline { list-style: none; padding: 0; margin: 8px 0 0; }
   ol.timeline li { padding: 11px 0; border-top: 1px solid var(--line); color: var(--dim); font-size: .95rem; }
-  ol.timeline li:first-child { border-top: 0; }
   ol.timeline li b { color: var(--text); font-weight: 600; }
   footer { color: var(--dim); font-size: .84rem; border-top: 1px solid var(--line); padding-top: 18px; margin-top: 40px; max-width: 70ch; }
-  @media (max-width: 640px) { .steps { grid-template-columns: 1fr; } .card { padding: 22px 18px; border-radius: 16px; } }
+  @media (max-width: 640px) { .card { padding: 22px 18px; border-radius: 16px; } .op dl { grid-template-columns: 1fr; } nav { flex-wrap: wrap; } }
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
 </style>
 </head>
 <body>
 <nav>
   <a href="/" class="brand"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M18.7 11a7.7 7.7 0 1 0-7.7 7.7" stroke="#F27644" stroke-width="2.6" stroke-linecap="round"/><rect x="14.6" y="14.6" width="6.6" height="6.6" rx="1.5" fill="#F27644"/></svg>Qlyphs<small>Guardian</small></a>
-  <a href="/" class="back">← The story</a>
+  <div class="wallet" id="wallet"></div>
 </nav>
 <main>
   <header>
     <div class="eyebrow">NEAR testnet · live</div>
-    <h1>Check it yourself.</h1>
-    <p class="lead">A NEAR token whose admin key was retired. <b>Minting and upgrades now need two of three post-quantum approvals and a 60-second on-chain delay.</b> Three steps, two minutes.</p>
+    <h1>Mint with post-quantum approvals.</h1>
+    <p class="lead"><b>Two signers approve the exact operation with ML-DSA-87.</b> You carry it to the chain with your own NEAR wallet. The Guardian checks the signatures, enforces a 60-second delay, then anyone executes.</p>
     <p id="repo" hidden></p>
-    <div class="steps"><span class="pill" id="pill-1"><b>1</b>It is locked down</span><span class="pill" id="pill-2"><b>2</b>Old keys fail</span><span class="pill" id="pill-3"><b>3</b>The post-quantum way works</span></div>
   </header>
 
-  <section class="card" id="verify">
-    <div class="card-head"><span class="num">01</span><h2>Is this token really locked down?</h2></div>
-    <p>We read NEAR testnet at one finalized block: no keys left, reviewed builds, audited creation and cutover.</p>
-    <div class="big wait" id="verdict-1"><span id="badge-text">Checking testnet…</span></div>
+  <section class="card" id="approve">
+    <div class="card-head"><span class="num">01</span><h2>Two signers approve</h2></div>
+    <p>Request 100 GDEMO for your account. Signers 0 and 1 sign the 320-byte operation; the third signer is not needed. The signatures are checked again in your browser.</p>
+    <div class="row"><input id="receiver" autocomplete="off" spellcheck="false" aria-label="Receiving testnet account" placeholder="your-account.testnet"><button class="primary" id="prepare">Get the approvals</button></div>
+    <div class="result" id="prepare-result"></div>
+    <div class="op" id="op" hidden>
+      <dl id="op-fields"></dl>
+      <div id="sigs"></div>
+    </div>
+  </section>
+
+  <section class="card" id="carry">
+    <div class="card-head"><span class="num">02</span><h2>Carry it to the chain</h2></div>
+    <p>Your wallet signs a plain NEAR transaction that calls <code>propose</code> on the Guardian with the operation and its two approvals. Your key cannot change what was approved, only deliver it.</p>
+    <div class="row"><button class="primary" id="propose" disabled>Sign propose with NEAR wallet</button><button class="ghost" id="relay" disabled>No wallet? Let the demo send it</button></div>
+    <div class="result" id="propose-result"></div>
+    <div id="follow" hidden>
+      <ol class="track">
+        <li id="t-approved"><span class="dot"></span><div>Queued by the Guardian: two valid ML-DSA-87 approvals<div class="detail" id="t-approved-d"></div></div></li>
+        <li id="t-delay"><span class="dot"></span><div>On-chain delay<div class="bar"><i id="op-bar"></i></div><div class="detail" id="op-timer"></div></div></li>
+        <li id="t-exec"><span class="dot"></span><div>Execute: anyone can<div class="row" style="margin-top:8px"><button id="execute" disabled>Sign execute with NEAR wallet</button><button class="ghost" id="execute-relay" disabled>Let the demo execute it</button></div></div></li>
+        <li id="t-done"><span class="dot"></span><div>Settled on chain<div class="result" id="exec-result"></div></div></li>
+      </ol>
+    </div>
+    <p class="hint">Demo mode: this server holds signer keys 0 and 1 so that anyone can try it. In a real deployment each signer keeps its own key in its own wallet. Your NEAR wallet is a classical ed25519 key: it can carry and execute, never approve.</p>
+  </section>
+
+  <section class="card" id="also">
+    <div class="card-head"><span class="num">+</span><h2>Also worth checking</h2></div>
+    <div class="big wait" id="verdict-1"><span id="badge-text">Checking that the token is locked down…</span></div>
     <ul class="plain" id="summary"></ul>
     <details>
-      <summary>The 9 technical checks</summary>
+      <summary>The 9 technical checks, at a finalized block</summary>
       <ul class="checks" id="checks"></ul>
       <div class="result" id="statement"></div>
       <div class="row"><button class="ghost" id="rerun">Run the checks again</button></div>
     </details>
-  </section>
-
-  <section class="card" id="attack">
-    <div class="card-head"><span class="num">02</span><h2>Take control with the old keys</h2></div>
-    <p>Before the cutover, one owner key could mint and one deploy key could replace the token's code. We published both. Use them.</p>
-    <div class="row"><button id="try-both">Try both old keys</button></div>
-    <div class="attempt"><div>The old owner mints 1,000,000,000 GDEMO</div><div class="result" id="attack-mint-result">Not tried yet.</div></div>
-    <div class="attempt"><div>The deleted deploy key replaces the token's code</div><div class="result" id="attack-deploy-result">Not tried yet.</div></div>
     <details>
-      <summary>The published keys, one by one</summary>
+      <summary>Try the old keys: we published them</summary>
+      <div class="row"><button id="try-both">Try both old keys</button></div>
+      <div class="attempt"><div>The old owner mints 1,000,000,000 GDEMO</div><div class="result" id="attack-mint-result">Not tried yet.</div></div>
+      <div class="attempt"><div>The deleted deploy key replaces the token's code</div><div class="result" id="attack-deploy-result">Not tried yet.</div></div>
       <p style="margin-top:12px"><b>Former owner</b> <span class="detail" id="owner-id"></span></p>
-      <div class="secret mono" id="owner-key">loading…</div>
-      <button class="ghost" id="attack-mint">Try the owner key</button>
-      <p style="margin-top:16px"><b>Token deploy key</b> <span class="detail" id="token-id"></span></p>
-      <div class="secret mono" id="token-key">loading…</div>
-      <button class="ghost" id="attack-deploy">Try the deploy key</button>
+      <div class="detail" id="owner-key">loading…</div>
+      <p style="margin-top:12px"><b>Token deploy key</b> <span class="detail" id="token-id"></span></p>
+      <div class="detail" id="token-key">loading…</div>
     </details>
-  </section>
-
-  <section class="card" id="mint">
-    <div class="card-head"><span class="num">03</span><h2>Now do it the post-quantum way</h2></div>
-    <p>Request 100 GDEMO. Two signers approve it with ML-DSA-87, the chain enforces the delay, then you execute it yourself.</p>
-    <div class="row"><input id="receiver" autocomplete="off" spellcheck="false" aria-label="Receiving testnet account"><button class="primary" id="request">Request 100 GDEMO</button></div>
-    <div class="hint">Demo recipient prefilled. This does not create an account. Use an account you control to spend the test tokens.</div>
-    <div class="result" id="mint-result"></div>
-    <div id="op" hidden>
-      <ol class="track">
-        <li id="t-approved"><span class="dot"></span><div>Approved by 2 of 3 signers with ML-DSA-87<div class="detail" id="t-approved-d"></div></div></li>
-        <li id="t-delay"><span class="dot"></span><div>On-chain delay<div class="bar"><i id="op-bar"></i></div><div class="detail" id="op-timer"></div></div></li>
-        <li id="t-exec"><span class="dot"></span><div>Execute: anyone can, including you<div class="row" style="margin-top:8px"><button id="execute" disabled>Execute</button></div></div></li>
-        <li id="t-done"><span class="dot"></span><div>Settled on chain<div class="result" id="exec-result"></div></div></li>
-      </ol>
-      <details>
-        <summary>The signed operation</summary>
-        <dl id="op-fields"></dl>
-      </details>
-    </div>
-    <p class="note">Demo mode: this server holds two of the three signer keys so that anyone can try it. In a real deployment each signer keeps its own key in its own wallet.</p>
-  </section>
-
-  <section class="card" id="history">
-    <div class="card-head"><span class="num">LOG</span><h2>What already happened on testnet</h2></div>
-    <p>The cutover, the upgrade and the failure cases, as transactions you can open in the explorer.</p>
-    <ol class="timeline" id="timeline"></ol>
+    <details>
+      <summary>What already happened on testnet</summary>
+      <ol class="timeline" id="timeline"></ol>
+    </details>
   </section>
 
   <footer>
@@ -187,153 +187,207 @@
 </main>
 <script type="module">
 import { followed, summarize, trackFor } from './follow.js';
+import { encodeTx, loginUrl, signUrl, fromBase64 } from './tx.js';
 const tx = (h) => `<a href="https://testnet.nearblocks.io/txns/${h}" target="_blank" rel="noopener">${h.slice(0, 10)}…</a>`;
 const acct = (id) => `<a href="https://testnet.nearblocks.io/address/${id}" target="_blank" rel="noopener">${id}</a>`;
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 const $ = (id) => document.getElementById(id);
 const api = async (path, body) => { const r = await fetch(path, body ? { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) } : {}); return r.json(); };
 const humanError = (f) => { const m = String(f ?? '').match(/panicked: ([^"\\]+)/); return m ? m[1] : String(f ?? 'no answer').slice(0, 160); };
-let decimals = 18;
-const units = (raw) => { const v = BigInt(raw), d = 10n ** BigInt(decimals), w = v / d, f = (v % d).toString().padStart(decimals, '0').replace(/0+$/, ''); return `${w.toLocaleString('en-US')}${f ? `.${f}` : ''} GDEMO`; };
 const show = (el, cls, html, attrs = {}) => { el.className = `result ${cls}`; el.innerHTML = html; for (const [k, v] of Object.entries(attrs)) el.dataset[k] = v; };
-const done = (n, ok) => { $(`pill-${n}`).classList.toggle('done', ok); document.querySelectorAll('.card')[n - 1].classList.toggle('done', ok); };
-$('receiver').value = `visitor-${Math.random().toString(36).slice(2, 8)}.testnet`;
+const done = (id, ok) => $(id).classList.toggle('done', ok);
+let decimals = 18, GUARDIAN = '', writableDemo = true;
+const units = (raw) => { const v = BigInt(raw), d = 10n ** BigInt(decimals), w = v / d, f = (v % d).toString().padStart(decimals, '0').replace(/0+$/, ''); return `${w.toLocaleString('en-US')}${f ? `.${f}` : ''} GDEMO`; };
+const HERE = `${location.origin}/demo`;
 
-// Step 1: the report, summarized in plain words (follow.js); the nine checks stay one click away.
-async function runReport() {
-  $('checks').innerHTML = ''; $('summary').innerHTML = ''; show($('statement'), '', 'Reading testnet…', { ok: 'pending' });
-  $('verdict-1').className = 'big wait'; $('badge-text').textContent = 'Checking testnet…'; done(1, false);
-  try {
-    const r = await api('/api/report');
-    if (r.error || !Array.isArray(r.checks)) throw new Error(r.error ?? 'no report');
-    for (const [label, st] of summarize(r.checks)) {
-      const li = document.createElement('li');
-      li.innerHTML = `<span class="mark ${st}">${st === 'pass' ? '✓' : st === 'fail' ? '✕' : '?'}</span><div>${esc(label)}</div>`;
-      $('summary').appendChild(li);
-    }
-    r.checks.forEach((c) => {
-      const li = document.createElement('li'); li.dataset.status = c.status;
-      li.innerHTML = `<span class="mark ${c.status}">${c.status === 'pass' ? '✓' : c.status === 'fail' ? '✕' : '?'}</span><div>${esc(c.name)}<div class="detail">${esc(c.detail ?? '')}</div></div>`;
-      $('checks').appendChild(li);
-    });
-    show($('statement'), r.ok ? 'ok' : 'bad', `${esc(r.statement)} <a href="https://testnet.nearblocks.io/blocks/${r.block.hash}" target="_blank" rel="noopener">Block ${r.block.height}</a>`, { ok: String(r.ok) });
-    $('verdict-1').className = `big ${r.ok ? 'ok' : 'bad'}`;
-    $('badge-text').textContent = r.ok ? `Yes. Verified on NEAR testnet at block ${r.block.height.toLocaleString('en-US')}.` : 'Not verified: open the technical checks.';
-    done(1, r.ok);
-  } catch (e) {
-    show($('statement'), 'unverified', `Could not read testnet right now (${esc(e.message)}).`, { ok: 'false' });
-    $('verdict-1').className = 'big bad'; $('badge-text').textContent = 'Could not read testnet right now. Try again in a moment.';
-  }
+// What survives the wallet redirects: the connected account and the operation this visitor is carrying.
+const KEY = 'qlyphs-guardian-demo';
+const flow = JSON.parse(localStorage.getItem(KEY) ?? '{}');
+const save = () => localStorage.setItem(KEY, JSON.stringify(flow));
+const clearOp = () => { for (const k of ['op', 'proposal_hash', 'propose_tx', 'execute_tx', 'pending', 'settled']) delete flow[k]; save(); };
+
+// Back from the wallet: a login, a signed transaction, or an error.
+{
+  const q = new URL(location.href).searchParams;
+  if (q.get('account_id')) { flow.account = q.get('account_id'); save(); }
+  if (q.get('transactionHashes')) { const h = q.get('transactionHashes').split(',')[0]; if (q.get('meta') === 'execute') flow.execute_tx = h; else flow.propose_tx = h; delete flow.pending; save(); }
+  if (q.get('errorCode')) { flow.lastError = `${q.get('errorCode')}${q.get('errorMessage') ? `: ${q.get('errorMessage')}` : ''}`; delete flow.pending; save(); }
+  if ([...q.keys()].length) history.replaceState(null, '', HERE);
 }
 
-async function loadKeys() {
-  try {
-    const k = await api('/api/retired-keys');
-    $('owner-id').innerHTML = acct(k.owner.account); $('owner-key').textContent = k.owner.secret ?? 'not published by this copy of the demo';
-    $('token-id').innerHTML = `${acct(k.token.account)} · deleted in ${tx(k.token.deleted_in)}`; $('token-key').textContent = k.token.secret ?? 'not published by this copy of the demo';
-  } catch { $('owner-key').textContent = $('token-key').textContent = 'could not load'; }
+function renderWallet() {
+  const w = $('wallet');
+  w.innerHTML = flow.account ? `<span class="acct"><i></i>${esc(flow.account)}</span><button class="ghost" id="disconnect">Disconnect</button>` : '<button class="ghost" id="connect">Connect NEAR wallet</button>';
+  $('connect')?.addEventListener('click', () => { location.href = loginUrl(HERE); });
+  $('disconnect')?.addEventListener('click', () => { delete flow.account; save(); renderWallet(); renderButtons(); });
+  if (flow.account && !$('receiver').value) $('receiver').value = flow.account;
+}
+function renderButtons() {
+  const ready = !!flow.op && !flow.propose_tx && !flow.settled && !flow.pending;
+  $('propose').disabled = !ready || !flow.account || !writableDemo;
+  $('relay').disabled = !ready || !writableDemo;
 }
 
-// Step 2: green only for the specific expected refusal; anything else is "not verified", never a pass.
-const EXPLAIN = { 'owner-mint': 'Blocked by the token: only the Guardian can mint now.', 'token-deploy': 'Rejected by NEAR: that key no longer exists on the token account.' };
-async function attack(kind, out) {
-  done(2, false);
-  show($(out), '', 'Signing with the old key and sending to testnet…', { verdict: 'pending' });
-  try {
-    const r = await api(`/api/attack/${kind}`, {});
-    if (r.verdict === 'blocked_as_expected') show($(out), 'ok', `✓ ${EXPLAIN[kind]}${r.tx ? ` ${tx(r.tx)}` : ''}`, { verdict: r.verdict });
-    else if (r.verdict === 'unexpected_success') show($(out), 'bad', `✕ It went through. That should never happen.${r.tx ? ` ${tx(r.tx)}` : ''}`, { verdict: r.verdict });
-    else show($(out), 'unverified', `Not verified right now (${esc(humanError(r.reason ?? r.failure ?? r.error))}). The recorded refusal is listed at the bottom.`, { verdict: 'unverified' });
-  } catch (e) { show($(out), 'unverified', `Not verified right now (${esc(e.message)}).`, { verdict: 'unverified' }); }
-  done(2, $('attack-mint-result').dataset.verdict === 'blocked_as_expected' && $('attack-deploy-result').dataset.verdict === 'blocked_as_expected');
-}
-const lockAttacks = (on) => ['try-both', 'attack-mint', 'attack-deploy'].forEach((id) => { $(id).disabled = on; });
-$('try-both').onclick = async () => { lockAttacks(true); try { await Promise.all([attack('owner-mint', 'attack-mint-result'), attack('token-deploy', 'attack-deploy-result')]); } finally { lockAttacks(false); } };
-$('attack-mint').onclick = async () => { lockAttacks(true); try { await attack('owner-mint', 'attack-mint-result'); } finally { lockAttacks(false); } };
-$('attack-deploy').onclick = async () => { lockAttacks(true); try { await attack('token-deploy', 'attack-deploy-result'); } finally { lockAttacks(false); } };
-
-// Step 3: the operation this page follows, set from this visitor's own request (or, on arrival, the one already
-// in the timelock), then fixed until it settles. Results carry its proposal hash.
-let current = null, inflight = false, offset = 0n, ticking = null, polling = null, writableDemo = true;
-const stage = (approved, delay, exec, end) => { for (const [id, s] of [['t-approved', approved], ['t-delay', delay], ['t-exec', exec], ['t-done', end]]) $(id).className = s || ''; };
-function setResult(cls, html, status) { show($('exec-result'), cls, html, { status, proposalHash: current?.proposal_hash ?? '' }); }
-function render(view) {
+// Step 1: the approvals, shown and re-verified here with the signer keys from the Guardian configuration.
+let verifier = null;
+const loadVerifier = () => (verifier ??= import('https://esm.sh/@noble/post-quantum@0.7.1/ml-dsa.js').then((m) => m.ml_dsa87).catch(() => null));
+const hexBytes = (h) => Uint8Array.from(h.match(/../g), (x) => parseInt(x, 16));
+async function renderOp() {
+  const o = flow.op; if (!o) { $('op').hidden = true; return; }
   $('op').hidden = false;
-  done(3, view.mode === 'terminal' && view.status === 'applied');
-  if (view.op) {
-    const a = view.op, who = [0, 1, 2].filter((i) => a.signers & (1 << i)).join(' and ');
-    $('t-approved-d').textContent = `signers ${who} · ${a.amount ? `${units(a.amount)} to ${a.receiver_id}` : a.action}`;
-    $('op-fields').innerHTML = `<dt>Action</dt><dd>${esc(a.action)} ${a.amount ? units(a.amount) + ' to ' + acct(a.receiver_id) : ''}</dd><dt>Nonce</dt><dd class="mono">${esc(a.nonce)}</dd><dt>Signers</dt><dd>${who}</dd><dt>Proposal hash</dt><dd class="mono">${esc(a.proposal_hash)}</dd>`;
+  $('op-fields').innerHTML = `<dt>Action</dt><dd>mint ${units(o.amount)} to ${acct(o.receiver_id)}</dd><dt>Guardian nonce</dt><dd class="mono">${esc(o.nonce)}</dd><dt>Proposal hash</dt><dd class="mono">${esc(o.proposal_hash)}</dd><dt>Operation</dt><dd class="mono" style="color:var(--dim)">${esc(o.message_hex.slice(0, 64))}… 320 bytes: network, Guardian, token, config, nonce, deadline, action</dd>`;
+  $('sigs').innerHTML = [0, 1, 2].map((i) => {
+    const a = o.approvals.find((x) => x.index === i);
+    if (!a) return `<div class="sig off"><div class="h"><b>Signer ${i}</b><span class="v">${o.approvals.length ? 'not needed · 2 of 3' : 'relayed'}</span></div></div>`;
+    return `<div class="sig"><div class="h"><b>Signer ${i} · ML-DSA-87</b><span class="v" id="v-${i}">4,627 bytes · verifying in your browser…</span></div><div class="hex" id="hex-${i}">${a.signature_hex}</div><button class="more" data-i="${i}" type="button">Show all 9,254 hex characters</button></div>`;
+  }).join('');
+  $('sigs').querySelectorAll('.more').forEach((b) => b.addEventListener('click', () => { const h = $(`hex-${b.dataset.i}`); h.classList.toggle('open'); b.textContent = h.classList.contains('open') ? 'Show less' : 'Show all 9,254 hex characters'; }));
+  if (!o.approvals.length) return;
+  const ml = await loadVerifier(), msg = hexBytes(o.message_hex), ctx = new TextEncoder().encode(o.context);
+  for (const a of o.approvals) {
+    const v = $(`v-${a.index}`); if (!v) continue;
+    if (!ml) { v.textContent = '4,627 bytes · browser check unavailable; verified on chain'; continue; }
+    let ok = false; try { ok = ml.verify(hexBytes(a.signature_hex), msg, hexBytes(o.signers[a.index]), { context: ctx }); } catch {}
+    v.className = `v ${ok ? 'ok' : 'bad'}`; v.textContent = ok ? `✓ verified in your browser against signer key ${a.index}` : '✕ does not verify';
   }
+}
+$('prepare').onclick = async () => {
+  $('prepare').disabled = true; show($('prepare-result'), '', 'Two signers are approving the operation…');
+  try {
+    const r = await api('/api/mint/prepare', { receiver_id: $('receiver').value.trim() });
+    if (r.error) { show($('prepare-result'), 'bad', esc(r.error)); return; }
+    clearOp(); flow.op = r; flow.proposal_hash = r.proposal_hash; save();
+    show($('prepare-result'), 'ok', 'Approved. The deadline is 10 minutes: carry it to the chain below.');
+    done('approve', true); done('carry', false); $('follow').hidden = true; show($('propose-result'), '', ''); setResult('', '', '');
+    await renderOp(); renderButtons();
+  } catch (e) { show($('prepare-result'), 'unverified', `Could not reach the demo: ${esc(e.message)}`); }
+  finally { $('prepare').disabled = false; }
+};
+
+// Step 2: the visitor's wallet signs propose, later execute. Both are plain NEAR transactions built here.
+async function walletCall(method, args, meta) {
+  const c = await api(`/api/tx-context?account=${encodeURIComponent(flow.account)}`);
+  if (c.error) throw new Error(c.error);
+  const t = encodeTx({ signerId: flow.account, publicKey: c.public_key, nonce: BigInt(c.nonce), receiverId: flow.op?.guardian ?? GUARDIAN, blockHash: c.block_hash, actions: [{ method, args, gas: 300n * 10n ** 12n, deposit: 0n }] });
+  flow.pending = meta; save();
+  location.href = signUrl([t], HERE, meta);
+}
+$('propose').onclick = async () => {
+  $('propose').disabled = $('relay').disabled = true; show($('propose-result'), '', 'Opening your NEAR wallet…');
+  try { await walletCall('propose', fromBase64(flow.op.envelope_base64), 'propose'); }
+  catch (e) { show($('propose-result'), 'bad', esc(e.message)); delete flow.pending; save(); renderButtons(); }
+};
+$('relay').onclick = async () => {
+  $('relay').disabled = $('propose').disabled = true; show($('propose-result'), '', 'The demo relayer is sending propose…');
+  try {
+    const r = await api('/api/mint', { receiver_id: flow.op.receiver_id });
+    if (!r.ok) { show($('propose-result'), 'bad', esc(r.error ?? humanError(r.failure))); renderButtons(); return; }
+    // The relayer signs a fresh operation under the next nonce; this page follows that one.
+    flow.op = { ...flow.op, proposal_hash: r.proposal_hash, message_hex: r.message_hex, approvals: [] }; flow.proposal_hash = r.proposal_hash; flow.propose_tx = r.tx; save();
+    show($('propose-result'), 'ok', `Sent by the demo relayer and queued by the Guardian. ${tx(r.tx)}`); renderOp(); await refresh(); follow();
+  } catch (e) { show($('propose-result'), 'unverified', `Could not reach the demo: ${esc(e.message)}`); renderButtons(); }
+};
+$('execute').onclick = async () => {
+  $('execute').disabled = $('execute-relay').disabled = true; setResult('', 'Opening your NEAR wallet…', 'executing');
+  try { await walletCall('execute', new Uint8Array(0), 'execute'); } catch (e) { setResult('unverified', esc(e.message), 'unknown'); }
+};
+$('execute-relay').onclick = async () => {
+  $('execute').disabled = $('execute-relay').disabled = true; setResult('', 'Executing…', 'executing');
+  try { const r = await api('/api/execute', { proposal_hash: flow.proposal_hash }); if (r.tx) { flow.execute_tx = r.tx; save(); } if (!r.ok && r.error) setResult('unverified', esc(r.error), 'unknown'); }
+  catch (e) { setResult('unverified', `Could not reach the demo: ${esc(e.message)}`, 'unknown'); }
+  finally { await refresh(); follow(); }
+};
+
+// Following the operation on chain by its proposal hash (follow.js decides what the Guardian's record establishes).
+let offset = 0n, ticking = null, polling = null;
+const stage = (a, b, c, d) => { for (const [id, s] of [['t-approved', a], ['t-delay', b], ['t-exec', c], ['t-done', d]]) $(id).className = s || ''; };
+function setResult(cls, html, status) { show($('exec-result'), cls, html, { status }); }
+function render(view) {
+  if (view.mode === 'unavailable' && !flow.propose_tx) { $('follow').hidden = true; return; } // prepared, not yet carried
+  $('follow').hidden = false;
+  done('carry', view.mode === 'terminal' && view.status === 'applied');
+  $('t-approved-d').innerHTML = flow.propose_tx ? `propose ${tx(flow.propose_tx)}` : '';
   clearInterval(ticking);
   if (view.status === 'queued') {
     const a = view.op, queued = BigInt(a.queued_at_ns), eta = BigInt(a.eta_ns), expires = BigInt(a.expires_ns);
     const tick = () => {
       const now = BigInt(Date.now()) * 1000000n - offset, waiting = now < eta, left = waiting ? (eta - now + 999999999n) / 1000000000n : 0n;
       $('op-bar').style.width = `${Math.min(100, Number(((now - queued) * 100n) / (eta - queued)))}%`;
-      $('op-timer').textContent = !writableDemo ? 'Read-only copy: executing is not available here.' : now >= expires ? 'The window closed: executing now closes it as expired.' : waiting ? `${left} s left. Nobody can execute it before, not even us.` : 'Done waiting. Anyone can execute it now.';
-      $('execute').disabled = waiting || inflight || !writableDemo;
+      $('op-timer').textContent = now >= expires ? 'The window closed: executing now closes it as expired.' : waiting ? `${left} s left. Nobody can execute it before, not even us.` : 'Done waiting. Anyone can execute it now.';
+      const can = !waiting && !flow.pending && $('exec-result').dataset.status !== 'executing';
+      $('execute').disabled = !can || !flow.account; $('execute-relay').disabled = !can || !writableDemo;
       stage('ok', waiting ? 'on' : 'ok', waiting ? '' : 'on', '');
     };
     tick(); ticking = setInterval(tick, 500);
-    // A message left from an earlier followed operation never stays under this one.
-    const r = $('exec-result'), sameExecution = r.dataset.status === 'executing' && r.dataset.proposalHash === current.proposal_hash;
-    if (!sameExecution) setResult('', '', 'queued');
+    if ($('exec-result').dataset.status !== 'executing') setResult('', '', 'queued');
     return;
   }
-  $('execute').disabled = true; $('op-bar').style.width = '100%';
-  if (view.status === 'executing') { stage('ok', 'ok', 'ok', 'on'); $('op-timer').textContent = ''; $('exec-result').dataset.status = 'executing'; return; }
+  $('execute').disabled = $('execute-relay').disabled = true; $('op-bar').style.width = '100%';
+  if (view.status === 'executing') { stage('ok', 'ok', 'ok', 'on'); $('op-timer').textContent = ''; return; }
   $('op-timer').textContent = '';
   stage(...trackFor(view.mode === 'terminal' ? view.status : 'unavailable'));
   if (view.mode === 'terminal') {
     const ok = view.status === 'applied';
-    setResult(ok ? 'ok' : 'bad', ok ? `✓ Applied. The tokens are minted.${current.execute_tx ? ` ${tx(current.execute_tx)}` : ''}` : `Guardian status: ${esc(view.status)}`, view.status);
+    setResult(ok ? 'ok' : 'bad', ok ? `✓ Applied. The tokens are minted.${flow.execute_tx ? ` ${tx(flow.execute_tx)}` : ''}` : `Guardian status: ${esc(view.status)}`, view.status);
+    flow.settled = true; save(); renderButtons();
   } else setResult('unverified', 'The result of this operation is no longer readable from the Guardian (a later operation replaced its record).', 'unavailable');
   clearInterval(polling); polling = null;
 }
 async function refresh() {
   try {
     const s = await api('/api/state');
-    decimals = Number(s.metadata?.decimals ?? 18);
+    decimals = Number(s.metadata?.decimals ?? 18); GUARDIAN = s.accounts.guardian;
     offset = BigInt(Date.now()) * 1000000n - BigInt(s.now_ns);
     if (/^https:\/\//.test(s.repo_url ?? '')) { $('repo').hidden = false; $('repo').innerHTML = `Source, tests and every transaction: <a href="${esc(s.repo_url)}" target="_blank" rel="noopener">${esc(s.repo_url.replace(/^https:\/\//, ''))}</a>`; }
     writableDemo = s.writable;
-    if (!s.writable) { $('request').disabled = true; show($('mint-result'), 'unverified', 'This copy of the demo is read-only. Use the hosted demo to request a mint.'); }
-    if (!current && s.guardian?.active) current = { proposal_hash: s.guardian.active.proposal_hash, watched: true };
-    // Someone else's operation, watched on arrival: when it leaves the record, watch the next one instead.
-    if (current?.watched && s.guardian?.active && followed(current.proposal_hash, s.guardian).mode === 'unavailable') current = { proposal_hash: s.guardian.active.proposal_hash, watched: true };
-    if (current) render(followed(current.proposal_hash, s.guardian));
+    if (!s.writable) { $('prepare').disabled = true; show($('prepare-result'), 'unverified', 'This copy of the demo is read-only. Use the hosted demo.'); }
+    if (flow.proposal_hash) render(followed(flow.proposal_hash, s.guardian));
+    renderButtons();
     return s;
   } catch { return null; }
 }
 const follow = () => { if (!polling) polling = setInterval(refresh, 4000); };
 
-$('request').onclick = async () => {
-  $('request').disabled = true; done(3, false); show($('mint-result'), '', 'Two signers are approving the operation…');
+// The checks and the old keys.
+async function runReport() {
+  $('checks').innerHTML = ''; $('summary').innerHTML = ''; show($('statement'), '', 'Reading testnet…', { ok: 'pending' });
+  $('verdict-1').className = 'big wait'; $('badge-text').textContent = 'Checking that the token is locked down…';
   try {
-    const r = await api('/api/mint', { receiver_id: $('receiver').value });
-    show($('mint-result'), r.ok ? 'ok' : 'bad', r.ok ? `Queued by the Guardian. ${tx(r.tx)}` : esc(r.error ?? humanError(r.failure)));
-    if (r.ok) { current = { proposal_hash: r.proposal_hash }; show($('exec-result'), '', '', { status: 'queued', proposalHash: r.proposal_hash }); }
-  } catch (e) { show($('mint-result'), 'unverified', `Could not reach the demo: ${esc(e.message)}`); }
-  finally { $('request').disabled = !writableDemo; await refresh(); follow(); }
-};
-$('execute').onclick = async () => {
-  const op = current; // fixed before awaiting, so the result attaches to this operation only
-  if (!op) return;
-  inflight = true; $('execute').disabled = true; setResult('', 'Executing…', 'executing');
+    const r = await api('/api/report');
+    if (r.error || !Array.isArray(r.checks)) throw new Error(r.error ?? 'no report');
+    for (const [label, st] of summarize(r.checks)) { const li = document.createElement('li'); li.innerHTML = `<span class="mark ${st}">${st === 'pass' ? '✓' : st === 'fail' ? '✕' : '?'}</span><div>${esc(label)}</div>`; $('summary').appendChild(li); }
+    r.checks.forEach((c) => { const li = document.createElement('li'); li.dataset.status = c.status; li.innerHTML = `<span class="mark ${c.status}">${c.status === 'pass' ? '✓' : c.status === 'fail' ? '✕' : '?'}</span><div>${esc(c.name)}<div class="detail">${esc(c.detail ?? '')}</div></div>`; $('checks').appendChild(li); });
+    show($('statement'), r.ok ? 'ok' : 'bad', `${esc(r.statement)} <a href="https://testnet.nearblocks.io/blocks/${r.block.hash}" target="_blank" rel="noopener">Block ${r.block.height}</a>`, { ok: String(r.ok) });
+    $('verdict-1').className = `big ${r.ok ? 'ok' : 'bad'}`;
+    $('badge-text').textContent = r.ok ? `The token is locked down: no keys, reviewed code, Guardian as admin. Verified at block ${r.block.height.toLocaleString('en-US')}.` : 'Not verified: open the technical checks.';
+  } catch (e) { show($('statement'), 'unverified', `Could not read testnet right now (${esc(e.message)}).`, { ok: 'false' }); $('verdict-1').className = 'big bad'; $('badge-text').textContent = 'Could not read testnet right now. Try again in a moment.'; }
+}
+async function loadKeys() {
+  try { const k = await api('/api/retired-keys'); $('owner-id').innerHTML = acct(k.owner.account); $('owner-key').textContent = k.owner.secret ?? 'not published by this copy of the demo'; $('token-id').innerHTML = `${acct(k.token.account)} · deleted in ${tx(k.token.deleted_in)}`; $('token-key').textContent = k.token.secret ?? 'not published by this copy of the demo'; }
+  catch { $('owner-key').textContent = $('token-key').textContent = 'could not load'; }
+}
+const EXPLAIN = { 'owner-mint': 'Blocked by the token: only the Guardian can mint now.', 'token-deploy': 'Rejected by NEAR: that key no longer exists on the token account.' };
+async function attack(kind, out) {
+  show($(out), '', 'Signing with the old key and sending to testnet…', { verdict: 'pending' });
   try {
-    const r = await api('/api/execute', { proposal_hash: op.proposal_hash });
-    if (r.tx) op.execute_tx = r.tx;
-    if (!r.ok && r.error && current === op) setResult('unverified', esc(r.error), 'unknown');
-  } catch (e) { if (current === op) setResult('unverified', `Could not reach the demo: ${esc(e.message)}`, 'unknown'); }
-  finally { inflight = false; await refresh(); follow(); }
-};
+    const r = await api(`/api/attack/${kind}`, {});
+    if (r.verdict === 'blocked_as_expected') show($(out), 'ok', `✓ ${EXPLAIN[kind]}${r.tx ? ` ${tx(r.tx)}` : ''}`, { verdict: r.verdict });
+    else if (r.verdict === 'unexpected_success') show($(out), 'bad', `✕ It went through. That should never happen.${r.tx ? ` ${tx(r.tx)}` : ''}`, { verdict: r.verdict });
+    else show($(out), 'unverified', `Not verified right now (${esc(humanError(r.reason ?? r.failure ?? r.error))}).`, { verdict: 'unverified' });
+  } catch (e) { show($(out), 'unverified', `Not verified right now (${esc(e.message)}).`, { verdict: 'unverified' }); }
+}
+$('try-both').onclick = async () => { $('try-both').disabled = true; try { await Promise.all([attack('owner-mint', 'attack-mint-result'), attack('token-deploy', 'attack-deploy-result')]); } finally { $('try-both').disabled = false; } };
 $('rerun').onclick = runReport;
 
 (async () => {
+  renderWallet();
+  if (flow.lastError) { show($('propose-result'), 'bad', `The wallet answered: ${esc(flow.lastError)}`); delete flow.lastError; save(); }
+  if (flow.op) { done('approve', true); show($('prepare-result'), 'ok', flow.propose_tx ? 'Approved and carried to the chain.' : 'Approved. Carry it to the chain below.'); renderOp(); }
+  if (flow.propose_tx && !flow.execute_tx) show($('propose-result'), 'ok', `Signed with your wallet and sent. ${tx(flow.propose_tx)}`);
+  if (flow.pending === 'execute') setResult('', 'Waiting for the wallet…', 'executing');
   runReport(); loadKeys();
   const s = await refresh();
-  if (current) follow();
+  if (flow.proposal_hash) follow();
   if (!s) return;
   const c = s.ceremony, op = c.operations;
   $('timeline').innerHTML = [

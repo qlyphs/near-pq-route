@@ -1,0 +1,32 @@
+{
+ "date": "2026-11-09",
+ "what": "The app flow at /bridge/quantum (local build of feat/pq-route, testnet settings): request created and sealed in the browser, paid with the wallet's exact message format (site session signed by the depositor key, queued on the route Worker), minted by the route service, found again in the browser from public receipts, withdrawn with an ML-DSA-65 signature made in the browser, released 2-of-3 on Quantus.",
+ "payer_side_note": "The payer's two wallet approvals (sendQtc to the lock, signSessionChallenge) were produced by the command line with the same bytes (scripts/near-pay.ts), because the person's wallet approves those itself.",
+ "quantus_network": "curve test chain (genesis 0x06fb13f7\u2026)",
+ "request_id": "2dd82d49e471574ef314773e45e3ec2b",
+ "fresh_account": "r19f8220e1cde871b3484.qlyphs-pqroute-c.testnet",
+ "lock": {
+  "quantus_tx": "0xf3d522df0d087d568fe27a3208fd01702689ed933107ccb2183d6afb7620cdb2",
+  "block": 120490,
+  "extrinsic": 1,
+  "planck": "1500000000000",
+  "deposit_id": "89a758330371baa0a1b6db6c88bc6a4d0d37eeb76c9975dd36b3e39a943a636f"
+ },
+ "mint_near_tx": "3HfpaTtJojnUNqCaebhnb4Fx1T7dRK83jDJZXWc49fSn",
+ "withdraw_near_tx_signed_ml_dsa_65_in_browser": "5X2RSeXbxAoxmfWFQ6bmAUsigAeKaBc9W1yKZaNPZjzg",
+ "release": {
+  "request": {
+   "destination": "07f81a9542503d26b9f3029f4aabb9b24186be828c91a59f42e231aebf79864a",
+   "planck": "1500000000000"
+  },
+  "result": {
+   "id": "near:pqqtc.qlyphs-pqroute-a.testnet:1",
+   "destination": "qzjdgfzxCKR8tR8iA971aptTKB5Xn3tmKn3C8k34iSekaTgRR",
+   "planck": "1500000000000",
+   "proposalId": 1,
+   "propose": "0x2ae9e774ca8feecbd4b6001c8c6f5a0ee3eca6dbfe0e9a851b8447da6452fa5c",
+   "approve": "0x0d345aade3c80e1bda24fe35220db3a6d3cc9d50561c390f0f22698e60b57c39",
+   "execute": "0x8e827063479e176c6f5dc4317438a0636cc26ec09147e040841d614d1d905758"
+  }
+ }
+}

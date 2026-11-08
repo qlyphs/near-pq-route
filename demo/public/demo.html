@@ -231,8 +231,9 @@ function render(view) {
       stage('ok', waiting ? 'on' : 'ok', waiting ? '' : 'on', '');
     };
     tick(); ticking = setInterval(tick, 500);
-    if ($('exec-result').dataset.status !== 'executing') $('exec-result').dataset.status = 'queued';
-    $('exec-result').dataset.proposalHash = current.proposal_hash;
+    // A message left from an earlier followed operation never stays under this one.
+    if ($('exec-result').dataset.status !== 'executing') setResult('', '', 'queued');
+    else $('exec-result').dataset.proposalHash = current.proposal_hash;
     return;
   }
   $('execute').disabled = true; $('op-bar').style.width = '100%';
@@ -253,7 +254,9 @@ async function refresh() {
     if (s.repo_url) { $('repo').hidden = false; $('repo').innerHTML = `Source, tests and every transaction: <a href="${esc(s.repo_url)}" target="_blank" rel="noopener">${esc(s.repo_url.replace(/^https:\/\//, ''))}</a>`; }
     writableDemo = s.writable;
     if (!s.writable) { $('request').disabled = true; show($('mint-result'), 'unverified', 'This copy of the demo is read-only. Use the hosted demo to request a mint.'); }
-    if (!current && s.guardian?.active) current = { proposal_hash: s.guardian.active.proposal_hash };
+    if (!current && s.guardian?.active) current = { proposal_hash: s.guardian.active.proposal_hash, watched: true };
+    // Someone else's operation, watched on arrival: when it leaves the record, watch the next one instead.
+    if (current?.watched && s.guardian?.active && followed(current.proposal_hash, s.guardian).mode === 'unavailable') current = { proposal_hash: s.guardian.active.proposal_hash, watched: true };
     if (current) render(followed(current.proposal_hash, s.guardian));
     return s;
   } catch { return null; }

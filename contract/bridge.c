@@ -165,10 +165,19 @@ static void parse_json(const uint8_t *j, size_t n, const char *allowed) {
     i = skip_ws(j, n, ke + 1);
     REQUIRE(i < n && j[i] == ':', "expected ':'");
     i = skip_ws(j, n, i + 1);
-    if (i + 4 <= n && memcmp(j + i, "null", 4) == 0) {
-      /* null means absent: near-sdk sends optional fields (memo) as null. */
+    /* null (and true/false for registration_only): near-sdk sends optional fields this way. The name is checked
+     * like any other and recorded, so duplicates are refused; get_field reports it as absent. */
+    size_t lit = (i + 4 <= n && memcmp(j + i, "null", 4) == 0) ? 4
+      : (i + 4 <= n && memcmp(j + i, "true", 4) == 0 && name_is(&f, "registration_only")) ? 4
+      : (i + 5 <= n && memcmp(j + i, "false", 5) == 0 && name_is(&f, "registration_only")) ? 5 : 0;
+    if (lit) {
       for (size_t k = 0; k < nfields; k++) REQUIRE(!(fields[k].kl == f.kl && memcmp(fields[k].k, f.k, f.kl) == 0), "duplicate JSON field");
-      i = skip_ws(j, n, i + 4);
+      int okl = 0;
+      for (const char *a = allowed; *a;) { const char *e = a; while (*e && *e != ' ') e++; if ((size_t)(e - a) == f.kl && memcmp(a, f.k, f.kl) == 0) okl = 1; a = *e ? e + 1 : e; }
+      REQUIRE(okl, "unexpected JSON field");
+      REQUIRE(nfields < MAX_FIELDS, "too many JSON fields");
+      f.v = 0; f.vl = 0; fields[nfields++] = f;
+      i = skip_ws(j, n, i + lit);
       REQUIRE(i < n, "unterminated JSON object");
       if (j[i] == ',') { i = skip_ws(j, n, i + 1); continue; }
       REQUIRE(j[i] == '}', "expected ',' or '}'");
@@ -197,7 +206,7 @@ static void parse_json(const uint8_t *j, size_t n, const char *allowed) {
   }
   REQUIRE(skip_ws(j, n, i) == n, "trailing data after the JSON object");
 }
-static const field *get_field(const char *name) { for (size_t k = 0; k < nfields; k++) if (name_is(&fields[k], name)) return &fields[k]; return 0; }
+static const field *get_field(const char *name) { for (size_t k = 0; k < nfields; k++) if (name_is(&fields[k], name)) return fields[k].v ? &fields[k] : 0; return 0; }
 static size_t json_id(const char *name, uint8_t *out) {
   const field *f = get_field(name);
   REQUIRE(f && valid_id(f->v, f->vl), "missing or invalid account id");
@@ -257,6 +266,7 @@ EXPORT(new) void new_(void) {
   input(0); size_t n = read_reg(0, in, sizeof(in)); load_ids();
   /* Only the direct parent, inside the batch that creates and deploys the account: the bridge never holds a key. */
   REQUIRE(self_len > caller_len + 1 && self_id[self_len - caller_len - 1] == '.' && memcmp(self_id + self_len - caller_len, caller, caller_len) == 0, "init must come from the parent account");
+  for (size_t k = 0; k + caller_len + 1 < self_len; k++) REQUIRE(self_id[k] != '.', "init must come from the direct parent account");
   REQUIRE(storage_read(1, PTR("c"), 0) != 1, "already initialized");
   REQUIRE(n > CONFIG + 1 && n == CONFIG + 1 + in[CONFIG] && valid_id(in + CONFIG + 1, in[CONFIG]), "config is genesis, three ML-DSA-87 public keys and the Intents verifier id");
   REQUIRE(!same(in + CONFIG + 1, in[CONFIG], self_id, self_len), "the verifier cannot be the bridge");
@@ -454,8 +464,16 @@ EXPORT(ft_resolve_transfer) void ft_resolve_transfer(void) {
     if (len >= 3 && len <= 41) {
       read_register(1, PTR(r));
       if (r[0] == '"' && r[len - 1] == '"') {
-        u128 x = { 0, 0 }; int ok = 1;
-        for (uint64_t k = 1; k + 1 < len; k++) { if (r[k] < '0' || r[k] > '9') { ok = 0; break; } x = mul10add(x, r[k] - '0'); }
+        /* The receiver's answer is untrusted: anything that is not a decimal u128 counts as nothing used. */
+        u128 x = { 0, 0 }; int ok = len - 2 <= 39;
+        for (uint64_t k = 1; ok && k + 1 < len; k++) {
+          if (r[k] < '0' || r[k] > '9' || x.hi >= (1ULL << 60)) { ok = 0; break; }
+          u128 a8 = { x.lo << 3, (x.hi << 3) | (x.lo >> 61) }, a2 = { x.lo << 1, (x.hi << 1) | (x.lo >> 63) }, d = { (uint64_t)(r[k] - '0'), 0 };
+          u128 t = { a8.lo + a2.lo, a8.hi + a2.hi + (a8.lo + a2.lo < a8.lo) };
+          u128 y = { t.lo + d.lo, t.hi + (t.lo + d.lo < t.lo) };
+          if (lt128(y, t)) { ok = 0; break; }
+          x = y;
+        }
         if (ok) unused = lt128(amount, x) ? amount : x;
       }
     }

@@ -36,6 +36,12 @@ try {
   await refused('init only from the parent account', () => alice.callRaw(bridge, 'new', new Uint8Array(config), { gas: 30n * TGAS }), 'init must come from the parent');
   const dup = Buffer.from(config); keys[0].publicKey.copy(dup, 32 + 2592);
   await refused('init refuses duplicate attester keys', () => root.callRaw(bridge, 'new', new Uint8Array(dup), { gas: 30n * TGAS }), 'must differ');
+  {
+    const mid = await root.createSubAccount('mid', { initialBalance: 10n * NEAR });
+    const deep = await mid.createSubAccount('deep', { initialBalance: 5n * NEAR });
+    await deep.deploy(wasm);
+    await refused('init from a grandparent is refused', () => root.callRaw(deep, 'new', new Uint8Array(config), { gas: 30n * TGAS }), 'direct parent');
+  }
   const init = await root.callRaw(bridge, 'new', new Uint8Array(config), { gas: 30n * TGAS });
   record('init with genesis and three keys', init.succeeded);
   await refused('init only once', () => root.callRaw(bridge, 'new', new Uint8Array(config), { gas: 30n * TGAS }), 'already initialized');
@@ -113,6 +119,15 @@ try {
     const r2 = await carol.callRaw(bridge, 'storage_deposit', {}, { attachedDeposit: 10n ** 22n });
     record('storage_deposit on a registered account refunds everything', r2.succeeded);
     record('storage_balance_bounds is fixed', (await bridge.view('storage_balance_bounds')).min === '1250000000000000000000');
+  }
+  // Strict input: null and boolean literals are named, allowed fields only, never twice.
+  {
+    const raw = (o) => new Uint8Array(Buffer.from(o));
+    await refused('a null field twice is refused', () => bob.callRaw(bridge, 'ft_transfer', raw('{"receiver_id":"alice.test.near","amount":"1","memo":null,"memo":null}'), { attachedDeposit: 1n }), 'duplicate JSON field');
+    await refused('an unknown field is refused even when null', () => bob.callRaw(bridge, 'ft_transfer', raw('{"receiver_id":"alice.test.near","amount":"1","other":null}'), { attachedDeposit: 1n }), 'unexpected JSON field');
+    const dave = await root.createSubAccount('dave', { initialBalance: 5n * NEAR });
+    const r = await dave.callRaw(bridge, 'storage_deposit', raw('{"registration_only":true}'), { attachedDeposit: 1250000000000000000000n });
+    record('storage_deposit accepts registration_only: true', r.succeeded, r.succeeded ? '' : failureText(r).slice(0, 160));
   }
   // Intents withdrawal convention: ft_transfer to the bridge itself with memo WITHDRAW_TO:<hex>.
   await refused('transfer to the bridge without WITHDRAW_TO is refused', () => bob.callRaw(bridge, 'ft_transfer', { receiver_id: bridge.accountId, amount: '1' }, { attachedDeposit: 1n }), 'needs memo WITHDRAW_TO');

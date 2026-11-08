@@ -75,7 +75,7 @@ try {
 
   // Transfers and redeem.
   await refused('transfer to an unregistered account', () => alice.callRaw(bridge, 'ft_transfer', { receiver_id: bob.accountId, amount: '1' }, { attachedDeposit: 1n }), 'not a registered holder');
-  await bob.call(bridge, 'storage_deposit', {}, { attachedDeposit: 1250000000000000000000n });
+  await bob.callRaw(bridge, 'storage_deposit', {}, { attachedDeposit: 1250000000000000000000n });
   const tr = await alice.callRaw(bridge, 'ft_transfer', { receiver_id: bob.accountId, amount: '1000000000000' }, { attachedDeposit: 1n });
   record('transfer to a registered holder', tr.succeeded && (await bridge.view('ft_balance_of', { account_id: bob.accountId })) === '1000000000000');
   const qto = randomBytes(32).toString('hex');
@@ -92,11 +92,33 @@ try {
   // near-sdk sends optional fields as null.
   { const r = await bob.callRaw(bridge, 'ft_transfer', new Uint8Array(Buffer.from(JSON.stringify({ receiver_id: alice.accountId, amount: '1', memo: null }))), { attachedDeposit: 1n });
     record('memo null is accepted as absent', r.succeeded, r.succeeded ? '' : failureText(r).slice(0, 160)); }
+  // Minimum withdrawal, enforced before any state change (both paths).
+  {
+    const before = { a: await bridge.view('ft_balance_of', { account_id: alice.accountId }), s: await bridge.view('ft_total_supply'), r: (await bridge.view('state')).redemptions };
+    await refused('redeem below 0.01 QTC is refused', () => alice.callRaw(bridge, 'redeem', { amount: '9999999999', quantus_to: qto }, { attachedDeposit: 1n }), 'below the minimum withdrawal');
+    await refused('WITHDRAW_TO below 0.01 QTC is refused', () => alice.callRaw(bridge, 'ft_transfer', { receiver_id: bridge.accountId, amount: '9999999999', memo: `WITHDRAW_TO:${qto}` }, { attachedDeposit: 1n }), 'below the minimum withdrawal');
+    const after = { a: await bridge.view('ft_balance_of', { account_id: alice.accountId }), s: await bridge.view('ft_total_supply'), r: (await bridge.view('state')).redemptions };
+    record('refused small withdrawals change nothing', JSON.stringify(before) === JSON.stringify(after));
+    const ok = await alice.callRaw(bridge, 'redeem', { amount: '10000000000', quantus_to: qto }, { attachedDeposit: 1n });
+    record('exactly 0.01 QTC redeems', ok.succeeded && (await bridge.view('state')).redemptions === before.r + 1);
+  }
+  // NEP-145 storage.
+  {
+    const carol = await root.createSubAccount('carol', { initialBalance: 5n * NEAR });
+    record('storage_balance_of is null before registration', (await bridge.view('storage_balance_of', { account_id: carol.accountId })) === null);
+    const b0 = BigInt((await carol.balance()).available.toString());
+    const r1 = await carol.callRaw(bridge, 'storage_deposit', {}, { attachedDeposit: 2n * 10n ** 22n });
+    const sb = await bridge.view('storage_balance_of', { account_id: carol.accountId });
+    record('storage_deposit registers, returns the balance and refunds the excess', r1.succeeded && sb?.total === '1250000000000000000000' && b0 - BigInt((await carol.balance()).available.toString()) < 2n * 10n ** 21n);
+    const r2 = await carol.callRaw(bridge, 'storage_deposit', {}, { attachedDeposit: 10n ** 22n });
+    record('storage_deposit on a registered account refunds everything', r2.succeeded);
+    record('storage_balance_bounds is fixed', (await bridge.view('storage_balance_bounds')).min === '1250000000000000000000');
+  }
   // Intents withdrawal convention: ft_transfer to the bridge itself with memo WITHDRAW_TO:<hex>.
   await refused('transfer to the bridge without WITHDRAW_TO is refused', () => bob.callRaw(bridge, 'ft_transfer', { receiver_id: bridge.accountId, amount: '1' }, { attachedDeposit: 1n }), 'needs memo WITHDRAW_TO');
   const wq = randomBytes(32).toString('hex');
   const w = await bob.callRaw(bridge, 'ft_transfer', { receiver_id: bridge.accountId, amount: '400000000000', memo: `WITHDRAW_TO:${wq}` }, { attachedDeposit: 1n });
-  const wrec = await bridge.view('redemption', { id: '1' });
+  const wrec = await bridge.view('redemption', { id: '2' });
   record('WITHDRAW_TO transfer burns and records like redeem', w.succeeded && wrec?.quantus_to === wq && wrec.account === bob.accountId && (await bridge.view('ft_balance_of', { account_id: bob.accountId })) === '599999999999');
   writeFileSync('evidence/bridge-sandbox.json', JSON.stringify({ date: new Date().toISOString().slice(0, 10), wasm_sha256: sha256(wasm).toString('hex'), results }, null, 2) + '\n');
 } finally {

@@ -34,6 +34,8 @@ IMPORT(promise_create) uint64_t promise_create(uint64_t alen, uint64_t aptr, uin
 IMPORT(promise_then) uint64_t promise_then(uint64_t idx, uint64_t alen, uint64_t aptr, uint64_t mlen, uint64_t mptr,
   uint64_t arglen, uint64_t argptr, uint64_t amount_ptr, uint64_t gas);
 IMPORT(promise_return) void promise_return(uint64_t idx);
+IMPORT(promise_batch_create) uint64_t promise_batch_create(uint64_t len, uint64_t ptr);
+IMPORT(promise_batch_action_transfer) void promise_batch_action_transfer(uint64_t idx, uint64_t amount_ptr);
 IMPORT(promise_results_count) uint64_t promise_results_count(void);
 IMPORT(promise_result) uint64_t promise_result(uint64_t idx, uint64_t reg);
 IMPORT(sha256) void sha256(uint64_t len, uint64_t ptr, uint64_t reg);
@@ -50,6 +52,7 @@ IMPORT(sha256) void sha256(uint64_t len, uint64_t ptr, uint64_t reg);
 #define MIN_STORAGE_LO 14068147061460041728ULL   /* 0.00125 NEAR (1.25e21 yocto) to register a holder */
 #define MIN_STORAGE_HI 67ULL
 #define MAX_PAGE 8u
+#define MIN_WITHDRAW 10000000000ULL   /* 0.01 QTC in planck: the smallest burn the attesters release */
 #define TGAS 1000000000000ULL
 #define RESOLVE_GAS (10 * TGAS)
 #define WITHDRAW "WITHDRAW_TO:"
@@ -342,17 +345,35 @@ EXPORT(mint) void mint(void) {
   call_on_transfer(who, wl, ver, vl, amount, who, wl);
 }
 
-/* storage_deposit({"account_id"?}): registers a holder (balance 0) for at least 0.00125 NEAR, once. */
+/* NEP-145, fixed storage: one registration costs 0.00125 NEAR and never changes. */
+static void put_storage_balance(void) { PUT("{\"total\":\"1250000000000000000000\",\"available\":\"0\"}"); }
+
+/* storage_deposit({"account_id"?, "registration_only"?}): registers a holder (balance 0). Attach at least 0.00125
+ * NEAR; anything above, or everything when the account is already registered, goes back to the caller. */
 EXPORT(storage_deposit) void storage_deposit(void) {
   input(0); size_t n = read_reg(0, in, 1024); load_ids();
   uint8_t dep[16]; attached_deposit(PTR(dep));
-  u128 d = rd128(dep), min = { MIN_STORAGE_LO, MIN_STORAGE_HI };
-  REQUIRE(!lt128(d, min), "attach at least 0.00125 NEAR");
+  u128 d = rd128(dep), min = { MIN_STORAGE_LO, MIN_STORAGE_HI }, refund = d;
   size_t wl;
-  if (n) { parse_json(in, n, "account_id"); if (get_field("account_id")) wl = json_id("account_id", who); else { memcpy(who, caller, caller_len); wl = caller_len; } }
+  if (n) { parse_json(in, n, "account_id registration_only"); if (get_field("account_id")) wl = json_id("account_id", who); else { memcpy(who, caller, caller_len); wl = caller_len; } }
   else { memcpy(who, caller, caller_len); wl = caller_len; }
-  REQUIRE(!registered(who, wl), "already registered");
-  u128 z = { 0, 0 }; set_balance(who, wl, z);
+  if (!registered(who, wl)) {
+    REQUIRE(!lt128(d, min), "attach at least 0.00125 NEAR");
+    u128 z = { 0, 0 }; set_balance(who, wl, z);
+    refund = sub128(d, min);
+  }
+  if (!is0(refund)) { uint8_t r[16]; wr128(r, refund); uint64_t p = promise_batch_create(caller_len, PTR(caller)); promise_batch_action_transfer(p, PTR(r)); }
+  on = 0; put_storage_balance(); value_return(on, PTR(out));
+}
+EXPORT(storage_balance_of) void storage_balance_of(void) {
+  input(0); size_t n = read_reg(0, in, 1024);
+  parse_json(in, n, "account_id");
+  size_t al = json_id("account_id", who);
+  on = 0; if (registered(who, al)) put_storage_balance(); else PUT("null");
+  value_return(on, PTR(out));
+}
+EXPORT(storage_balance_bounds) void storage_balance_bounds(void) {
+  on = 0; PUT("{\"min\":\"1250000000000000000000\",\"max\":\"1250000000000000000000\"}"); value_return(on, PTR(out));
 }
 
 /* Burns amount from the caller and records the 32-byte Quantus account given as 64 lowercase hex characters. */
@@ -360,7 +381,8 @@ static void burn_to_quantus(u128 amount, const uint8_t *hex64) {
   uint8_t rec[16 + 32 + 8 + 1 + MAX_ID], nz = 0;
   for (unsigned k = 0; k < 32; k++) { int a = unhex(hex64[2 * k]), b = unhex(hex64[2 * k + 1]); REQUIRE(a >= 0 && b >= 0, "quantus_to is lowercase hex"); rec[16 + k] = (uint8_t)(a << 4 | b); nz |= rec[16 + k]; }
   REQUIRE(nz, "quantus_to is zero");
-  REQUIRE(!is0(amount), "amount must be positive");
+  u128 min = { MIN_WITHDRAW, 0 };
+  REQUIRE(!lt128(amount, min), "below the minimum withdrawal of 0.01 QTC");
   set_balance(caller, caller_len, sub128(balance(caller, caller_len), amount));
   set_supply(sub128(supply(), amount));
   wr128(rec, amount); put64(rec + 48, block_index()); rec[56] = (uint8_t)caller_len; memcpy(rec + 57, caller, caller_len);

@@ -2,6 +2,10 @@
 
 Research proof of concept. Not audited. Never use it with real funds.
 
+This file covers the vault. For Qlyphs Guardian, the trust boundary, the state machine and what the
+verification report can and cannot prove are in [docs/GUARDIAN.md](docs/GUARDIAN.md); its limits are
+summarized in the [README](README.md#limits).
+
 ## What the contract enforces
 
 - Funds leave a vault only after the contract has verified, on-chain and in one call, an ML-DSA-87

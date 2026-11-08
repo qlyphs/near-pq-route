@@ -100,6 +100,8 @@ records are kept as `deployments/superseded-guardian-r1.json` and are not eviden
 ## Reproduce
 
 Requirements: Node 22+, LLVM clang and lld with wasm32 (Homebrew `llvm` and `lld`), OpenSSL 3.5+ (ML-DSA).
+The sandbox suites download the NEAR sandbox binary on first run (network needed). Running a suite rewrites
+its `evidence/*.json` file; gas figures in it vary slightly from run to run.
 
 ```sh
 npm ci

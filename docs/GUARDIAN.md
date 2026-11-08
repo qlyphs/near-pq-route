@@ -186,8 +186,9 @@ No transition decreases or reuses the nonce.
 ## Storage and funding
 
 Queued upgrade code is stored under key `c` (at most 131,072 bytes, about 1.32 NEAR of storage at
-10^19 yoctoNEAR per byte), plus record overhead. The testnet Guardian is funded with 2.5 NEAR, measured
-against a maximum-size queued code on testnet. Anyone can top up a keyless account with a plain transfer.
+10^19 yoctoNEAR per byte), plus record overhead. On testnet the release Guardian holds 0.6 NEAR (no large upgrade is queued on
+it) and the Guardian used for the 131,072-byte upgrades holds 1.8 NEAR, enough for a maximum-size queued
+code. Anyone can top up a keyless account with a plain transfer.
 Transfers cannot grow the target's ledger; its storage grows with `mint` to a new holder, a larger
 deployed build, or the first write of `l`, all admin actions. Terminal cleanup treats an absent `c` (a mint)
 as normal.
@@ -225,5 +226,5 @@ with this configuration, under the recorded deployment and cutover assumptions."
 
 A build step lists the exports of each release Wasm and compares them with an allowlist: Guardian
 `init propose cancel execute on_result expire state`; token `new mint handover upgrade migrate ft_transfer
-ft_balance_of ft_total_supply ft_metadata state`. Test-only builds (`token-v2-failing.wasm`) are never
+ft_balance_of ft_total_supply ft_metadata state`. Test-only builds (`token-v2-failing.wasm`, the padded `*-max.wasm`, `guardian-sandbox-failing-callback.wasm`) are never
 deployed outside the sandbox.

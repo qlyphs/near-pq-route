@@ -1,6 +1,6 @@
 {
   "date": "2026-11-08",
-  "wasm_sha256": "34587632ef1aa0b4cd65247e5f1e1db5b904ae0de190ea9224ee8a3e35f77034",
+  "wasm_sha256": "166bcb304df51cc68bdc9ed440d557ad1df5bd95a5f6ae5d979089dfb9ea6b32",
   "results": [
     {
       "name": "init only by the bridge account",
@@ -95,7 +95,7 @@
     {
       "name": "2-of-3 attested deposit mints",
       "ok": true,
-      "detail": "13.974973821879 Tgas"
+      "detail": "13.978550568173 Tgas"
     },
     {
       "name": "deposit recorded as minted",
@@ -144,6 +144,16 @@
     },
     {
       "name": "redeem burns and records the Quantus destination",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "transfer to the bridge without WITHDRAW_TO is refused",
+      "ok": true,
+      "detail": "needs memo WITHDRAW_TO"
+    },
+    {
+      "name": "WITHDRAW_TO transfer burns and records like redeem",
       "ok": true,
       "detail": ""
     }

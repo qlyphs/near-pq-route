@@ -85,6 +85,12 @@ try {
   const rd = await alice.callRaw(bridge, 'redeem', { amount: '2000000000000', quantus_to: qto }, { attachedDeposit: 1n });
   const rec = await bridge.view('redemption', { id: '0' });
   record('redeem burns and records the Quantus destination', rd.succeeded && rec?.amount === '2000000000000' && rec.quantus_to === qto && rec.account === alice.accountId && (await bridge.view('ft_total_supply')) === '3000000000000');
+  // Intents withdrawal convention: ft_transfer to the bridge itself with memo WITHDRAW_TO:<hex>.
+  await refused('transfer to the bridge without WITHDRAW_TO is refused', () => bob.callRaw(bridge, 'ft_transfer', { receiver_id: bridge.accountId, amount: '1' }, { attachedDeposit: 1n }), 'needs memo WITHDRAW_TO');
+  const wq = randomBytes(32).toString('hex');
+  const w = await bob.callRaw(bridge, 'ft_transfer', { receiver_id: bridge.accountId, amount: '400000000000', memo: `WITHDRAW_TO:${wq}` }, { attachedDeposit: 1n });
+  const wrec = await bridge.view('redemption', { id: '1' });
+  record('WITHDRAW_TO transfer burns and records like redeem', w.succeeded && wrec?.quantus_to === wq && wrec.account === bob.accountId && (await bridge.view('ft_balance_of', { account_id: bob.accountId })) === '600000000000');
   writeFileSync('evidence/bridge-sandbox.json', JSON.stringify({ date: new Date().toISOString().slice(0, 10), wasm_sha256: sha256(wasm).toString('hex'), results }, null, 2) + '\n');
 } finally {
   await worker.tearDown();

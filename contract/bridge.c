@@ -27,6 +27,15 @@ IMPORT(current_account_id) void current_account_id(uint64_t reg);
 IMPORT(predecessor_account_id) void predecessor_account_id(uint64_t reg);
 IMPORT(attached_deposit) void attached_deposit(uint64_t ptr);
 IMPORT(block_index) uint64_t block_index(void);
+IMPORT(prepaid_gas) uint64_t prepaid_gas(void);
+IMPORT(used_gas) uint64_t used_gas(void);
+IMPORT(promise_create) uint64_t promise_create(uint64_t alen, uint64_t aptr, uint64_t mlen, uint64_t mptr,
+  uint64_t arglen, uint64_t argptr, uint64_t amount_ptr, uint64_t gas);
+IMPORT(promise_then) uint64_t promise_then(uint64_t idx, uint64_t alen, uint64_t aptr, uint64_t mlen, uint64_t mptr,
+  uint64_t arglen, uint64_t argptr, uint64_t amount_ptr, uint64_t gas);
+IMPORT(promise_return) void promise_return(uint64_t idx);
+IMPORT(promise_results_count) uint64_t promise_results_count(void);
+IMPORT(promise_result) uint64_t promise_result(uint64_t idx, uint64_t reg);
 IMPORT(sha256) void sha256(uint64_t len, uint64_t ptr, uint64_t reg);
 
 #define CONTEXT "qlyphs/near-bridge/v1"
@@ -40,6 +49,9 @@ IMPORT(sha256) void sha256(uint64_t len, uint64_t ptr, uint64_t reg);
 #define MIN_STORAGE_LO 14068147061460041728ULL   /* 0.00125 NEAR (1.25e21 yocto) to register a holder */
 #define MIN_STORAGE_HI 67ULL
 #define MAX_PAGE 8u
+#define TGAS 1000000000000ULL
+#define RESOLVE_GAS (10 * TGAS)
+#define WITHDRAW "WITHDRAW_TO:"
 
 /* Attestation offsets (docs/BRIDGE.md). */
 enum { A_MAGIC = 0, A_CHAIN = 8, A_BRIDGE = 16, A_GENESIS = 81, A_DEPOSIT = 113, A_AMOUNT = 145, A_RECV = 161,
@@ -295,36 +307,12 @@ EXPORT(storage_deposit) void storage_deposit(void) {
   u128 z = { 0, 0 }; set_balance(who, wl, z);
 }
 
-/* ft_transfer({"receiver_id","amount","memo"?}) with exactly 1 yoctoNEAR; the receiver must be registered. */
-EXPORT(ft_transfer) void ft_transfer(void) {
-  input(0); size_t n = read_reg(0, in, 1024); load_ids();
-  uint8_t dep[16]; attached_deposit(PTR(dep));
-  REQUIRE(le64(dep) == 1 && le64(dep + 8) == 0, "requires attached deposit of exactly 1 yoctoNEAR");
-  parse_json(in, n, "receiver_id amount memo");
-  size_t rl = json_id("receiver_id", who);
-  REQUIRE(!same(who, rl, caller, caller_len), "sender and receiver are the same");
-  REQUIRE(registered(who, rl), "receiver is not a registered holder");
-  u128 amount = json_u128("amount", 1, 0);
-  REQUIRE(!is0(amount), "amount must be positive");
-  set_balance(caller, caller_len, sub128(balance(caller, caller_len), amount));
-  set_balance(who, rl, add128(balance(who, rl), amount));
-  emit("ft_transfer", caller, caller_len, amount, who, rl);
-}
-
-/* redeem({"amount","quantus_to"}) with exactly 1 yoctoNEAR: burns the caller's tokens and records the
- * 32-byte Quantus account (64 hex characters) the attesters release the QTC to. */
-EXPORT(redeem) void redeem(void) {
-  input(0); size_t n = read_reg(0, in, 1024); load_ids(); load_config();
-  uint8_t dep[16]; attached_deposit(PTR(dep));
-  REQUIRE(le64(dep) == 1 && le64(dep + 8) == 0, "requires attached deposit of exactly 1 yoctoNEAR");
-  parse_json(in, n, "amount quantus_to");
-  u128 amount = json_u128("amount", 1, 0);
-  REQUIRE(!is0(amount), "amount must be positive");
-  const field *f = get_field("quantus_to");
-  REQUIRE(f && f->vl == 64, "quantus_to is a 32-byte account id in lowercase hex");
+/* Burns amount from the caller and records the 32-byte Quantus account given as 64 lowercase hex characters. */
+static void burn_to_quantus(u128 amount, const uint8_t *hex64) {
   uint8_t rec[16 + 32 + 8 + 1 + MAX_ID], nz = 0;
-  for (unsigned k = 0; k < 32; k++) { int a = unhex(f->v[2 * k]), b = unhex(f->v[2 * k + 1]); REQUIRE(a >= 0 && b >= 0, "quantus_to is lowercase hex"); rec[16 + k] = (uint8_t)(a << 4 | b); nz |= rec[16 + k]; }
+  for (unsigned k = 0; k < 32; k++) { int a = unhex(hex64[2 * k]), b = unhex(hex64[2 * k + 1]); REQUIRE(a >= 0 && b >= 0, "quantus_to is lowercase hex"); rec[16 + k] = (uint8_t)(a << 4 | b); nz |= rec[16 + k]; }
   REQUIRE(nz, "quantus_to is zero");
+  REQUIRE(!is0(amount), "amount must be positive");
   set_balance(caller, caller_len, sub128(balance(caller, caller_len), amount));
   set_supply(sub128(supply(), amount));
   wr128(rec, amount); put64(rec + 48, block_index()); rec[56] = (uint8_t)caller_len; memcpy(rec + 57, caller, caller_len);
@@ -334,6 +322,113 @@ EXPORT(redeem) void redeem(void) {
   wr_u64_key("m", x + 1);
   emit("ft_burn", caller, caller_len, amount, 0, 0);
   on = 0; PUT("bridge_redeem id="); put_u64(x); log_utf8(on, PTR(out));
+}
+static void one_yocto(void) {
+  uint8_t dep[16]; attached_deposit(PTR(dep));
+  REQUIRE(le64(dep) == 1 && le64(dep + 8) == 0, "requires attached deposit of exactly 1 yoctoNEAR");
+}
+/* Moves amount from the caller to a registered holder. */
+static void move(const uint8_t *to, size_t tl, u128 amount) {
+  REQUIRE(!same(to, tl, caller, caller_len), "sender and receiver are the same");
+  REQUIRE(registered(to, tl), "receiver is not a registered holder");
+  REQUIRE(!is0(amount), "amount must be positive");
+  set_balance(caller, caller_len, sub128(balance(caller, caller_len), amount));
+  set_balance(to, tl, add128(balance(to, tl), amount));
+  emit("ft_transfer", caller, caller_len, amount, to, tl);
+}
+
+/* ft_transfer({"receiver_id","amount","memo"?}) with exactly 1 yoctoNEAR; the receiver must be registered.
+ * A transfer to the bridge itself with memo "WITHDRAW_TO:<64 hex>" is a redeem: the convention the
+ * NEAR Intents verifier uses for ft_withdraw on bridged tokens. */
+EXPORT(ft_transfer) void ft_transfer(void) {
+  input(0); size_t n = read_reg(0, in, 1024); load_ids(); one_yocto();
+  parse_json(in, n, "receiver_id amount memo");
+  size_t rl = json_id("receiver_id", who);
+  u128 amount = json_u128("amount", 1, 0);
+  if (same(who, rl, self_id, self_len)) {
+    const field *m = get_field("memo");
+    REQUIRE(m && m->vl == 12 + 64 && memcmp(m->v, WITHDRAW, 12) == 0, "a transfer to the bridge needs memo WITHDRAW_TO:<64 hex Quantus account>");
+    load_config(); burn_to_quantus(amount, m->v + 12);
+    return;
+  }
+  move(who, rl, amount);
+}
+
+/* ft_transfer_call({"receiver_id","amount","memo"?,"msg"}) with exactly 1 yoctoNEAR (NEP-141): transfers, calls
+ * receiver.ft_on_transfer, then ft_resolve_transfer refunds what the receiver returns as unused. */
+EXPORT(ft_transfer_call) void ft_transfer_call(void) {
+  input(0); size_t n = read_reg(0, in, 2048); load_ids(); one_yocto();
+  parse_json(in, n, "receiver_id amount memo msg");
+  size_t rl = json_id("receiver_id", who);
+  REQUIRE(!same(who, rl, self_id, self_len), "use ft_transfer to redeem");
+  u128 amount = json_u128("amount", 1, 0);
+  const field *msg = get_field("msg");
+  REQUIRE(msg, "msg is required");
+  move(who, rl, amount);
+  uint64_t used = used_gas(), pre = prepaid_gas();
+  REQUIRE(pre > used + RESOLVE_GAS + 10 * TGAS, "not enough gas for ft_transfer_call");
+  uint64_t call_gas = pre - used - RESOLVE_GAS - 5 * TGAS;
+  static uint8_t args[2400]; size_t a = 0;
+#define ADD(s) do { const char *s_ = (s); while (*s_) args[a++] = (uint8_t)*s_++; } while (0)
+  ADD("{\"sender_id\":\""); memcpy(args + a, caller, caller_len); a += caller_len;
+  ADD("\",\"amount\":\""); { char d[40]; size_t k = dec128(amount, d); memcpy(args + a, d, k); a += k; }
+  ADD("\",\"msg\":\""); memcpy(args + a, msg->v, msg->vl); a += msg->vl; ADD("\"}");
+  uint8_t zero[16] = { 0 };
+  uint64_t p = promise_create(rl, PTR(who), 14, PTR("ft_on_transfer"), a, PTR(args), PTR(zero), call_gas);
+  a = 0;
+  ADD("{\"sender_id\":\""); memcpy(args + a, caller, caller_len); a += caller_len;
+  ADD("\",\"receiver_id\":\""); memcpy(args + a, who, rl); a += rl;
+  ADD("\",\"amount\":\""); { char d[40]; size_t k = dec128(amount, d); memcpy(args + a, d, k); a += k; }
+  ADD("\"}");
+#undef ADD
+  uint64_t q = promise_then(p, self_len, PTR(self_id), 19, PTR("ft_resolve_transfer"), a, PTR(args), PTR(zero), RESOLVE_GAS);
+  promise_return(q);
+}
+
+/* ft_resolve_transfer({"sender_id","receiver_id","amount"}): private callback. The receiver returned the unused
+ * amount as a JSON string; on failure everything is unused. Refunds min(unused, receiver balance) to the sender
+ * and returns the amount actually kept. */
+EXPORT(ft_resolve_transfer) void ft_resolve_transfer(void) {
+  input(0); size_t n = read_reg(0, in, 1024); load_ids();
+  REQUIRE(same(caller, caller_len, self_id, self_len), "private");
+  parse_json(in, n, "sender_id receiver_id amount");
+  uint8_t snd[MAX_ID]; size_t sl = json_id("sender_id", snd);
+  size_t rl = json_id("receiver_id", who);
+  u128 amount = json_u128("amount", 1, 0), unused = amount;
+  REQUIRE(promise_results_count() == 1, "one promise result expected");
+  if (promise_result(0, 1) == 1) {
+    uint8_t r[64]; uint64_t len = register_len(1);
+    if (len >= 3 && len <= 41) {
+      read_register(1, PTR(r));
+      if (r[0] == '"' && r[len - 1] == '"') {
+        u128 x = { 0, 0 }; int ok = 1;
+        for (uint64_t k = 1; k + 1 < len; k++) { if (r[k] < '0' || r[k] > '9') { ok = 0; break; } x = mul10add(x, r[k] - '0'); }
+        if (ok) unused = lt128(amount, x) ? amount : x;
+      }
+    }
+  }
+  if (!is0(unused)) {
+    u128 rb = balance(who, rl), back = lt128(rb, unused) ? rb : unused;
+    if (!is0(back)) {
+      set_balance(who, rl, sub128(rb, back));
+      set_balance(snd, sl, add128(balance(snd, sl), back));
+      emit("ft_transfer", who, rl, back, snd, sl);
+    }
+    unused = back;
+  }
+  u128 kept = sub128(amount, unused);
+  on = 0; PUT("\""); put_u128(kept); PUT("\""); value_return(on, PTR(out));
+}
+
+/* redeem({"amount","quantus_to"}) with exactly 1 yoctoNEAR: burns the caller's tokens and records the
+ * 32-byte Quantus account (64 lowercase hex characters) the attesters release the QTC to. */
+EXPORT(redeem) void redeem(void) {
+  input(0); size_t n = read_reg(0, in, 1024); load_ids(); load_config(); one_yocto();
+  parse_json(in, n, "amount quantus_to");
+  u128 amount = json_u128("amount", 1, 0);
+  const field *f = get_field("quantus_to");
+  REQUIRE(f && f->vl == 64, "quantus_to is a 32-byte account id in lowercase hex");
+  burn_to_quantus(amount, f->v);
 }
 
 EXPORT(ft_balance_of) void ft_balance_of(void) {

@@ -4,116 +4,136 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Qlyphs Guardian · NEAR testnet demo</title>
-<meta name="description" content="Post-quantum admin control for NEAR contracts: 2-of-3 ML-DSA-87 approvals and an on-chain timelock. Verify it yourself on testnet.">
+<meta name="description" content="Post-quantum admin control for NEAR contracts: 2-of-3 ML-DSA-87 approvals and an on-chain timelock. Check it yourself on testnet in two minutes.">
 <style>
   :root { --bg: #0b0d10; --panel: #13161b; --line: #232831; --text: #e8eaed; --dim: #8b929c; --ok: #5be49b; --bad: #ff6b6b; --warn: #f5c451; --accent: #7aa2ff; }
   * { box-sizing: border-box; }
   html, body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; }
-  main { max-width: 860px; margin: 0 auto; padding: 0 20px; }
-  section { min-height: 60dvh; padding: 9dvh 0 4dvh; }
-  section.hero { min-height: 72dvh; display: flex; flex-direction: column; justify-content: center; }
-  h1 { font-size: clamp(2.2rem, 6vw, 3.6rem); line-height: 1.05; margin: 0 0 18px; letter-spacing: -0.02em; }
-  h2 { font-size: 1.6rem; margin: 0 0 8px; letter-spacing: -0.01em; }
-  p { margin: 0 0 14px; color: var(--dim); max-width: 640px; }
-  p.lead { font-size: 1.2rem; color: var(--text); }
-  code, .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.86rem; }
+  main { max-width: 820px; margin: 0 auto; padding: 0 20px 6dvh; }
+  header { min-height: 46dvh; display: flex; flex-direction: column; justify-content: center; padding: 6dvh 0 3dvh; }
+  h1 { font-size: clamp(2.2rem, 6vw, 3.4rem); line-height: 1.05; margin: 0 0 14px; letter-spacing: -0.02em; }
+  h2 { font-size: 1.45rem; margin: 0; letter-spacing: -0.01em; }
+  p { margin: 0 0 12px; color: var(--dim); }
+  p.lead { font-size: 1.2rem; color: var(--text); max-width: 640px; }
   a { color: var(--accent); text-decoration: none; } a:hover { text-decoration: underline; }
-  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; margin-top: 18px; }
-  .badge { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); font-size: 0.92rem; color: var(--dim); transition: color .4s, border-color .4s; }
-  .badge.ok { color: var(--ok); border-color: color-mix(in srgb, var(--ok) 40%, transparent); }
-  .badge.bad { color: var(--bad); border-color: color-mix(in srgb, var(--bad) 40%, transparent); }
-  .dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
-  .badge.wait .dot { animation: pulse 1.2s infinite; }
-  @keyframes pulse { 50% { opacity: .25; } }
-  ul.checks { list-style: none; padding: 0; margin: 0; }
-  ul.checks li { display: grid; grid-template-columns: 22px 1fr; gap: 10px; padding: 10px 0; border-top: 1px solid var(--line); opacity: 0; transform: translateY(4px); animation: in .35s forwards; }
-  ul.checks li:first-child { border-top: 0; }
-  @keyframes in { to { opacity: 1; transform: none; } }
+  code, .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.84rem; }
+  .steps { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 18px; }
+  .pill { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); color: var(--dim); font-size: 0.92rem; transition: color .3s, border-color .3s; }
+  .pill b { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: var(--line); color: var(--text); font-size: 0.78rem; }
+  .pill.done { color: var(--ok); border-color: color-mix(in srgb, var(--ok) 40%, transparent); }
+  .pill.done b { background: var(--ok); color: var(--bg); }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 22px; margin: 18px 0; }
+  .card-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 6px; }
+  .num { flex: none; display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--line); font-weight: 700; font-size: 0.9rem; transition: all .3s; }
+  .card.done .num { background: var(--ok); color: var(--bg); }
+  .big { font-size: 1.35rem; font-weight: 650; margin: 12px 0 4px; min-height: 1.6em; }
+  .big.ok { color: var(--ok); } .big.bad { color: var(--bad); } .big.wait { color: var(--dim); }
+  ul.plain { list-style: none; padding: 0; margin: 10px 0 0; }
+  ul.plain li { display: grid; grid-template-columns: 24px 1fr; gap: 8px; padding: 7px 0; border-top: 1px solid var(--line); }
+  ul.plain li:first-child { border-top: 0; }
   .mark { font-weight: 700; } .mark.pass { color: var(--ok); } .mark.fail { color: var(--bad); } .mark.unverified { color: var(--warn); }
-  .detail { color: var(--dim); font-size: 0.86rem; word-break: break-all; }
-  button { font: inherit; background: var(--text); color: var(--bg); border: 0; border-radius: 10px; padding: 10px 16px; cursor: pointer; transition: transform .1s, opacity .2s; }
+  .detail { color: var(--dim); font-size: 0.84rem; word-break: break-all; }
+  details { margin-top: 12px; border-top: 1px solid var(--line); padding-top: 10px; }
+  summary { cursor: pointer; color: var(--dim); font-size: 0.92rem; }
+  summary:hover { color: var(--text); }
+  ul.checks { list-style: none; padding: 0; margin: 8px 0 0; }
+  ul.checks li { display: grid; grid-template-columns: 22px 1fr; gap: 10px; padding: 8px 0; border-top: 1px solid var(--line); }
+  button { font: inherit; font-weight: 600; background: var(--text); color: var(--bg); border: 0; border-radius: 10px; padding: 11px 18px; cursor: pointer; transition: transform .1s, opacity .2s; }
   button:active { transform: scale(.98); } button:disabled { opacity: .4; cursor: default; }
-  button.ghost { background: transparent; color: var(--text); border: 1px solid var(--line); }
-  input { font: inherit; background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; width: min(100%, 360px); }
-  input:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-  .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
-  .result { margin-top: 12px; font-size: 0.92rem; min-height: 1.4em; }
-  .result.ok { color: var(--ok); } .result.bad { color: var(--bad); }
-  .bar { height: 6px; background: var(--line); border-radius: 6px; overflow: hidden; margin: 12px 0 6px; }
-  .bar > i { display: block; height: 100%; width: 0; background: var(--accent); transition: width 1s linear; }
-  dl { display: grid; grid-template-columns: max-content 1fr; gap: 6px 16px; margin: 10px 0 0; }
-  dt { color: var(--dim); font-size: 0.9rem; } dd { margin: 0; word-break: break-all; }
-  ol.timeline { padding-left: 20px; margin: 0; } ol.timeline li { padding: 6px 0; color: var(--dim); } ol.timeline li b { color: var(--text); font-weight: 600; }
-  .secret { background: var(--bg); border: 1px dashed var(--line); border-radius: 8px; padding: 8px 10px; margin: 6px 0 12px; word-break: break-all; }
-  p.note { font-size: 0.9rem; border-left: 3px solid var(--warn); padding-left: 10px; color: var(--text); }
-  .result.unverified { color: var(--warn); }
-  footer { padding: 6dvh 0 8dvh; color: var(--dim); font-size: 0.9rem; border-top: 1px solid var(--line); margin-top: 6dvh; }
-  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } ul.checks li { opacity: 1; transform: none; } }
+  button.ghost { background: transparent; color: var(--text); border: 1px solid var(--line); font-weight: 500; }
+  input { font: inherit; background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; width: min(100%, 340px); }
+  input:focus-visible, button:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 12px; }
+  .result { font-size: 0.92rem; min-height: 1.4em; margin-top: 4px; }
+  .result.ok { color: var(--ok); } .result.bad { color: var(--bad); } .result.unverified { color: var(--warn); }
+  .attempt { padding: 10px 0; border-top: 1px solid var(--line); }
+  .attempt:first-of-type { border-top: 0; margin-top: 8px; }
+  ol.track { list-style: none; padding: 0; margin: 14px 0 0; }
+  ol.track li { display: grid; grid-template-columns: 26px 1fr; gap: 10px; padding: 8px 0; color: var(--dim); }
+  ol.track li .dot { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--line); margin-top: 3px; transition: all .3s; }
+  ol.track li.on { color: var(--text); } ol.track li.on .dot { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 30%, transparent); }
+  ol.track li.ok { color: var(--text); } ol.track li.ok .dot { border-color: var(--ok); background: var(--ok); }
+  ol.track li.bad .dot { border-color: var(--bad); background: var(--bad); }
+  .bar { height: 6px; background: var(--line); border-radius: 6px; overflow: hidden; margin: 8px 0 4px; }
+  .bar > i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .5s linear; }
+  dl { display: grid; grid-template-columns: max-content 1fr; gap: 6px 16px; margin: 8px 0 0; }
+  dt { color: var(--dim); font-size: 0.88rem; } dd { margin: 0; word-break: break-all; }
+  p.note { font-size: 0.88rem; border-left: 3px solid var(--warn); padding-left: 10px; color: var(--text); margin: 14px 0 0; }
+  .secret { background: var(--bg); border: 1px dashed var(--line); border-radius: 8px; padding: 8px 10px; margin: 4px 0 6px; word-break: break-all; }
+  ol.timeline { padding-left: 20px; margin: 8px 0 0; } ol.timeline li { padding: 5px 0; color: var(--dim); } ol.timeline li b { color: var(--text); font-weight: 600; }
+  footer { color: var(--dim); font-size: 0.86rem; border-top: 1px solid var(--line); padding-top: 18px; margin-top: 30px; }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 </head>
 <body>
 <main>
-  <section class="hero">
+  <header>
     <h1>Qlyphs Guardian</h1>
-    <p class="lead">Post-quantum admin control for NEAR contracts.</p>
-    <p>This demo token's admin key was retired. Minting and code upgrades now need two of three ML-DSA-87 approvals and a 60-second on-chain delay, enforced by a Guardian contract that has no keys at all. The token's current control is verified live at a finalized NEAR block; the recorded cutover, mint, upgrade and rollback transactions are linked below.</p>
-    <p>Prefer to watch first? <a href="/guardian-demo.mp4" target="_blank" rel="noopener">The 60-second walkthrough</a> (a real session on this page; the timelock wait is shown 5x).</p>
+    <p class="lead">A NEAR token whose admin key was retired. Minting and upgrades now need two of three post-quantum (ML-DSA-87) approvals and a 60-second on-chain delay. Check it yourself in three steps.</p>
+    <p>Prefer to watch first? <a href="/guardian-demo.mp4" target="_blank" rel="noopener">The 60-second walkthrough</a>.</p>
     <p id="repo" hidden></p>
-    <div class="row" style="margin-top:12px"><span id="badge" class="badge wait"><span class="dot"></span><span id="badge-text">Checking testnet…</span></span></div>
-  </section>
+    <div class="steps"><span class="pill" id="pill-1"><b>1</b>It is locked down</span><span class="pill" id="pill-2"><b>2</b>Old keys fail</span><span class="pill" id="pill-3"><b>3</b>The post-quantum way works</span></div>
+  </header>
 
-  <section id="verify">
-    <h2>Verify control</h2>
-    <p>One finalized block, every query pinned to it. A check that can't be read shows as unverified, never as a pass.</p>
-    <div class="panel">
+  <section class="card" id="verify">
+    <div class="card-head"><span class="num">1</span><h2>Is this token really locked down?</h2></div>
+    <p>We read NEAR testnet at one finalized block. You don't have to trust us.</p>
+    <div class="big wait" id="verdict-1"><span id="badge-text">Checking testnet…</span></div>
+    <ul class="plain" id="summary"></ul>
+    <details>
+      <summary>Show the 9 technical checks</summary>
       <ul class="checks" id="checks"></ul>
       <div class="result" id="statement"></div>
-      <div class="row" style="margin-top:10px"><button class="ghost" id="rerun">Run the checks again</button></div>
-    </div>
+      <div class="row"><button class="ghost" id="rerun">Run the checks again</button></div>
+    </details>
   </section>
 
-  <section id="attack">
-    <h2>Try the old keys</h2>
-    <p>Before the cutover, one owner key could mint and one deployment key could replace the token's code. Both credentials are published here. Use them.</p>
-    <div class="panel">
-      <div><b>Former owner</b> <span class="detail" id="owner-id"></span></div>
+  <section class="card" id="attack">
+    <div class="card-head"><span class="num">2</span><h2>Try to take control with the old keys</h2></div>
+    <p>Before the cutover, one owner key could mint and one deploy key could replace the token's code. We published both. Use them.</p>
+    <div class="row"><button id="try-both">Try both old keys</button></div>
+    <div class="attempt"><div>The old owner mints 1,000,000,000 GDEMO</div><div class="result" id="attack-mint-result">Not tried yet.</div></div>
+    <div class="attempt"><div>The deleted deploy key replaces the token's code</div><div class="result" id="attack-deploy-result">Not tried yet.</div></div>
+    <details>
+      <summary>Show the leaked keys and try them one by one</summary>
+      <p style="margin-top:10px"><b>Former owner</b> <span class="detail" id="owner-id"></span></p>
       <div class="secret mono" id="owner-key">loading…</div>
-      <div class="row"><button id="attack-mint">Mint 1,000,000,000 GDEMO with the owner key</button></div>
-      <div class="result" id="attack-mint-result"></div>
-    </div>
-    <div class="panel">
-      <div><b>Token deployment key</b> <span class="detail" id="token-id"></span></div>
+      <button class="ghost" id="attack-mint">Try the owner key</button>
+      <p style="margin-top:14px"><b>Token deploy key</b> <span class="detail" id="token-id"></span></p>
       <div class="secret mono" id="token-key">loading…</div>
-      <div class="row"><button id="attack-deploy">Deploy new code to the token with this key</button></div>
-      <div class="result" id="attack-deploy-result"></div>
-    </div>
+      <button class="ghost" id="attack-deploy">Try the deploy key</button>
+    </details>
   </section>
 
-  <section id="mint">
-    <h2>Request a post-quantum mint</h2>
-    <p>Ask for 100 GDEMO. Two signers approve the exact operation with ML-DSA-87, the Guardian queues it, and after the delay anyone can execute it. Here, that's you.</p>
-    <p class="note">Demo mode: this server holds two of the three signer keys so that visitors can trigger mints. In a real deployment each signer keeps its own key in its own wallet.</p>
-    <div class="panel">
-      <div class="row"><input id="receiver" placeholder="your-account.testnet" autocomplete="off" spellcheck="false"><button id="request">Request mint</button></div>
-      <div class="result" id="mint-result"></div>
-      <div id="op" hidden>
+  <section class="card" id="mint">
+    <div class="card-head"><span class="num">3</span><h2>Now do it the post-quantum way</h2></div>
+    <p>Request 100 GDEMO. You will see the two approvals and the enforced delay, then you execute it yourself.</p>
+    <div class="row"><input id="receiver" autocomplete="off" spellcheck="false" aria-label="Receiving testnet account"><button id="request">Request 100 GDEMO</button></div>
+    <div class="detail" style="margin-top:6px">Any testnet account id works. We filled one in for you.</div>
+    <div class="result" id="mint-result"></div>
+    <div id="op" hidden>
+      <ol class="track">
+        <li id="t-approved"><span class="dot"></span><div>Approved by 2 of 3 signers with ML-DSA-87<div class="detail" id="t-approved-d"></div></div></li>
+        <li id="t-delay"><span class="dot"></span><div>On-chain delay<div class="bar"><i id="op-bar"></i></div><div class="detail" id="op-timer"></div></div></li>
+        <li id="t-exec"><span class="dot"></span><div>Execute: anyone can, including you<div class="row" style="margin-top:6px"><button id="execute" disabled>Execute</button></div></div></li>
+        <li id="t-done"><span class="dot"></span><div>Settled on chain<div class="result" id="exec-result"></div></div></li>
+      </ol>
+      <details>
+        <summary>Show the signed operation</summary>
         <dl id="op-fields"></dl>
-        <div class="bar"><i id="op-bar"></i></div>
-        <div class="detail" id="op-timer"></div>
-        <div class="row" style="margin-top:12px"><button id="execute" disabled>Execute</button></div>
-        <div class="result" id="exec-result"></div>
-      </div>
+      </details>
     </div>
+    <p class="note">Demo mode: this server holds two of the three signer keys so that anyone can try it. In a real deployment each signer keeps its own key in its own wallet.</p>
   </section>
 
-  <section id="history">
-    <h2>What happened on testnet</h2>
-    <p>The full cutover, as recorded transactions you can open in the explorer.</p>
-    <div class="panel"><ol class="timeline" id="timeline"></ol></div>
+  <section class="card" id="history">
+    <div class="card-head"><span class="num">✓</span><h2>What already happened on testnet</h2></div>
+    <p>The cutover, the upgrade and the failure cases, as transactions you can open in the explorer.</p>
+    <ol class="timeline" id="timeline"></ol>
   </section>
 
   <footer>
-    Unaudited testnet prototype. The claim covers minting and upgrades of this reviewed token, after the recorded deployment and cutover. It does not make NEAR consensus, users' keys, or code a quorum approves later post-quantum. The demo server holds two of the three signer keys so that visitors can trigger mints; in a real deployment each signer holds its own key in its own wallet.
+    Unaudited testnet prototype. The claim covers minting and upgrades of this reviewed token, after the recorded deployment and cutover. It does not make NEAR consensus, users' keys, or code a quorum approves later post-quantum.
   </footer>
 </main>
 <script type="module">
@@ -122,29 +142,46 @@ const tx = (h) => `<a href="https://testnet.nearblocks.io/txns/${h}" target="_bl
 const acct = (id) => `<a href="https://testnet.nearblocks.io/address/${id}" target="_blank" rel="noopener">${id}</a>`;
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 const $ = (id) => document.getElementById(id);
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const api = async (path, body) => { const r = await fetch(path, body ? { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) } : {}); return r.json(); };
 const humanError = (f) => { const m = String(f ?? '').match(/panicked: ([^"\\]+)/); return m ? m[1] : String(f ?? 'no answer').slice(0, 160); };
 let decimals = 18;
 const units = (raw) => { const v = BigInt(raw), d = 10n ** BigInt(decimals), w = v / d, f = (v % d).toString().padStart(decimals, '0').replace(/0+$/, ''); return `${w.toLocaleString('en-US')}${f ? `.${f}` : ''} GDEMO`; };
 const show = (el, cls, html, attrs = {}) => { el.className = `result ${cls}`; el.innerHTML = html; for (const [k, v] of Object.entries(attrs)) el.dataset[k] = v; };
+const done = (n, ok) => { $(`pill-${n}`).classList.toggle('done', ok); document.querySelectorAll('.card')[n - 1].classList.toggle('done', ok); };
+$('receiver').value = `visitor-${Math.random().toString(36).slice(2, 8)}.testnet`;
 
+// Step 1: the report, summarized in plain words; the nine checks stay one click away.
+const PLAIN = [
+  ['No keys on the token', ['Target has no access keys']],
+  ['No keys on the Guardian', ['Guardian has no access keys']],
+  ['Both run the reviewed, reproducible code', ['Guardian runs the reproducible build', 'Target runs a reviewed build', 'Guardian config bytes match']],
+  ['The Guardian is the only admin, and the handover is on chain', ['Guardian state agrees', 'Target is guarded by this Guardian, no owner', 'Creation audited on chain', 'Cutover audited on chain']],
+];
 async function runReport() {
-  $('checks').innerHTML = ''; show($('statement'), '', 'Reading testnet…', { ok: 'pending' });
-  const b = $('badge'); b.className = 'badge wait'; $('badge-text').textContent = 'Checking testnet…';
+  $('checks').innerHTML = ''; $('summary').innerHTML = ''; show($('statement'), '', 'Reading testnet…', { ok: 'pending' });
+  $('verdict-1').className = 'big wait'; $('badge-text').textContent = 'Checking testnet…'; done(1, false);
   try {
     const r = await api('/api/report');
     if (r.error || !Array.isArray(r.checks)) throw new Error(r.error ?? 'no report');
-    r.checks.forEach((c, i) => {
-      const li = document.createElement('li'); li.style.animationDelay = `${i * 70}ms`; li.dataset.status = c.status;
+    const by = Object.fromEntries(r.checks.map((c) => [c.name, c.status]));
+    for (const [label, names] of PLAIN) {
+      const st = names.every((n) => by[n] === 'pass') ? 'pass' : names.some((n) => by[n] === 'fail') ? 'fail' : 'unverified';
+      const li = document.createElement('li');
+      li.innerHTML = `<span class="mark ${st}">${st === 'pass' ? '✓' : st === 'fail' ? '✕' : '?'}</span><div>${esc(label)}</div>`;
+      $('summary').appendChild(li);
+    }
+    r.checks.forEach((c) => {
+      const li = document.createElement('li'); li.dataset.status = c.status;
       li.innerHTML = `<span class="mark ${c.status}">${c.status === 'pass' ? '✓' : c.status === 'fail' ? '✕' : '?'}</span><div>${esc(c.name)}<div class="detail">${esc(c.detail ?? '')}</div></div>`;
       $('checks').appendChild(li);
     });
     show($('statement'), r.ok ? 'ok' : 'bad', `${esc(r.statement)} <a href="https://testnet.nearblocks.io/blocks/${r.block.hash}" target="_blank" rel="noopener">Block ${r.block.height}</a>`, { ok: String(r.ok) });
-    b.className = `badge ${r.ok ? 'ok' : 'bad'}`; $('badge-text').textContent = r.ok ? `Verified at block ${r.block.height}` : 'Not verified: see the checks';
+    $('verdict-1').className = `big ${r.ok ? 'ok' : 'bad'}`;
+    $('badge-text').textContent = r.ok ? `Yes. Verified on NEAR testnet at block ${r.block.height.toLocaleString('en-US')}.` : 'Not verified: open the technical checks.';
+    done(1, r.ok);
   } catch (e) {
-    show($('statement'), 'unverified', `Could not read testnet right now (${esc(e.message)}). Try again in a moment.`, { ok: 'false' });
-    b.className = 'badge bad'; $('badge-text').textContent = 'Could not read testnet';
+    show($('statement'), 'unverified', `Could not read testnet right now (${esc(e.message)}).`, { ok: 'false' });
+    $('verdict-1').className = 'big bad'; $('badge-text').textContent = 'Could not read testnet right now. Try again in a moment.';
   }
 }
 
@@ -156,28 +193,34 @@ async function loadKeys() {
   } catch { $('owner-key').textContent = $('token-key').textContent = 'could not load'; }
 }
 
-// Green only for the specific expected defense; anything else is shown as unverified, never as a pass.
-async function attack(kind, out, btn) {
-  btn.disabled = true; show($(out), '', 'Signing with the old key and sending to testnet…', { verdict: 'pending' });
+// Step 2: green only for the specific expected refusal; anything else is "not verified", never a pass.
+const EXPLAIN = { 'owner-mint': 'Blocked by the token: only the Guardian can mint now.', 'token-deploy': 'Rejected by NEAR: that key no longer exists on the token account.' };
+async function attack(kind, out) {
+  show($(out), '', 'Signing with the old key and sending to testnet…', { verdict: 'pending' });
   try {
     const r = await api(`/api/attack/${kind}`, {});
-    if (r.verdict === 'blocked_as_expected') show($(out), 'ok', `Refused: ${esc(r.reason)}${r.tx ? ` · ${tx(r.tx)}` : ''}`, { verdict: r.verdict });
-    else if (r.verdict === 'unexpected_success') show($(out), 'bad', `It went through. That should never happen${r.tx ? `: ${tx(r.tx)}` : ''}`, { verdict: r.verdict });
-      else show($(out), 'unverified', `Not verified right now: ${esc(humanError(r.reason ?? r.failure ?? r.error))}. The recorded refusal is listed under "What happened on testnet".`, { verdict: 'unverified' });
-  } catch (e) {
-    show($(out), 'unverified', `Not verified right now: ${esc(e.message)}.`, { verdict: 'unverified' });
-  } finally { btn.disabled = false; }
+    if (r.verdict === 'blocked_as_expected') show($(out), 'ok', `✓ ${EXPLAIN[kind]}${r.tx ? ` ${tx(r.tx)}` : ''}`, { verdict: r.verdict });
+    else if (r.verdict === 'unexpected_success') show($(out), 'bad', `✕ It went through. That should never happen.${r.tx ? ` ${tx(r.tx)}` : ''}`, { verdict: r.verdict });
+    else show($(out), 'unverified', `Not verified right now (${esc(humanError(r.reason ?? r.failure ?? r.error))}). The recorded refusal is listed at the bottom.`, { verdict: 'unverified' });
+  } catch (e) { show($(out), 'unverified', `Not verified right now (${esc(e.message)}).`, { verdict: 'unverified' }); }
+  done(2, $('attack-mint-result').dataset.verdict === 'blocked_as_expected' && $('attack-deploy-result').dataset.verdict === 'blocked_as_expected');
 }
+const lockAttacks = (on) => ['try-both', 'attack-mint', 'attack-deploy'].forEach((id) => { $(id).disabled = on; });
+$('try-both').onclick = async () => { lockAttacks(true); try { await Promise.all([attack('owner-mint', 'attack-mint-result'), attack('token-deploy', 'attack-deploy-result')]); } finally { lockAttacks(false); } };
+$('attack-mint').onclick = async () => { lockAttacks(true); try { await attack('owner-mint', 'attack-mint-result'); } finally { lockAttacks(false); } };
+$('attack-deploy').onclick = async () => { lockAttacks(true); try { await attack('token-deploy', 'attack-deploy-result'); } finally { lockAttacks(false); } };
 
-// The operation this page follows: set from this visitor's own mint request (or, on arrival, the operation that is
-// already in the timelock), then fixed until it settles. Results carry its proposal hash.
+// Step 3: the operation this page follows, set from this visitor's own request (or, on arrival, the one already
+// in the timelock), then fixed until it settles. Results carry its proposal hash.
 let current = null, inflight = false, offset = 0n, ticking = null, polling = null, writableDemo = true;
+const stage = (approved, delay, exec, end) => { for (const [id, s] of [['t-approved', approved], ['t-delay', delay], ['t-exec', exec], ['t-done', end]]) $(id).className = s || ''; };
 function setResult(cls, html, status) { show($('exec-result'), cls, html, { status, proposalHash: current?.proposal_hash ?? '' }); }
 function render(view) {
   $('op').hidden = false;
   if (view.op) {
-    const a = view.op;
-    $('op-fields').innerHTML = `<dt>Action</dt><dd>${esc(a.action)} ${a.amount ? units(a.amount) + ' to ' + acct(a.receiver_id) : ''}</dd><dt>Nonce</dt><dd class="mono">${esc(a.nonce)}</dd><dt>Approved by</dt><dd>signers ${[0, 1, 2].filter((i) => a.signers & (1 << i)).join(' and ')} (ML-DSA-87)</dd><dt>Proposal hash</dt><dd class="mono">${esc(a.proposal_hash)}</dd>`;
+    const a = view.op, who = [0, 1, 2].filter((i) => a.signers & (1 << i)).join(' and ');
+    $('t-approved-d').textContent = `signers ${who} · ${a.amount ? `${units(a.amount)} to ${a.receiver_id}` : a.action}`;
+    $('op-fields').innerHTML = `<dt>Action</dt><dd>${esc(a.action)} ${a.amount ? units(a.amount) + ' to ' + acct(a.receiver_id) : ''}</dd><dt>Nonce</dt><dd class="mono">${esc(a.nonce)}</dd><dt>Signers</dt><dd>${who}</dd><dt>Proposal hash</dt><dd class="mono">${esc(a.proposal_hash)}</dd>`;
   }
   clearInterval(ticking);
   if (view.status === 'queued') {
@@ -185,8 +228,9 @@ function render(view) {
     const tick = () => {
       const now = BigInt(Date.now()) * 1000000n - offset, waiting = now < eta, left = waiting ? (eta - now + 999999999n) / 1000000000n : 0n;
       $('op-bar').style.width = `${Math.min(100, Number(((now - queued) * 100n) / (eta - queued)))}%`;
-      $('op-timer').textContent = !writableDemo ? 'Read-only copy: executing is not available here.' : now >= expires ? 'Dispatch window closed: executing now closes it as expired.' : waiting ? `Timelock: ${left} s left. Nobody can execute it before.` : 'Timelock passed. Anyone can execute it now.';
+      $('op-timer').textContent = !writableDemo ? 'Read-only copy: executing is not available here.' : now >= expires ? 'The window closed: executing now closes it as expired.' : waiting ? `${left} s left. Nobody can execute it before, not even us.` : 'Done waiting. Anyone can execute it now.';
       $('execute').disabled = waiting || inflight || !writableDemo;
+      stage('ok', waiting ? 'on' : 'ok', waiting ? '' : 'on', '');
     };
     tick(); ticking = setInterval(tick, 500);
     if ($('exec-result').dataset.status !== 'executing') $('exec-result').dataset.status = 'queued';
@@ -194,12 +238,14 @@ function render(view) {
     return;
   }
   $('execute').disabled = true; $('op-bar').style.width = '100%';
-  if (view.status === 'executing') { $('op-timer').textContent = 'Executing: waiting for the token and the Guardian to settle.'; $('exec-result').dataset.status = 'executing'; return; }
+  if (view.status === 'executing') { stage('ok', 'ok', 'ok', 'on'); $('op-timer').textContent = ''; $('exec-result').dataset.status = 'executing'; return; }
   $('op-timer').textContent = '';
   if (view.mode === 'terminal') {
     const ok = view.status === 'applied';
-    setResult(ok ? 'ok' : 'bad', `Guardian status: ${esc(view.status)}${ok ? ' · the tokens are minted' : ''}${current.execute_tx ? ` · ${tx(current.execute_tx)}` : ''}`, view.status);
-  } else setResult('unverified', 'The result of this operation is no longer readable from the Guardian (a later operation replaced its record).', 'unavailable');
+    stage('ok', 'ok', 'ok', ok ? 'ok' : 'bad');
+    setResult(ok ? 'ok' : 'bad', ok ? `✓ Applied. The tokens are minted.${current.execute_tx ? ` ${tx(current.execute_tx)}` : ''}` : `Guardian status: ${esc(view.status)}`, view.status);
+    done(3, ok);
+  } else { stage('ok', '', '', 'bad'); setResult('unverified', 'The result of this operation is no longer readable from the Guardian (a later operation replaced its record).', 'unavailable'); }
   clearInterval(polling); polling = null;
 }
 async function refresh() {
@@ -218,10 +264,10 @@ async function refresh() {
 const follow = () => { if (!polling) polling = setInterval(refresh, 4000); };
 
 $('request').onclick = async () => {
-  $('request').disabled = true;
+  $('request').disabled = true; show($('mint-result'), '', 'Two signers are approving the operation…');
   try {
     const r = await api('/api/mint', { receiver_id: $('receiver').value });
-    show($('mint-result'), r.ok ? 'ok' : 'bad', r.ok ? `Queued by the Guardian · ${tx(r.tx)}` : esc(r.error ?? humanError(r.failure)));
+    show($('mint-result'), r.ok ? 'ok' : 'bad', r.ok ? `Queued by the Guardian. ${tx(r.tx)}` : esc(r.error ?? humanError(r.failure)));
     if (r.ok) { current = { proposal_hash: r.proposal_hash }; show($('exec-result'), '', '', { status: 'queued', proposalHash: r.proposal_hash }); }
   } catch (e) { show($('mint-result'), 'unverified', `Could not reach the demo: ${esc(e.message)}`); }
   finally { $('request').disabled = !writableDemo; await refresh(); follow(); }
@@ -237,8 +283,6 @@ $('execute').onclick = async () => {
   } catch (e) { setResult('unverified', `Could not reach the demo: ${esc(e.message)}`, 'unknown'); }
   finally { inflight = false; await refresh(); follow(); }
 };
-$('attack-mint').onclick = () => attack('owner-mint', 'attack-mint-result', $('attack-mint'));
-$('attack-deploy').onclick = () => attack('token-deploy', 'attack-deploy-result', $('attack-deploy'));
 $('rerun').onclick = runReport;
 
 (async () => {
@@ -248,15 +292,14 @@ $('rerun').onclick = runReport;
   if (!s) return;
   const c = s.ceremony, op = c.operations;
   $('timeline').innerHTML = [
-    `<li><b>Release parent created</b> ${acct(s.accounts.parent)} · ${tx(c.parent_tx)}</li>`,
-    `<li><b>Legacy token</b> ${acct(s.accounts.token)}: its own deployment key, V1 code, owner ${acct(s.accounts.owner)} mints two holders · ${tx(c.legacy.token_tx)}</li>`,
-    `<li><b>Guardian created</b> in one transaction: create, fund, deploy, init. Verified: exactly these four actions and the expected config · ${tx(c.guardian_creation.tx)}</li>`,
+    `<li><b>Legacy token</b> ${acct(s.accounts.token)} with its own deploy key and an owner, ${acct(s.accounts.owner)} · ${tx(c.legacy.token_tx)}</li>`,
+    `<li><b>Guardian created</b> in one checked transaction: create, fund, deploy, init · ${tx(c.guardian_creation.tx)}</li>`,
     `<li><b>Handover</b>: the owner gives mint and upgrade to the Guardian, for good · ${tx(c.cutover.handover_tx)}</li>`,
-    `<li><b>Token key deleted</b> after the handover executed: the token account has no keys left · ${tx(c.cutover.delete_keys_tx)}</li>`,
-    `<li><b>PQ mint</b> approved by signers 0 and 1, executed after the delay · ${tx(op.mint.execute_tx)}</li>`,
-    `<li><b>PQ upgrade V1 → V2</b> approved by signers 1 and 2. Balances, Guardian and replay state kept · ${tx(op.upgrade.execute_tx)}</li>`,
-    c.attacks ? `<li><b>Retired keys refused</b> after the cutover: the former owner's mint failed with "only the Guardian can do this" · ${tx(c.attacks.former_owner_mint_tx)}; the deleted key's deployment was rejected by the network with InvalidAccessKeyError: AccessKeyNotFound (a rejected transaction has no receipt)</li>` : '',
-    `<li><b>131,072-byte upgrades</b> on a second token and Guardian: a migration that fails is rolled back and settled failed · ${tx(op.max_failing.execute_tx)}; the same size applies · ${tx(op.max_upgrade.execute_tx)}</li>`,
+    `<li><b>Token key deleted</b> after the handover: no keys left on the token · ${tx(c.cutover.delete_keys_tx)}</li>`,
+    c.attacks ? `<li><b>Old keys refused</b>: the owner's mint failed with "only the Guardian can do this" · ${tx(c.attacks.former_owner_mint_tx)}; the deleted key was rejected by NEAR (AccessKeyNotFound, no receipt)</li>` : '',
+    `<li><b>Post-quantum mint</b> approved by signers 0 and 1, executed after the delay · ${tx(op.mint.execute_tx)}</li>`,
+    `<li><b>Post-quantum upgrade V1 → V2</b> approved by signers 1 and 2; balances and admin kept · ${tx(op.upgrade.execute_tx)}</li>`,
+    `<li><b>131,072-byte upgrades</b> on a second token: a failing migration rolled back · ${tx(op.max_failing.execute_tx)}; the same size applied · ${tx(op.max_upgrade.execute_tx)}</li>`,
   ].join('');
 })();
 </script>

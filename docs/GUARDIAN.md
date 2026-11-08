@@ -84,10 +84,13 @@ State: `v` version (u32, its presence is the initialization sentinel and it is n
   `DeployContract(code)` then `FunctionCall migrate(op_id ‖ from ‖ to)`. The receipt's actions are atomic.
 - `migrate(op_id ‖ from ‖ to)`, run by the new code, callable only by the token itself: requires the
   stored version = `from`, `to` = the compiled version, `op_id ≥ l`, guarded mode with `g` present and `o`
-  absent. Sets the version and `l = op_id + 1`. Balances, supply, `g` and the sentinel are untouched.
-- `ft_transfer({"receiver_id","amount","memo"?})` with exactly 1 yoctoNEAR: the receiver must already
-  hold a balance record (records are created only by `mint`), so transfers cannot grow the target's
-  storage. Self-transfer is refused.
+  absent. Sets the version and `l = op_id + 1` (refusing `op_id = 2^64 - 1`). Balances, supply and `g` are
+  untouched; the initialization sentinel remains present.
+- `ft_transfer({"receiver_id","amount","memo"?})` with exactly 1 yoctoNEAR: the sender is the immediate
+  caller (`predecessor_account_id`, never the transaction signer or a supplied field); the amount is
+  positive; the sender's balance covers it; debit and credit use checked arithmetic; the receiver must
+  already hold a balance record (records are created only by `mint` and kept at zero), so transfers cannot
+  grow the target's storage. Self-transfer is refused. Amounts and `op_id` are decimal strings in JSON.
 
 The operation id is the Guardian nonce. Ids may have gaps (canceled, expired and failed operations consume
 nonces); they never repeat because the Guardian is fixed and its nonce only increases. This high-water
@@ -108,7 +111,7 @@ then 64 zero-padded bytes, checked against the NEAR grammar.
 | 146 | 32 | `config_hash` |
 | 178 | 8 | operation nonce |
 | 186 | 1 | action: 1 mint, 2 upgrade, 3 cancel |
-| 187 | 8 | queue deadline, block timestamp in nanoseconds |
+| 187 | 8 | submission deadline (queue deadline for a proposal, acceptance deadline for a cancel), block timestamp in nanoseconds |
 | 195 | 125 | action payload, zero-padded |
 
 Payloads:
@@ -151,7 +154,8 @@ deposit and fixed gas (mint: `TARGET_MINT_GAS`, upgrade: `TARGET_UPGRADE_GAS`) a
 whole and the operation stays `Queued`.
 
 `on_result`: predecessor = Guardian; exactly one promise result; input is exactly 8 bytes equal to the
-active nonce; state is `Executing`. It reads no return bytes. Success: `Applied`; failure: `Failed`. For
+active nonce; state is `Executing`. It inspects only the promise status and never copies return data;
+an unexpected status traps and leaves the operation unresolved. Success: `Applied`; failure: `Failed`. For
 the reviewed target, failure means nothing applied: `mint` changes state in one receipt and traps on any
 error, and `upgrade` returns the atomic deploy-and-migrate batch. A failed operation is never retried
 under its nonce; a new mint signed under a new nonce is a new authorization.
@@ -182,9 +186,11 @@ No transition decreases or reuses the nonce.
 ## Storage and funding
 
 Queued upgrade code is stored under key `c` (at most 131,072 bytes, about 1.32 NEAR of storage at
-10^19 yoctoNEAR per byte). The Guardian is funded with 3 NEAR at creation; the SDK checks the available
-balance before proposing an upgrade. Anyone can top up a keyless account with a plain transfer. The
-target's storage grows only by `mint` to a new holder (an admin action).
+10^19 yoctoNEAR per byte), plus record overhead. The testnet Guardian is funded with 2.5 NEAR, measured
+against a maximum-size queued code on testnet. Anyone can top up a keyless account with a plain transfer.
+Transfers cannot grow the target's ledger; its storage grows with `mint` to a new holder, a larger
+deployed build, or the first write of `l`, all admin actions. Terminal cleanup treats an absent `c` (a mint)
+as normal.
 
 ## Views
 
@@ -192,8 +198,10 @@ Guardian `state()`: version, network, target, config hash, delay, window, SHA-25
 next nonce, and the active operation: status, nonce, proposal hash, the 320-byte message in hex, decoded
 fields (receiver and amount, or code hash, length and versions), `queued_at`, `eta`, `expires` (ns, as
 decimal strings), and the signer bitmap; plus the last terminal record (nonce, proposal hash, status).
-Queued code is read with RPC `view_state`, prefix `c`, at a pinned block; the SDK checks its length and
-hash against the message.
+Queued code is read with RPC `view_state` paginated (`block_id` = a pinned finalized block,
+`prefix_base64` = `Yw==`, `limit` = 1, available from nearcore 2.13): an unpaginated request fails once the
+account state exceeds 50,000 bytes. The SDK requires the returned key to be exactly `c` and checks the
+length and hash against the message. Config bytes (`C`) are read the same way.
 
 The wallet renders an operation from the 320 bytes it signs, never from separate metadata.
 

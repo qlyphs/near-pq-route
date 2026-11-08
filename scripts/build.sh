@@ -19,6 +19,11 @@ for chain in sandbox testnet mainnet; do
   "$clang" "${cflags[@]}" -std=c23 --embed-dir=build -DQP_CHAIN="\"$chain\"" -DVAULT_WASM="\"vault-$chain.wasm\"" \
     core/freestanding.c contract/factory.c "${ldflags[@]}" -o "build/factory-$chain.wasm"
 done
+# Guardian reference target, V1 and V2, plus a V2 whose migrate always fails (rollback test).
+for v in 1 2; do
+  "$clang" "${cflags[@]}" -DTOKEN_VERSION=$v core/freestanding.c contract/token.c "${ldflags[@]}" -o "build/token-v$v.wasm"
+done
+"$clang" "${cflags[@]}" -DTOKEN_VERSION=2 -DFAIL_MIGRATE core/freestanding.c contract/token.c "${ldflags[@]}" -o build/token-v2-failing.wasm
 # Test-only NEP-141 stand-in for the sandbox suite.
 "$clang" "${cflags[@]}" tests/mock_ft.c "${ldflags[@]}" -o build/mock_ft.wasm
 shasum -a 256 build/*.wasm

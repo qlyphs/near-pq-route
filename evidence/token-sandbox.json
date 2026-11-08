@@ -1,0 +1,157 @@
+{
+  "suite": "token.sandbox",
+  "token_v1_sha256": "8e3bf033179fd721488ae1dc0d149138d7fd9772e1b0e85582877754168beb14",
+  "token_v2_sha256": "d33281e72790769cffbd97aad2ae857f401b7e7058dc3e3ff40e3f2982e6be33",
+  "results": [
+    {
+      "name": "new only by the token account",
+      "ok": true,
+      "detail": "only the token account"
+    },
+    {
+      "name": "new only once",
+      "ok": true,
+      "detail": "already initialized"
+    },
+    {
+      "name": "starts in legacy mode, version 1",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "legacy owner mints",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "stranger cannot mint",
+      "ok": true,
+      "detail": "only the owner"
+    },
+    {
+      "name": "legacy mint refuses op_id",
+      "ok": true,
+      "detail": "op_id is for Guardian calls"
+    },
+    {
+      "name": "upgrade refused before handover",
+      "ok": true,
+      "detail": "upgrades go through the Guardian"
+    },
+    {
+      "name": "duplicate JSON field refused",
+      "ok": true,
+      "detail": "duplicate JSON field"
+    },
+    {
+      "name": "leading zero amount refused",
+      "ok": true,
+      "detail": "bad number"
+    },
+    {
+      "name": "amount above u128 refused",
+      "ok": true,
+      "detail": "amount overflow"
+    },
+    {
+      "name": "stranger cannot hand over",
+      "ok": true,
+      "detail": "only the owner"
+    },
+    {
+      "name": "handover sets the Guardian and removes the owner",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "handover only once",
+      "ok": true,
+      "detail": "already guarded"
+    },
+    {
+      "name": "former owner cannot mint",
+      "ok": true,
+      "detail": "only the Guardian"
+    },
+    {
+      "name": "Guardian mint needs op_id",
+      "ok": true,
+      "detail": "missing number"
+    },
+    {
+      "name": "replayed op id refused",
+      "ok": true,
+      "detail": "operation already applied"
+    },
+    {
+      "name": "Guardian mint applied once",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "stranger cannot upgrade",
+      "ok": true,
+      "detail": "only the Guardian"
+    },
+    {
+      "name": "upgrade with a spent op id",
+      "ok": true,
+      "detail": "operation already applied"
+    },
+    {
+      "name": "upgrade from the wrong version",
+      "ok": true,
+      "detail": "version mismatch"
+    },
+    {
+      "name": "migrate is private",
+      "ok": true,
+      "detail": "private"
+    },
+    {
+      "name": "failing migration rolls the whole batch back",
+      "ok": true,
+      "detail": "code unchanged"
+    },
+    {
+      "name": "Guardian upgrade V1 to V2",
+      "ok": true,
+      "detail": "5.095867290523 Tgas"
+    },
+    {
+      "name": "upgraded code is the V2 build",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "balances and supply preserved across the upgrade",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "V2 metadata live",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "replayed upgrade refused after V2",
+      "ok": true,
+      "detail": "operation already applied"
+    },
+    {
+      "name": "ft_transfer needs 1 yocto",
+      "ok": true,
+      "detail": "exactly 1 yoctoNEAR"
+    },
+    {
+      "name": "ft_transfer over balance",
+      "ok": true,
+      "detail": "insufficient balance"
+    },
+    {
+      "name": "ft_transfer moves balances",
+      "ok": true,
+      "detail": ""
+    }
+  ]
+}

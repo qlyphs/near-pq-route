@@ -19,6 +19,11 @@
   },
   "private": true,
   "dependencies": {
+    "@fastnear/api": "^2.5.0",
+    "@fastnear/ml-dsa-65": "^2.5.0",
+    "@fastnear/utils": "^2.5.0",
+    "@noble/ciphers": "^2.4.0",
+    "@noble/hashes": "^2.4.0",
     "@noble/post-quantum": "0.7.1",
     "near-api-js": "5.1.1"
   }

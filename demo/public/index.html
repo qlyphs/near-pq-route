@@ -27,20 +27,12 @@
   .tag { position: fixed; left: 0; top: 0; padding: 5px 9px; border-radius: 8px; background: rgba(11,11,10,.7); border: 1px solid #262522; font: 500 .74rem/1 var(--mono); color: var(--fg); white-space: nowrap; pointer-events: none; transition: opacity .6s cubic-bezier(.2,.8,.2,1); will-change: transform; }
   .tags.hide .tag:not(.keep) { opacity: 0; }
 
-  .story { position: fixed; left: 26px; right: 26px; bottom: 30px; max-width: 520px; display: grid; gap: 14px; pointer-events: none; }
-  .cap { font: 600 .74rem/1 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--soft); min-height: 1em; }
-  h1 { margin: 0; font: 650 clamp(1.6rem, 3vw, 2.5rem)/1.02 var(--sans); letter-spacing: -0.04em; text-wrap: balance; text-shadow: 0 2px 24px #0B0B0A; }
-  h1 .w { display: inline-block; opacity: 0; transform: translateY(.3em); filter: blur(6px); transition: opacity .5s cubic-bezier(.2,.8,.2,1), transform .6s cubic-bezier(.2,.8,.2,1), filter .5s; }
-  h1.in .w { opacity: 1; transform: none; filter: none; }
-  .sub { margin: 0 0 6px; color: #B4B0A8; font-weight: 500; font-size: 1rem; max-width: 46ch; text-shadow: 0 1px 18px #0B0B0A; transition: opacity .4s; }
-  .sub.out { opacity: 0; }
-  .who { position: fixed; right: 26px; bottom: 30px; max-width: 300px; text-align: right; font: 500 .72rem/1.45 var(--mono); color: var(--soft); }
-  .who a { text-decoration: none; border-bottom: 1px solid #3a3936; }
-  @media (max-width: 900px) { .who { display: none; } }
+  .bottom { position: fixed; left: 0; right: 0; bottom: 30px; display: grid; justify-items: center; gap: 18px; pointer-events: none; }
+  .cap { font: 600 .78rem/1 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--soft); min-height: 1em; }
   .cap .w { display: inline-block; opacity: 0; transform: translateY(6px); filter: blur(4px); transition: opacity .5s cubic-bezier(.2,.8,.2,1), transform .6s cubic-bezier(.2,.8,.2,1), filter .5s; }
   .cap.in .w { opacity: 1; transform: none; filter: none; }
   .cap.ok { color: var(--ok); }
-  .act { pointer-events: auto; justify-self: start; font: 600 1rem/1 var(--sans); border: 0; border-radius: 999px; padding: 15px 26px; cursor: pointer; background: var(--fg); color: #111; display: inline-flex; align-items: center; gap: 12px; text-decoration: none; transition: transform .35s cubic-bezier(.3,1.6,.5,1), background .2s, opacity .25s; }
+  .act { pointer-events: auto; font: 600 1rem/1 var(--sans); border: 0; border-radius: 999px; padding: 16px 28px; cursor: pointer; background: var(--fg); color: #111; display: inline-flex; align-items: center; gap: 12px; text-decoration: none; transition: transform .35s cubic-bezier(.3,1.6,.5,1), background .2s, opacity .25s; }
   .act:hover { background: #fff; } .act:active { transform: scale(.94); }
   .act[disabled] { opacity: .35; cursor: default; }
   .act.q { background: var(--q); color: #1d0c04; }
@@ -53,13 +45,10 @@
 <div class="tags" id="tags" aria-hidden="true"></div>
 <a class="brand" href="/" aria-label="Qlyphs Guardian"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M18.7 11a7.7 7.7 0 1 0-7.7 7.7" stroke="#F27644" stroke-width="2.6" stroke-linecap="round"/><rect x="14.6" y="14.6" width="6.6" height="6.6" rx="1.5" fill="#F27644"/></svg>Qlyphs<small>Guardian</small></a>
 <a class="live" id="live" href="/demo"><i></i><span id="live-text">NEAR testnet</span></a>
-<section class="story" aria-live="polite">
-  <div class="cap" id="cap"></div>
-  <h1 id="title"></h1>
-  <p class="sub" id="sub"></p>
+<div class="bottom">
+  <div class="cap" id="cap" aria-live="polite"></div>
   <button class="act" id="act" type="button"><span id="act-text">Continue</span><kbd>↵</kbd></button>
-</section>
-<p class="who">Qlyphs builds post-quantum crypto: an open-source ML-DSA-87 wallet, live on Quantus. Guardian brings the same signatures to NEAR. <a href="https://qlyphs.com" target="_blank" rel="noopener">qlyphs.com</a></p>
+</div>
 
 <script type="module">
 import * as THREE from 'three';
@@ -123,7 +112,7 @@ function resize() {
   renderer.setSize(W, H, false); rt.setSize(Math.ceil(W / cw) * 2, Math.ceil(H / ch) * 2);
   ascii.uniforms.res.value.set(W, H); ascii.uniforms.cell.value.set(cw, ch);
   ascii.uniforms.tGlyph.value?.dispose(); ascii.uniforms.tGlyph.value = glyphAtlas(cw, ch);
-  camera.aspect = W / H; if (W > 900) camera.setViewOffset(W, H, -W * 0.12, H * 0.02, W, H); else camera.setViewOffset(W, H, 0, H * 0.2, W, H); camera.updateProjectionMatrix();
+  camera.aspect = W / H; camera.setViewOffset(W, H, 0, H * 0.1, W, H); camera.updateProjectionMatrix();
 }
 addEventListener('resize', resize); resize(); document.fonts?.ready.then(resize);
 
@@ -183,7 +172,7 @@ function makeLattice(parent) {
         n.flash = Math.max(0, n.flash - dt * 1.8);
         tmp.position.copy(n.pos); tmp.rotation.set(0, 0, 0); tmp.scale.setScalar(Math.max(0.0001, Math.min(1, n.t * 2))); tmp.updateMatrix(); nm.setMatrixAt(i, tmp.matrix);
         const band = Math.exp(-((n.target.y - L.sweep) ** 2) / 0.35);
-        nm.setColorAt(i, col.copy(C.dim).lerp(C.white, 0.2 + band * 0.8).lerp(C.warm, band * 0.5).lerp(C.red, n.flash));
+        nm.setColorAt(i, col.copy(C.dim).lerp(C.white, 0.35 + band * 0.65).lerp(C.warm, band * 0.5).lerp(C.red, n.flash));
       });
       latticeEdges.forEach(([i, j], k) => {
         const A = nodes[i], B = nodes[j], s = Math.min(A.t, B.t);
@@ -191,7 +180,7 @@ function makeLattice(parent) {
         tmp.position.addVectors(A.pos, B.pos).multiplyScalar(0.5); tmp.quaternion.setFromUnitVectors(up, v1.normalize());
         tmp.scale.set(Math.max(0.0001, s), s > 0.98 ? len : 0.0001, Math.max(0.0001, s)); tmp.updateMatrix(); em.setMatrixAt(k, tmp.matrix); tmp.quaternion.identity();
         const band = Math.exp(-((((A.target.y + B.target.y) / 2) - L.sweep) ** 2) / 0.35);
-        em.setColorAt(k, col.copy(C.dim).lerp(C.white, 0.02 + band * 0.9).lerp(C.warm, band * 0.5).lerp(C.red, Math.max(A.flash, B.flash)));
+        em.setColorAt(k, col.copy(C.dim).lerp(C.white, 0.15 + band * 0.75).lerp(C.warm, band * 0.5).lerp(C.red, Math.max(A.flash, B.flash)));
       });
       nm.instanceMatrix.needsUpdate = em.instanceMatrix.needsUpdate = nm.instanceColor.needsUpdate = em.instanceColor.needsUpdate = true;
     },
@@ -229,7 +218,7 @@ function fire(p, n) {
   }
 }
 // The quantum wave: a red ring that sweeps the whole ring of protocols.
-const wave = new THREE.Mesh(new THREE.TorusGeometry(1, 0.035, 8, 128), new THREE.MeshStandardMaterial({ color: C.red, emissive: C.red, emissiveIntensity: 0.8 }));
+const wave = new THREE.Mesh(new THREE.TorusGeometry(1, 0.06, 8, 96), new THREE.MeshStandardMaterial({ color: C.red, emissive: C.red, emissiveIntensity: 0.8 }));
 wave.rotation.x = Math.PI / 2; wave.visible = false; scene.add(wave);
 
 // ---------- Camera and per-frame update ----------
@@ -302,36 +291,32 @@ requestAnimationFrame(frame);
 const hero = P[0];
 const sweepDelay = (p, ms) => new Promise((r) => { const t0 = performance.now(); const step = () => { const k = (performance.now() - t0) / (reduce ? 1 : ms); p.lattice.sweep = -3 + k * 6.4; if (k < 1) requestAnimationFrame(step); else { p.lattice.sweep = -10; r(); } }; step(); });
 const beats = [
-  { cap: 'NEAR mainnet today', title: 'Who can upgrade the biggest NEAR protocols?', sub: 'Follow the admin path of each one and it ends at a few classical ed25519 keys: a council of five, sometimes a single key.', run: async () => {} },
-  { cap: 'a quantum computer', title: 'A quantum computer recovers those keys.', sub: 'From public data alone. With enough of them, an attacker upgrades the contract and takes what it holds.', run: async () => { S.wave = 0.5; await wait(2400); } },
-  { cap: 'Rhea Finance', title: 'Five council keys. All classical.', sub: 'Break a majority and you own the contract. The same holds for every protocol on the ring.', run: async () => { S.sel = hero; S.focusT.copy(hero.g.position); S.distT = 12; S.elT = 0.22; tags.classList.add('hide'); hero.tag.classList.add('keep'); await wait(1600); } },
-  { cap: 'Guardian', ok: true, title: 'An admin with zero keys.', sub: 'Guardian is an immutable contract. It can only mint or upgrade this protocol, and only with 2 of 3 ML-DSA-87 approvals, a lattice-based signature.', run: async () => { hero.keyN = 0; hero.colT.copy(C.white); S.distT = 19; S.elT = 0.36; await wait(300); hero.lattice.Lt = 1.25; await wait(1200); S.pillarsT = 1.4; await wait(900); } },
-  { cap: '2 of 3 · public delay', ok: true, title: 'Two signers approve. Then everyone waits.', sub: 'The exact operation sits on chain where anyone can read it. The signers can still cancel. Nothing runs early.', run: async () => { for (const i of [0, 1]) { pillars[i].userData.sign = 1; await wait(520); } await sweepDelay(hero, 2600); } },
-  { cap: 'executed', ok: true, title: 'Then anyone executes it.', sub: 'Same contract, same balances, same users. Only the hands on the controls changed.', run: async () => { hero.slabT = 0; await wait(900); pillars.forEach((p) => (p.userData.sign = 0)); } },
-  { cap: 'post-quantum', ok: true, title: 'Nothing left to break.', sub: 'No classical key remains on the admin path. ML-DSA-87 is the highest level of NIST\'s post-quantum signature standard.', run: async () => { S.distT = 18; fire(hero, 5); await wait(2800); } },
-  { cap: 'every protocol', ok: true, title: 'Any protocol can make this move.', sub: 'Add mint and upgrade methods that accept only Guardian, then vote the handover. The contract, its state and its users stay where they are.', run: async () => {
+  { cap: 'NEAR today · upgrade keys', run: async () => {} },
+  { cap: 'a quantum computer', run: async () => { S.wave = 0.5; await wait(2400); } },
+  { cap: 'Rhea Finance · taken', run: async () => { S.sel = hero; S.focusT.copy(hero.g.position); S.distT = 12; S.elT = 0.22; tags.classList.add('hide'); hero.tag.classList.add('keep'); await wait(1600); } },
+  { cap: 'Guardian · zero keys', ok: true, run: async () => { hero.keyN = 0; hero.colT.copy(C.white); S.distT = 19; S.elT = 0.36; await wait(300); hero.lattice.Lt = 1.25; await wait(1200); S.pillarsT = 1.4; await wait(900); } },
+  { cap: '2 of 3 ML-DSA-87 · then a public delay', ok: true, run: async () => { for (const i of [0, 1]) { pillars[i].userData.sign = 1; await wait(520); } await sweepDelay(hero, 2600); } },
+  { cap: 'executed', ok: true, run: async () => { hero.slabT = 0; await wait(900); pillars.forEach((p) => (p.userData.sign = 0)); } },
+  { cap: 'nothing left to break', ok: true, run: async () => { S.distT = 18; fire(hero, 5); await wait(2800); } },
+  { cap: 'every protocol', ok: true, run: async () => {
       S.sel = null; S.focusT.set(0, 0, 0); S.distT = 48; S.elT = 0.8; S.pillarsT = 0; tags.classList.remove('hide');
       await wait(900);
       for (const p of P) { if (p === hero) continue; p.keyN = 0; p.colT.copy(C.white); p.lattice.rate = 1.3; p.lattice.Lt = 1.25; await wait(240); }
       await wait(1200);
   } },
-  { cap: 'live on NEAR testnet', ok: true, final: true, title: 'Live on NEAR testnet.', sub: 'Guardian runs on a reference token today, and we published its retired keys: try them, the chain refuses. No protocol shown here uses Guardian yet; that takes its own governance.', run: async () => {} },
+  { cap: 'live on NEAR testnet', ok: true, final: true, run: async () => {} },
 ];
 let at = -1, busy = false;
-function words(el, text) {
-  el.classList.remove('in'); el.replaceChildren();
-  text.split(' ').forEach((w, i) => { const s = document.createElement('span'); s.className = 'w'; s.textContent = w; s.style.transitionDelay = `${i * 40}ms`; el.append(s, ' '); });
-  requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('in')));
-}
-function caption(b) {
-  const c = $('cap'); c.classList.toggle('ok', !!b.ok); words(c, b.cap); words($('title'), b.title);
-  const sub = $('sub'); sub.classList.add('out'); setTimeout(() => { sub.textContent = b.sub; sub.classList.remove('out'); }, reduce ? 0 : 350);
+function caption(text, ok) {
+  const c = $('cap'); c.classList.remove('in'); c.classList.toggle('ok', !!ok); c.replaceChildren();
+  text.split(' ').forEach((w, i) => { const s = document.createElement('span'); s.className = 'w'; s.textContent = w; s.style.transitionDelay = `${i * 40}ms`; c.append(s, ' '); });
+  requestAnimationFrame(() => requestAnimationFrame(() => c.classList.add('in')));
 }
 async function next() {
   if (busy) return;
   if (beats[at]?.final) { location.href = '/demo'; return; }
   busy = true; $('act').disabled = true;
-  at += 1; const b = beats[at]; caption(b);
+  at += 1; const b = beats[at]; caption(b.cap, b.ok);
   await b.run();
   if (b.final) { $('act-text').textContent = 'Try it on testnet →'; $('act').classList.add('q'); }
   busy = false; $('act').disabled = false;

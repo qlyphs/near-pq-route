@@ -43,7 +43,7 @@ try {
   await refused('new only by the token account', () => owner.callRaw(token, 'new', { owner_id: owner.accountId }), 'only the token account');
   await token.call(token, 'new', { owner_id: owner.accountId });
   await refused('new only once', () => token.callRaw(token, 'new', { owner_id: alice.accountId }), 'already initialized');
-  record('starts in legacy mode, version 1', JSON.stringify(await view('state')) === JSON.stringify({ version: 1, owner: owner.accountId, guardian: null, last_op: 0, total_supply: '0' }));
+  record('starts in legacy mode, version 1', JSON.stringify(await view('state')) === JSON.stringify({ version: 1, owner: owner.accountId, guardian: null, next_op: 0, total_supply: '0' }));
 
   await owner.call(token, 'mint', { receiver_id: alice.accountId, amount: '1000' });
   record('legacy owner mints', (await view('ft_balance_of', { account_id: alice.accountId })) === '1000');
@@ -77,16 +77,19 @@ try {
 
   const ok = await guardian.callRaw(token, 'upgrade', upgradeArgs(2, 1, 2, v2), { gas: 200n * TGAS });
   const s2 = await view('state');
-  record('Guardian upgrade V1 to V2', ok.succeeded && s2.version === 2 && s2.last_op === 2 && s2.guardian === guardian.accountId, `${Number(BigInt(ok.result.transaction_outcome.outcome.gas_burnt) + ok.result.receipts_outcome.reduce((a, r) => a + BigInt(r.outcome.gas_burnt), 0n)) / 1e12} Tgas`);
+  record('Guardian upgrade V1 to V2', ok.succeeded && s2.version === 2 && s2.next_op === 3 && s2.guardian === guardian.accountId, `${Number(BigInt(ok.result.transaction_outcome.outcome.gas_burnt) + ok.result.receipts_outcome.reduce((a, r) => a + BigInt(r.outcome.gas_burnt), 0n)) / 1e12} Tgas`);
   record('upgraded code is the V2 build', (await code()) === sha(v2) && before === sha(v1));
   record('balances and supply preserved across the upgrade', (await view('ft_balance_of', { account_id: alice.accountId })) === '1005' && s2.total_supply === '1005');
   record('V2 metadata live', (await view('ft_metadata')).name === 'Guardian Demo Token v2');
   await refused('replayed upgrade refused after V2', () => guardian.callRaw(token, 'upgrade', upgradeArgs(2, 2, 3, v2), { gas: 200n * TGAS }), 'operation already applied');
 
+  await refused('ft_transfer to an unregistered account', () => alice.callRaw(token, 'ft_transfer', { receiver_id: owner.accountId, amount: '5' }, { attachedDeposit: 1n }), 'not a registered holder');
+  await guardian.call(token, 'mint', { receiver_id: owner.accountId, amount: '1', op_id: '7' });
+  await refused('op id below the high-water mark after a gap', () => guardian.callRaw(token, 'mint', { receiver_id: owner.accountId, amount: '1', op_id: '5' }), 'operation already applied');
   await refused('ft_transfer needs 1 yocto', () => alice.callRaw(token, 'ft_transfer', { receiver_id: owner.accountId, amount: '5' }), 'exactly 1 yoctoNEAR');
   await alice.call(token, 'ft_transfer', { receiver_id: owner.accountId, amount: '5' }, { attachedDeposit: 1n });
   await refused('ft_transfer over balance', () => alice.callRaw(token, 'ft_transfer', { receiver_id: owner.accountId, amount: '5000' }, { attachedDeposit: 1n }), 'insufficient balance');
-  record('ft_transfer moves balances', (await view('ft_balance_of', { account_id: owner.accountId })) === '5');
+  record('ft_transfer moves balances', (await view('ft_balance_of', { account_id: owner.accountId })) === '6');
 
   writeFileSync('evidence/token-sandbox.json', JSON.stringify({ suite: 'token.sandbox', token_v1_sha256: sha(v1), token_v2_sha256: sha(v2), results }, null, 2) + '\n');
 } finally {

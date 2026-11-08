@@ -35,7 +35,7 @@ IMPORT(promise_return) void promise_return(uint64_t idx);
 #define MIGRATE_GAS (20 * TGAS)
 
 /* Storage keys: "v" version (u32), "o" owner id (legacy mode only), "g" Guardian id (guarded mode only),
- * "l" last applied Guardian operation id (u64), "s" total supply (u128), "b<account>" balance (u128). */
+ * "l" next acceptable Guardian operation id (u64, absent = 0), "s" total supply (u128), "b<account>" balance (u128). */
 static uint8_t in[16 + MAX_CODE];
 static uint8_t self_id[MAX_ID], caller[MAX_ID], who[MAX_ID], key[1 + MAX_ID];
 static size_t self_len, caller_len;
@@ -146,8 +146,9 @@ static size_t read_id_key(const char *k, uint8_t *out) {
   return read_reg(0, out, MAX_ID);
 }
 static uint32_t version(void) { uint8_t v[4]; REQUIRE(storage_read(1, PTR("v"), 0) == 1 && read_reg(0, v, 4) == 4, "not initialized"); return le32(v); }
-static uint64_t last_op(void) { uint8_t l[8]; if (storage_read(1, PTR("l"), 0) != 1) return 0; REQUIRE(read_reg(0, l, 8) == 8, "bad op"); return le64(l); }
-static void set_last_op(uint64_t x) { uint8_t l[8]; put64(l, x); storage_write(1, PTR("l"), 8, PTR(l), 0); }
+static uint64_t next_op(void) { uint8_t l[8]; if (storage_read(1, PTR("l"), 0) != 1) return 0; REQUIRE(read_reg(0, l, 8) == 8, "bad op"); return le64(l); }
+/* Records op as applied: the next acceptable id becomes op + 1. Ids may skip, never repeat. */
+static void apply_op(uint64_t op) { REQUIRE(op != UINT64_MAX, "operation id exhausted"); uint8_t l[8]; put64(l, op + 1); storage_write(1, PTR("l"), 8, PTR(l), 0); }
 
 static u128 balance(const uint8_t *id, size_t n) {
   key[0] = 'b'; memcpy(key + 1, id, n);
@@ -200,14 +201,14 @@ static int require_admin(void) {
 }
 
 /* mint({"receiver_id":..,"amount":..,"op_id":..}). From the Guardian, op_id is its operation nonce and
- * must be above the last applied one; it is recorded with the mint, so a replayed call cannot mint twice. */
+ * must be at least the next acceptable id; it is recorded with the mint, so a replayed call cannot mint twice. */
 EXPORT(mint) void mint(void) {
   size_t n = read_input(1024); load_ids(); version();
   int guarded = require_admin(), present;
   u128 op = json_u128(in, n, "op_id", guarded, &present);
   if (guarded) {
-    REQUIRE(op.hi == 0 && op.lo > last_op(), "operation already applied");
-    set_last_op(op.lo);
+    REQUIRE(op.hi == 0 && op.lo >= next_op(), "operation already applied");
+    apply_op(op.lo);
   } else REQUIRE(!present, "op_id is for Guardian calls");
   size_t rl = json_id(in, n, "receiver_id", who);
   u128 amount = json_u128(in, n, "amount", 1, 0);
@@ -238,7 +239,7 @@ EXPORT(upgrade) void upgrade(void) {
   require_admin();
   REQUIRE(n > 16 && n - 16 <= MAX_CODE, "bad upgrade input");
   uint64_t op = le64(in); uint32_t from = le32(in + 8), to = le32(in + 12);
-  REQUIRE(op > last_op(), "operation already applied");
+  REQUIRE(op >= next_op(), "operation already applied");
   REQUIRE(from == version() && to > from, "version mismatch");
   uint8_t none[16] = { 0 };
   uint64_t p = promise_batch_create(self_len, PTR(self_id));
@@ -257,20 +258,23 @@ EXPORT(migrate) void migrate(void) {
 #ifdef FAIL_MIGRATE
   fail("migration refused (test build)");
 #endif
-  REQUIRE(from == version() && to == TOKEN_VERSION && op > last_op() && has("g"), "migration does not match this code");
+  REQUIRE(from == version() && to == TOKEN_VERSION && op >= next_op() && has("g") && !has("o"), "migration does not match this code");
   uint8_t v[4] = { (uint8_t)to, (uint8_t)(to >> 8), (uint8_t)(to >> 16), (uint8_t)(to >> 24) };
   storage_write(1, PTR("v"), 4, PTR(v), 0);
-  set_last_op(op);
+  apply_op(op);
   log_utf8(8, PTR("migrated"));
 }
 
-/* ft_transfer({"receiver_id":..,"amount":..,"memo"?}) with exactly 1 yoctoNEAR attached (NEP-141). */
+/* ft_transfer({"receiver_id":..,"amount":..,"memo"?}) with exactly 1 yoctoNEAR attached (NEP-141). The receiver
+ * must already hold a balance record (created only by mint), so transfers cannot grow the token's storage. */
 EXPORT(ft_transfer) void ft_transfer(void) {
   size_t n = read_input(1024); load_ids(); version();
   uint8_t dep[16]; attached_deposit(PTR(dep));
   REQUIRE(le64(dep) == 1 && le64(dep + 8) == 0, "requires attached deposit of exactly 1 yoctoNEAR");
   size_t rl = json_id(in, n, "receiver_id", who);
   REQUIRE(!same(who, rl, caller, caller_len), "sender and receiver are the same");
+  key[0] = 'b'; memcpy(key + 1, who, rl);
+  REQUIRE(storage_read(1 + rl, PTR(key), 0) == 1, "receiver is not a registered holder");
   u128 amount = json_u128(in, n, "amount", 1, 0);
   REQUIRE(!is0(amount), "amount must be positive");
   set_balance(caller, caller_len, sub128(balance(caller, caller_len), amount));
@@ -296,13 +300,13 @@ EXPORT(ft_metadata) void ft_metadata(void) {
   value_return(sizeof(m) - 1, PTR(m));
 }
 
-/* View: {"version":N,"owner":..|null,"guardian":..|null,"last_op":N,"total_supply":".."}. */
+/* View: {"version":N,"owner":..|null,"guardian":..|null,"next_op":N,"total_supply":".."}. */
 EXPORT(state) void state(void) {
   uint8_t id[MAX_ID]; size_t n;
   on = 0; PUT("{\"version\":"); put_u64(version()); PUT(",\"owner\":");
   if ((n = read_id_key("o", id))) { PUT("\""); put_bytes(id, n); PUT("\""); } else PUT("null");
   PUT(",\"guardian\":");
   if ((n = read_id_key("g", id))) { PUT("\""); put_bytes(id, n); PUT("\""); } else PUT("null");
-  PUT(",\"last_op\":"); put_u64(last_op()); PUT(",\"total_supply\":\""); put_u128(supply()); PUT("\"}");
+  PUT(",\"next_op\":"); put_u64(next_op()); PUT(",\"total_supply\":\""); put_u128(supply()); PUT("\"}");
   value_return(on, PTR(out));
 }

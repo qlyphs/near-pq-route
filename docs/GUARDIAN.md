@@ -4,133 +4,218 @@ Qlyphs Guardian holds the admin powers of one NEAR contract and uses them only a
 signers approve an exact operation and an on-chain delay has passed. This describes `contract/guardian.c`,
 the reference target `contract/token.c` and `sdk/guardian.mjs`.
 
-The claim is narrow: on the reviewed deployment, minting and code upgrades of the target require two
-ML-DSA-87 approvals and the configured delay. NEAR consensus, users' keys and any other contract are
-outside it.
+The claim is narrow: at a stated finalized block, on the reviewed deployment and after the documented
+deployment and cutover ceremony, minting and code upgrades of the target require two ML-DSA-87 approvals
+and the configured delay. NEAR consensus, users' keys, other contracts, and code that a quorum approves
+later are outside it.
 
 ## Accounts and roles
 
 | Account | Access keys | Authority |
 |---|---|---|
 | Guardian | none | Calls the target's `mint` and `upgrade`, only for a queued, matured operation |
-| Target (token) | none after migration | Accepts `mint` and `upgrade` only when the immediate caller is the Guardian |
-| Signers 1-3 | not NEAR accounts | ML-DSA-87 keys fixed at Guardian creation; any two approve an operation |
+| Target (token) | none after cutover | Accepts `mint` and `upgrade` only when the immediate caller is the Guardian |
+| Signers 0-2 | not NEAR accounts | ML-DSA-87 keys fixed at Guardian creation; any two approve an operation |
 | Relayer / executor | any NEAR account | Submits approvals and executions, pays gas; chooses nothing that is signed |
 | Former owner | its own account | No role after `handover` |
 
-The Guardian has no owner, no upgrade path, no signer rotation, no arbitrary call and no recovery
-route. Its configuration is fixed at creation. Losing two signer keys locks administration of the target
-for good: that is the price of having no fallback, and it is stated, not hidden.
+The Guardian has no owner, no upgrade path, no signer rotation, no arbitrary call and no recovery route.
+Its configuration is fixed at creation. Two cases lock administration of the target for good, and are
+stated rather than hidden: losing two signer keys, and an `Executing` operation whose settlement callback
+fails (see Execution).
 
-## Creating the Guardian
+## Trust boundary: deployment and cutover
 
-One transaction from a creating account, with exactly these actions:
+What the report can prove is the present state at one block: no access keys, reviewed code, expected
+configuration. It cannot prove from a snapshot that no earlier incarnation of an account id left a
+delayed self-addressed receipt (for example an `AddKey` waiting on a slow promise) that would still run
+after the account is deleted and recreated. So the demo rests on a documented ceremony:
 
-1. `CreateAccount`
-2. `Transfer` (storage funding)
-3. `DeployContract` with the pinned Guardian code
-4. `FunctionCall init(config)`
+1. A dedicated release parent account is created for this release, and every Guardian and target id is a
+   fresh child of it, used once. The ids, creation transactions and their complete receipt outcomes are
+   recorded in `deployments/guardian-<network>.json`.
+2. The Guardian is created by one transaction: `CreateAccount`, `Transfer`, `DeployContract` (pinned
+   code), `FunctionCall init(config)`. `auditGuardianCreation` checks, per deployment, that this
+   transaction succeeded with exactly those actions, that code hash, and those exact `init` bytes, and that
+   every receipt it produced has completed.
+3. The target is created by its own transaction with a full-access key (legacy mode), deployed with token
+   V1 and initialized by the token account itself (`new`). Initial demo holders are minted by the owner.
+4. Cutover: the SDK preflights the Guardian (its state names this target and the expected config), the
+   owner calls `handover`, then the target account signs `DeleteKey` for every one of its access keys.
+   Each step waits for complete receipt execution, not just block inclusion.
+5. The verification report runs at a pinned finalized block after step 4.
+6. Only then are the retired credentials (the owner's key and the target's deleted key) published.
 
-`init` refuses a second call and any caller other than the direct parent account (same rule as the
-vault). Nothing in the Guardian code adds keys, deploys code or yields. `auditGuardianCreation` checks the
-transaction once per release: those four actions only, the code hash, and the config.
+Unknown or unrecorded provenance makes the report say "unverified", never green. This proves protection
+after a trusted cutover; it does not certify migration of an account an adversary already controlled.
 
-Config (binary, fixed size): network tag (8) ‖ target id (len 1 + 64) ‖ delay in seconds (u64) ‖
-execution window in seconds (u64) ‖ three ML-DSA-87 public keys (3 × 2,592). `init` refuses duplicate
-keys, a delay below 60 s or above 30 days, and a window below 1 hour. The Guardian stores
-`config_hash = SHA-256(config)`, and every signed message names it.
+## Guardian configuration
+
+The network is compiled into the binary (`-DQP_CHAIN`, like the vault), never a configuration value.
+
+Config, exactly 7,857 bytes: target id (length u8 + 64 zero-padded bytes) ‖ delay in seconds (u64) ‖
+dispatch window in seconds (u64) ‖ three ML-DSA-87 public keys (3 × 2,592). `init` refuses: a caller
+other than the direct parent; a second call; an invalid or non-canonical target id; the Guardian itself as
+target; duplicate keys; a delay outside 60 s to 30 days; a window outside 1 hour to 30 days. It stores the
+config and `config_hash = SHA-256(config)`.
 
 ## The target contract
 
-The reference target is a small token (`contract/token.c`, NEP-141 subset: `ft_transfer`,
-`ft_balance_of`, `ft_total_supply`, `ft_metadata`). Its admin surface is exactly:
+`contract/token.c`, a reference fixture with a fungible-token subset (`ft_transfer`, `ft_balance_of`,
+`ft_total_supply`, `ft_metadata`), not a complete NEP-141 implementation. Two reviewed builds, V1 and V2,
+differ only in metadata and compiled version.
 
-- `mint(op_id, receiver, amount)`: caller is the owner (legacy mode) or the Guardian (guarded mode).
-  In guarded mode the op id must be new; it is recorded atomically with the mint.
-- `handover(guardian_id)`: owner only, once. Sets the Guardian, clears the owner. There is no way back.
-- `upgrade(op_id, from_version, to_version, code)`: caller is the Guardian. Returns a promise for one
-  batch receipt to itself: `DeployContract(code)` then `FunctionCall migrate(op_id, from, to)`. Actions of
-  one receipt are atomic, so a failing `migrate` leaves the old code and state in place.
-- `migrate(op_id, from, to)`: callable only by the token itself (inside that batch). Requires the
-  stored version to equal `from`, sets it to `to`, records the op id.
+State: `v` version (u32, its presence is the initialization sentinel and it is never removed), `o` owner
+(legacy mode only), `g` Guardian (guarded mode only), `l` next acceptable operation id (u64, absent = 0),
+`s` total supply, `b<account>` balances.
 
-There is no other method that writes the owner, the Guardian, balances (except `ft_transfer` by the
-holder) or code. Migration of a live target: the owner calls `handover`, then the target account deletes
-its own access keys. Both are visible in the verification report.
+| Mode | `mint` | `upgrade` | `handover` |
+|---|---|---|---|
+| Legacy (`o` set, `g` absent) | immediate caller is the owner, no op id | refused | owner, once |
+| Guarded (`g` set, `o` absent) | immediate caller is the Guardian, op id ≥ `l` | immediate caller is the Guardian | refused |
+
+- `new({"owner_id"})`: only the token account itself, only when `v` is absent. Both builds refuse
+  reinitialization.
+- `handover({"guardian_id"})`: sets `g` and removes `o` in one receipt. Refuses the token itself.
+- Guarded `mint({"receiver_id","amount","op_id"})`: `op_id` (decimal u64) must be ≥ `l`; sets
+  `l = op_id + 1` in the same receipt as the mint. Returns nothing; any failure traps.
+- `upgrade(op_id u64 ‖ from u32 ‖ to u32 ‖ code)`: requires `op_id ≥ l`, `from` = stored version,
+  `to > from`, code of 1 to 131,072 bytes. Returns the promise of one batch receipt to itself:
+  `DeployContract(code)` then `FunctionCall migrate(op_id ‖ from ‖ to)`. The receipt's actions are atomic.
+- `migrate(op_id ‖ from ‖ to)`, run by the new code, callable only by the token itself: requires the
+  stored version = `from`, `to` = the compiled version, `op_id ≥ l`, guarded mode with `g` present and `o`
+  absent. Sets the version and `l = op_id + 1`. Balances, supply, `g` and the sentinel are untouched.
+- `ft_transfer({"receiver_id","amount","memo"?})` with exactly 1 yoctoNEAR: the receiver must already
+  hold a balance record (records are created only by `mint`), so transfers cannot grow the target's
+  storage. Self-transfer is refused.
+
+The operation id is the Guardian nonce. Ids may have gaps (canceled, expired and failed operations consume
+nonces); they never repeat because the Guardian is fixed and its nonce only increases. This high-water
+mark is valid only for one fixed Guardian with serialized operations.
 
 ## Signed operation
 
-320 bytes, Pure ML-DSA-87 (FIPS 204), context `qlyphs/near-guardian/v1`. Integers little-endian.
-Account ids are ASCII, zero-padded to 64 bytes, length in the byte before, checked against the NEAR
-grammar.
+Exactly 320 bytes, Pure ML-DSA-87 (FIPS 204, no pre-hash) over these bytes with context
+`qlyphs/near-guardian/v1`. Integers little-endian, read byte by byte. Account ids are ASCII, length byte
+then 64 zero-padded bytes, checked against the NEAR grammar.
 
 | Offset | Size | Field |
 |---:|---:|---|
 | 0 | 8 | `QLYPGRD1` |
-| 8 | 8 | network tag |
+| 8 | 8 | network tag (compiled into the Guardian) |
 | 16 | 1 + 64 | Guardian account id |
 | 81 | 1 + 64 | target account id |
 | 146 | 32 | `config_hash` |
-| 178 | 8 | operation nonce (must equal the Guardian's next nonce; cancel: the nonce being canceled) |
+| 178 | 8 | operation nonce |
 | 186 | 1 | action: 1 mint, 2 upgrade, 3 cancel |
-| 187 | 8 | deadline (block timestamp, seconds): approvals must be queued before it |
+| 187 | 8 | queue deadline, block timestamp in nanoseconds |
 | 195 | 125 | action payload, zero-padded |
 
 Payloads:
 
-- mint: receiver id (1 + 64) at 195, amount (u128, strictly positive) at 260.
-- upgrade: SHA-256 of the new code (32) at 195, code length (u32) at 227, from version (u32) at 231,
-  to version (u32) at 235. The code follows the approvals in the `propose` input.
-- cancel: no payload; the nonce field names the operation.
+- mint: receiver id (1 + 64) at 195, amount (u128, nonzero) at 260.
+- upgrade: SHA-256 of the code (32) at 195, code length (u32, 1 to 131,072) at 227, from version (u32)
+  at 231, to version (u32) at 235.
+- cancel: `proposal_hash` (32) at 195, the SHA-256 of the 320-byte message of the operation to cancel.
 
-All unused bytes must be zero. Attached deposit to the target is always zero and is not a field.
+`proposal_hash = SHA-256(message)` identifies an operation for display, cancellation and evidence.
 
-## Methods
+## Approval envelope and the common validator
 
-`propose(message ‖ k ‖ k × (signer index ‖ signature) ‖ extra)`: anyone may call. `k` is 2 or 3; indices
-are distinct and in 0..2; every signature must verify under that signer's key. Checks: magic, network,
-Guardian id = self, target = configured target, config hash, action 1 or 2, nonce = next nonce, current
-time < deadline, no operation active. For mint `extra` is empty; for upgrade it is the code (length and SHA-256 checked, at most 400 KB). On success: the nonce is
-consumed, and the operation is stored as `Queued` with `eta = now + delay` and `expires = eta + window`,
-using the block timestamp when the quorum is verified. Invalid input consumes nothing.
+`propose` and `cancel` take the same envelope: the 320-byte message, then exactly two approvals, each
+`signer index (u8, 0..2) ‖ signature (4,627 bytes)`: 9,576 bytes. `propose` for an upgrade appends exactly
+the declared code length; nothing else may follow. Two different indices are required; both signatures
+must verify. A third approval is not accepted (it adds no authority).
 
-`cancel(message ‖ k ‖ approvals)`: action 3, nonce = the active operation's nonce, deadline in the future,
-2 of 3 valid signatures. Only a `Queued` operation can be canceled; it becomes `Canceled` and its stored
-code is deleted.
+Both methods first run one validator: exact input length; magic; network tag = compiled tag; Guardian id =
+executing account; target = configured target; `config_hash` = stored; every id field valid and canonically
+padded; unused payload bytes zero; `now < deadline`; two distinct valid approvals. Then:
 
-`execute()`: anyone may call. The active operation must be `Queued`, with `eta <= now < expires`. It
-becomes `Executing` before the target call is created, so a second `execute` fails. The Guardian calls the
-target (`mint` or `upgrade`, zero deposit, fixed gas) and chains its private callback `on_result`.
+- `propose`: action 1 or 2; nonce = next nonce (< 2^64 - 1); no active operation; mint amount nonzero;
+  upgrade code length and SHA-256 match. Stores the operation `Queued` with `queued_at = now`,
+  `eta = now + delay × 10^9`, `expires = eta + window × 10^9` (nanoseconds, checked arithmetic), and
+  increments the nonce once.
+- `cancel`: action 3; an operation is `Queued`; its nonce equals the message nonce and its
+  `proposal_hash` equals the payload.
 
-`on_result`: predecessor must be the Guardian; the operation must be `Executing` with the expected nonce.
-Success: `Applied`. Failure: `Failed`. Either way the slot is freed and stored code is deleted. A failed
-operation is never retried under the same nonce; signers approve a new one. If the callback itself never
-lands the operation stays `Executing` (shown as unresolved); the target's op id record still prevents
-any duplicate mint or upgrade.
+Invalid input changes nothing. A proposal that cannot be paid for in storage fails as a whole and changes
+nothing. Cancellation only affects a queued operation: approvals that were never queued stay usable until
+their deadline.
 
-An operation past `expires` while `Queued` can be closed by anyone with `expire()`, which marks it
-`Expired` and frees the slot.
+## Execution
 
-Views: `state()` returns version, network, target, config hash, delay, window, signer key hashes, next
-nonce and the active operation (status, action, eta, expires, code hash). `code(nonce)` is not provided:
-queued code is readable from the Guardian's storage (key `c`) through RPC `view_state`.
+`execute()`: anyone, no arguments. Requires `Queued` and `eta <= now < expires` (`expires` is a dispatch
+cutoff; the target receipt may land later). Sets `Executing`, then creates the target call with zero
+deposit and fixed gas (mint: `TARGET_MINT_GAS`, upgrade: `TARGET_UPGRADE_GAS`) and the private callback
+`on_result(nonce u64)` with `CALLBACK_GAS`. If the prepaid gas cannot cover these, the call fails as a
+whole and the operation stays `Queued`.
 
-## Timing
+`on_result`: predecessor = Guardian; exactly one promise result; input is exactly 8 bytes equal to the
+active nonce; state is `Executing`. It reads no return bytes. Success: `Applied`; failure: `Failed`. For
+the reviewed target, failure means nothing applied: `mint` changes state in one receipt and traps on any
+error, and `upgrade` returns the atomic deploy-and-migrate batch. A failed operation is never retried
+under its nonce; a new mint signed under a new nonce is a new authorization.
 
-All times come from `block_timestamp` (nanoseconds, converted to seconds). The delay starts when the
-quorum is verified, never from an off-chain time. Re-submitting the same approvals fails (nonce spent).
-`execute` before `eta` fails and leaves the operation intact.
+If `on_result` itself fails, the operation stays `Executing`, the slot stays occupied, and no new
+operation can be queued: administration is locked even with all three keys. This is a disclosed testnet
+limitation. Elapsed time never clears `Executing`, because it proves neither failure nor the absence of a
+late effect.
+
+`expire()`: anyone; requires `Queued` and `now >= expires`.
+
+## State machine
+
+One active slot (`a`) and one bounded last-terminal record (`t`).
+
+| Current | Event | Result |
+|---|---|---|
+| Empty | valid `propose` | `Queued`, nonce + 1 |
+| Queued | valid `cancel` | `t` = Canceled; code deleted; slot cleared |
+| Queued | `expire`, `now >= expires` | `t` = Expired; code deleted; slot cleared |
+| Queued | `execute`, matured | `Executing`; dispatched once |
+| Executing | `on_result` success | `t` = Applied; code deleted; slot cleared |
+| Executing | `on_result` failure | `t` = Failed; code deleted; slot cleared |
+| Executing | `on_result` fails | stays `Executing` (unresolved) |
+
+No transition decreases or reuses the nonce.
+
+## Storage and funding
+
+Queued upgrade code is stored under key `c` (at most 131,072 bytes, about 1.32 NEAR of storage at
+10^19 yoctoNEAR per byte). The Guardian is funded with 3 NEAR at creation; the SDK checks the available
+balance before proposing an upgrade. Anyone can top up a keyless account with a plain transfer. The
+target's storage grows only by `mint` to a new holder (an admin action).
+
+## Views
+
+Guardian `state()`: version, network, target, config hash, delay, window, SHA-256 of each signer key,
+next nonce, and the active operation: status, nonce, proposal hash, the 320-byte message in hex, decoded
+fields (receiver and amount, or code hash, length and versions), `queued_at`, `eta`, `expires` (ns, as
+decimal strings), and the signer bitmap; plus the last terminal record (nonce, proposal hash, status).
+Queued code is read with RPC `view_state`, prefix `c`, at a pinned block; the SDK checks its length and
+hash against the message.
+
+The wallet renders an operation from the 320 bytes it signs, never from separate metadata.
 
 ## Verification report
 
-`verifyControl` in `sdk/guardian.mjs`, at one finalized block:
+`verifyControl` in `sdk/guardian.mjs` resolves one finalized block hash and runs every query at it:
 
-- Guardian and target access-key lists are empty (paginated, errors are failures, not "empty");
-- both accounts run directly deployed code (no global-contract reference) whose SHA-256 matches the
-  reproducible build;
-- the Guardian `state` matches the expected config hash, target and delay;
-- the target `state` names the Guardian and no owner;
-- the Guardian creation transaction passes `auditGuardianCreation`.
+- Guardian and target access-key lists are empty (an error or incomplete answer is "unverified");
+- both accounts run directly deployed code (no global-contract reference); the Guardian code hash equals
+  the reproducible build; the target code hash is one of the reviewed builds (V1 or V2), otherwise
+  "unreviewed code";
+- the Guardian config bytes equal the expected config (keys, delay, window, target) and `state` agrees;
+- the target is initialized, guarded, names this Guardian, has no owner; its `l` is reported;
+- the per-deployment creation audit and the cutover evidence from the deployment file are shown separately
+  from the present-state checks, with their transaction hashes.
 
-An empty key list proves the account-key condition at that block. The absence of hidden application
-authority depends on the reviewed code, which is in this repository.
+Result wording: "At finalized block B these accounts had no access keys and ran these reviewed builds
+with this configuration, under the recorded deployment and cutover assumptions."
+
+## Release checks
+
+A build step lists the exports of each release Wasm and compares them with an allowlist: Guardian
+`init propose cancel execute on_result expire state`; token `new mint handover upgrade migrate ft_transfer
+ft_balance_of ft_total_supply ft_metadata state`. Test-only builds (`token-v2-failing.wasm`) are never
+deployed outside the sandbox.

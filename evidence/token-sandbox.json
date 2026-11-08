@@ -1,7 +1,7 @@
 {
   "suite": "token.sandbox",
-  "token_v1_sha256": "8e3bf033179fd721488ae1dc0d149138d7fd9772e1b0e85582877754168beb14",
-  "token_v2_sha256": "d33281e72790769cffbd97aad2ae857f401b7e7058dc3e3ff40e3f2982e6be33",
+  "token_v1_sha256": "28055301a82bd6b595b99a785f50c62b26ef93fb856a63c7dd08994c3c553037",
+  "token_v2_sha256": "3f5fb76de7df1efc6dad55d7a3d8b19431c4687227b617aecbe11e59e5ccfd2c",
   "results": [
     {
       "name": "new only by the token account",
@@ -116,7 +116,7 @@
     {
       "name": "Guardian upgrade V1 to V2",
       "ok": true,
-      "detail": "5.095867290523 Tgas"
+      "detail": "5.183533835589 Tgas"
     },
     {
       "name": "upgraded code is the V2 build",
@@ -135,6 +135,16 @@
     },
     {
       "name": "replayed upgrade refused after V2",
+      "ok": true,
+      "detail": "operation already applied"
+    },
+    {
+      "name": "ft_transfer to an unregistered account",
+      "ok": true,
+      "detail": "not a registered holder"
+    },
+    {
+      "name": "op id below the high-water mark after a gap",
       "ok": true,
       "detail": "operation already applied"
     },

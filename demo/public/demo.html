@@ -114,104 +114,148 @@
   @media (max-width: 640px) { .card { padding: 22px 18px; border-radius: 16px; } .op dl { grid-template-columns: 1fr; } nav { flex-wrap: wrap; } }
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
 
-  /* Protocol cards, drawn in ASCII */
-  .atlas { margin: 6px 0 26px; }
-  .atlas-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 14px; }
+  /* Protocol cards */
+  .atlas { position: relative; left: 50%; width: min(1240px, calc(100vw - 40px)); transform: translateX(-50%); margin: 6px 0 34px; }
+  .atlas-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 16px; }
   .atlas-head h2 { font-size: 1.3rem; }
   .atlas-head span { font: 500 .74rem/1 var(--mono); color: var(--dim); }
-  .ascii-grid { display: grid; grid-template-columns: repeat(auto-fill, 286px); justify-content: space-between; gap: 14px; }
-  @media (max-width: 640px) { .ascii-grid { grid-template-columns: 1fr; justify-items: center; } }
-  pre.ac { margin: 0; padding: 0; font: 500 12.5px/1.12 "JetBrains Mono", var(--mono); color: var(--faint); white-space: pre; overflow: hidden; cursor: default;
-    transition: color .35s var(--ease), transform .35s var(--ease); }
-  pre.ac:hover { color: var(--dim); transform: translateY(-2px); }
-  pre.ac .t { color: var(--text); font-weight: 600; }
-  pre.ac .k { color: var(--dim); }
-  pre.ac .v { color: #C9C5BD; }
-  pre.ac .r { color: var(--bad); }
-  pre.ac .g { color: var(--ok); }
-  pre.ac .q { color: var(--q); }
-  pre.ac.live { color: color-mix(in srgb, var(--ok) 45%, var(--faint)); }
-  pre.ac.live:hover { color: var(--ok); }
-  .atlas-note { font-size: .84rem; color: var(--dim); margin-top: 12px; }
+  .pgrid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+  @media (max-width: 1100px) { .pgrid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 600px) { .pgrid { grid-template-columns: 1fr; } }
+  .pc { background: #0F0F0E; border: 1px solid var(--line); border-radius: 22px; padding: 22px 22px 20px; display: grid; gap: 16px; transition: border-color .3s var(--ease), transform .35s var(--ease); }
+  .pc:hover { border-color: var(--line-2); transform: translateY(-2px); }
+  .pc.live { border-color: color-mix(in srgb, var(--ok) 28%, var(--line)); }
+  .pc-top { display: grid; grid-template-columns: 44px 1fr; gap: 12px; align-items: center; }
+  .av { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; font: 700 .9rem/1 var(--mono); color: #0B0B0A; }
+  .pc-name { font: 500 1rem/1.1 var(--mono); letter-spacing: .02em; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pc-sub { font-size: .84rem; color: var(--dim); margin-top: 4px; }
+  .pc-sub i { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--bad); margin-right: 7px; vertical-align: 1px; }
+  .pc.live .pc-sub i { background: var(--ok); }
+  .pc.live { grid-column: 1 / -1; grid-template-columns: minmax(220px, 1fr) 2fr minmax(200px, 1fr) minmax(200px, 1fr); align-items: center; gap: 28px; }
+  @media (max-width: 1100px) { .pc.live { grid-template-columns: 1fr; gap: 16px; } }
+  .pc canvas { width: 100%; height: 86px; display: block; }
+  .pc-row { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+  .pc-row .l { font-size: .84rem; color: var(--dim); }
+  .pc-row .v { font: 500 1.02rem/1 var(--mono); }
+  .meter { position: relative; height: 4px; border-radius: 2px; background: #1d1c1a; margin-top: 10px; }
+  .meter i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 2px; background: var(--bad); }
+  .meter b { position: absolute; top: 50%; width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%; background: var(--bad); }
+  .pc.live .meter i, .pc.live .meter b { background: var(--ok); }
+  .atlas-note { font-size: .84rem; color: var(--dim); margin-top: 14px; }
+
+  /* One screen: protocols on the left, the Guardian flow on the right. Nothing scrolls on a laptop. */
+  html, body { height: 100%; }
+  .app { height: 100dvh; display: grid; grid-template-rows: auto 1fr; overflow: hidden; }
+  nav { padding: 14px clamp(16px, 2.4vw, 32px); }
+  .nav-mid { flex: 1; display: flex; justify-content: center; }
+  .nav-mid button { padding: 9px 14px; font-size: .86rem; }
+  .screen { max-width: none; margin: 0; padding: 0 clamp(16px, 2.4vw, 32px) 18px; display: grid; grid-template-columns: minmax(0, 1.75fr) minmax(360px, 1fr); gap: 18px; min-height: 0; }
+  .atlas { position: static; left: auto; width: auto; transform: none; margin: 0; display: grid; grid-template-rows: auto 1fr; min-height: 0; }
+  .atlas-head h1 { font-size: clamp(1.3rem, 2vw, 1.7rem); margin: 0; letter-spacing: -0.03em; }
+  .atlas-head { margin-bottom: 12px; }
+  .pgrid { grid-template-columns: repeat(4, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(0, 1fr)); gap: 12px; min-height: 0; }
+  .pc { padding: 16px 16px 14px; gap: 10px; border-radius: 18px; grid-template-rows: auto 1fr auto auto; min-height: 0; }
+  .pc-top { grid-template-columns: 36px 1fr; gap: 10px; }
+  .av { width: 36px; height: 36px; font-size: .78rem; }
+  .pc-name { font-size: .9rem; }
+  .pc-sub { font-size: .76rem; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pc canvas { height: 100%; min-height: 40px; }
+  .pc-row .l { font-size: .74rem; }
+  .pc-row .v { font-size: .9rem; }
+  .meter { margin-top: 8px; }
+  .panel { background: #0F0F0E; border: 1px solid color-mix(in srgb, var(--ok) 26%, var(--line)); border-radius: 22px; padding: 20px; display: flex; flex-direction: column; gap: 14px; min-height: 0; overflow: auto; }
+  .g-top { display: grid; grid-template-columns: 44px 1fr; gap: 12px; align-items: center; }
+  .av.g { width: 44px; height: 44px; background: var(--q); }
+  .okdot { background: var(--ok) !important; }
+  .step { border-top: 1px solid var(--line); padding-top: 14px; }
+  .step.done .num { color: var(--ok); }
+  .panel h2 { font-size: 1.05rem; }
+  .panel .row { margin-top: 10px; }
+  .panel input { width: auto; flex: 1; min-width: 0; padding: 11px 14px; font-size: .86rem; }
+  .panel button { padding: 11px 16px; font-size: .88rem; }
+  .op { margin-top: 12px; }
+  .op dl { padding: 10px 12px; font-size: .8rem; gap: 4px 12px; }
+  .sig { padding: 10px 12px; }
+  .sig .h { font-size: .82rem; }
+  .sig .hex { max-height: 1.5em; font-size: .7rem; }
+  .sig .more { display: none; }
+  ol.track { margin-top: 10px; } ol.track li { padding: 6px 0; font-size: .88rem; }
+  .panel .hint { margin-top: auto; font-size: .78rem; padding-top: 10px; }
+  dialog#more { background: var(--panel); color: var(--text); border: 1px solid var(--line-2); border-radius: 20px; padding: 24px; width: min(680px, calc(100vw - 32px)); max-height: 85dvh; overflow: auto; }
+  dialog#more::backdrop { background: rgba(0,0,0,.6); backdrop-filter: blur(4px); }
+  .dlg-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  @media (max-width: 1000px) { .app { height: auto; overflow: visible; } .screen { grid-template-columns: 1fr; } .pgrid { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: none; } .pc canvas { height: 70px; } .nav-mid { display: none; } }
 </style>
 </head>
 <body>
+<div class="app">
 <nav>
   <a href="/" class="brand"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M18.7 11a7.7 7.7 0 1 0-7.7 7.7" stroke="#F27644" stroke-width="2.6" stroke-linecap="round"/><rect x="14.6" y="14.6" width="6.6" height="6.6" rx="1.5" fill="#F27644"/></svg>Qlyphs<small>Guardian</small></a>
+  <div class="nav-mid"><button class="ghost" id="open-more" type="button">Checks &amp; old keys</button></div>
   <div class="wallet" id="wallet"></div>
 </nav>
-<main>
-  <header>
-    <div class="eyebrow">NEAR testnet · live</div>
-    <h1>Mint with post-quantum approvals.</h1>
-    <p class="lead"><b>Two signers approve the exact operation with ML-DSA-87.</b> You carry it to the chain with your own NEAR wallet. The Guardian checks the signatures, enforces a 60-second delay, then anyone executes.</p>
-    <p id="repo" hidden></p>
-  </header>
-
-
+<main class="screen">
   <section class="atlas" aria-label="Who can upgrade NEAR protocols today">
-    <div class="atlas-head"><h2>Who holds the upgrade keys today</h2><span>NEAR mainnet · read on chain, Nov 2026</span></div>
-    <div class="ascii-grid" id="atlas"></div>
-    <p class="atlas-note">Each path ends at classical ed25519 keys. None of these protocols uses Guardian; the last card is the testnet token this page lets you try.</p>
+    <div class="atlas-head"><h1>Who holds the upgrade keys</h1><span>NEAR mainnet · read on chain, Nov 2026 · none of these uses Guardian</span></div>
+    <div class="pgrid" id="atlas"></div>
   </section>
 
-  <section class="card" id="approve">
-    <div class="card-head"><span class="num">01</span><h2>Two signers approve</h2></div>
-    <p>Request 100 GDEMO for your account. Signers 0 and 1 sign the 320-byte operation; the third signer is not needed. The signatures are checked again in your browser.</p>
-    <div class="row"><input id="receiver" autocomplete="off" spellcheck="false" aria-label="Receiving testnet account" placeholder="your-account.testnet"><button class="primary" id="prepare">Get the approvals</button></div>
-    <div class="result" id="prepare-result"></div>
-    <div class="op" id="op" hidden>
-      <dl id="op-fields"></dl>
-      <div id="sigs"></div>
+  <section class="panel" aria-label="Mint with post-quantum approvals">
+    <div class="g-top"><div class="av g"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M18.7 11a7.7 7.7 0 1 0-7.7 7.7" stroke="#0B0B0A" stroke-width="2.8" stroke-linecap="round"/><rect x="14.6" y="14.6" width="6.6" height="6.6" rx="1.5" fill="#0B0B0A"/></svg></div>
+      <div><div class="pc-name">Guardian token</div><div class="pc-sub"><i class="okdot"></i>Live on NEAR testnet · 2 of 3 ML-DSA-87 · 0 keys</div></div></div>
+    <p id="repo" hidden></p>
+
+    <div class="step" id="approve">
+      <div class="card-head"><span class="num">01</span><h2>Two signers approve</h2></div>
+      <div class="row"><input id="receiver" autocomplete="off" spellcheck="false" aria-label="Receiving testnet account" placeholder="your-account.testnet"><button class="primary" id="prepare">Get the approvals</button></div>
+      <div class="result" id="prepare-result"></div>
+      <div class="op" id="op" hidden><dl id="op-fields"></dl><div id="sigs"></div></div>
     </div>
-  </section>
 
-  <section class="card" id="carry">
-    <div class="card-head"><span class="num">02</span><h2>Carry it to the chain</h2></div>
-    <p>Your wallet signs a plain NEAR transaction that calls <code>propose</code> on the Guardian with the operation and its two approvals. Your key cannot change what was approved, only deliver it.</p>
-    <div class="row"><button class="primary" id="propose" disabled>Sign propose with your wallet</button><button class="ghost" id="relay" disabled>No wallet? Let the demo send it</button></div>
-    <div class="result" id="propose-result"></div>
-    <div id="follow" hidden>
-      <ol class="track">
-        <li id="t-approved"><span class="dot"></span><div>Queued by the Guardian: two valid ML-DSA-87 approvals<div class="detail" id="t-approved-d"></div></div></li>
-        <li id="t-delay"><span class="dot"></span><div>On-chain delay<div class="bar"><i id="op-bar"></i></div><div class="detail" id="op-timer"></div></div></li>
-        <li id="t-exec"><span class="dot"></span><div>Execute: anyone can<div class="row" style="margin-top:8px"><button id="execute" disabled>Sign execute with your wallet</button><button class="ghost" id="execute-relay" disabled>Let the demo execute it</button></div></div></li>
-        <li id="t-done"><span class="dot"></span><div>Settled on chain<div class="result" id="exec-result"></div></div></li>
-      </ol>
+    <div class="step" id="carry">
+      <div class="card-head"><span class="num">02</span><h2>Carry it to the chain</h2></div>
+      <div class="row"><button class="primary" id="propose" disabled>Sign propose with your wallet</button><button class="ghost" id="relay" disabled>No wallet? Demo sends it</button></div>
+      <div class="result" id="propose-result"></div>
+      <div id="follow" hidden>
+        <ol class="track">
+          <li id="t-approved"><span class="dot"></span><div>Queued: two valid ML-DSA-87 approvals<div class="detail" id="t-approved-d"></div></div></li>
+          <li id="t-delay"><span class="dot"></span><div>On-chain delay<div class="bar"><i id="op-bar"></i></div><div class="detail" id="op-timer"></div></div></li>
+          <li id="t-exec"><span class="dot"></span><div>Execute: anyone can<div class="row" style="margin-top:6px"><button id="execute" disabled>Sign execute</button><button class="ghost" id="execute-relay" disabled>Demo executes it</button></div></div></li>
+          <li id="t-done"><span class="dot"></span><div>Settled on chain<div class="result" id="exec-result"></div></div></li>
+        </ol>
+      </div>
     </div>
-    <p class="hint">Demo mode: this server holds signer keys 0 and 1 so that anyone can try it. In a real deployment each signer keeps its own key in its own wallet. Your NEAR wallet is a classical ed25519 key: it can carry and execute, never approve.</p>
+    <p class="hint">Demo: this server holds signer keys 0 and 1. Your NEAR wallet is a classical key: it carries and executes, it never approves. Unaudited testnet prototype.</p>
   </section>
-
-  <section class="card" id="also">
-    <div class="card-head"><span class="num">+</span><h2>Also worth checking</h2></div>
-    <div class="big wait" id="verdict-1"><span id="badge-text">Checking that the token is locked down…</span></div>
-    <ul class="plain" id="summary"></ul>
-    <details>
-      <summary>The 9 technical checks, at a finalized block</summary>
-      <ul class="checks" id="checks"></ul>
-      <div class="result" id="statement"></div>
-      <div class="row"><button class="ghost" id="rerun">Run the checks again</button></div>
-    </details>
-    <details>
-      <summary>Try the old keys: we published them</summary>
-      <div class="row"><button id="try-both">Try both old keys</button></div>
-      <div class="attempt"><div>The old owner mints 1,000,000,000 GDEMO</div><div class="result" id="attack-mint-result">Not tried yet.</div></div>
-      <div class="attempt"><div>The deleted deploy key replaces the token's code</div><div class="result" id="attack-deploy-result">Not tried yet.</div></div>
-      <p style="margin-top:12px"><b>Former owner</b> <span class="detail" id="owner-id"></span></p>
-      <div class="detail" id="owner-key">loading…</div>
-      <p style="margin-top:12px"><b>Token deploy key</b> <span class="detail" id="token-id"></span></p>
-      <div class="detail" id="token-key">loading…</div>
-    </details>
-    <details>
-      <summary>What already happened on testnet</summary>
-      <ol class="timeline" id="timeline"></ol>
-    </details>
-  </section>
-
-  <footer>
-    Unaudited testnet prototype. The claim covers minting and upgrades of this reviewed token, after the recorded deployment and cutover. It does not make NEAR consensus, users' keys, or code a quorum approves later post-quantum. No protocol named on the story page uses Guardian.
-  </footer>
 </main>
+</div>
+
+<dialog id="more" aria-label="Checks and old keys">
+  <div class="dlg-head"><h2>Check it yourself</h2><button class="ghost" id="close-more" type="button">Close</button></div>
+  <div class="big wait" id="verdict-1"><span id="badge-text">Checking that the token is locked down…</span></div>
+  <ul class="plain" id="summary"></ul>
+  <details>
+    <summary>The 9 technical checks, at a finalized block</summary>
+    <ul class="checks" id="checks"></ul>
+    <div class="result" id="statement"></div>
+    <div class="row"><button class="ghost" id="rerun">Run the checks again</button></div>
+  </details>
+  <details>
+    <summary>Try the old keys: we published them</summary>
+    <div class="row"><button id="try-both">Try both old keys</button></div>
+    <div class="attempt"><div>The old owner mints 1,000,000,000 GDEMO</div><div class="result" id="attack-mint-result">Not tried yet.</div></div>
+    <div class="attempt"><div>The deleted deploy key replaces the token's code</div><div class="result" id="attack-deploy-result">Not tried yet.</div></div>
+    <p style="margin-top:12px"><b>Former owner</b> <span class="detail" id="owner-id"></span></p>
+    <div class="detail" id="owner-key">loading…</div>
+    <p style="margin-top:12px"><b>Token deploy key</b> <span class="detail" id="token-id"></span></p>
+    <div class="detail" id="token-key">loading…</div>
+  </details>
+  <details>
+    <summary>What already happened on testnet</summary>
+    <ol class="timeline" id="timeline"></ol>
+  </details>
+  <p class="hint">The claim covers minting and upgrades of this reviewed token, after the recorded deployment and cutover. It does not make NEAR consensus, users' keys, or code a quorum approves later post-quantum.</p>
+</dialog>
 <script type="module">
 import { followed, summarize, trackFor } from './follow.js';
 import { encodeTx, loginUrl, signUrl, fromBase64 } from './tx.js';
@@ -280,7 +324,7 @@ const hexBytes = (h) => Uint8Array.from(h.match(/../g), (x) => parseInt(x, 16));
 async function renderOp() {
   const o = flow.op; if (!o) { $('op').hidden = true; return; }
   $('op').hidden = false;
-  $('op-fields').innerHTML = `<dt>Action</dt><dd>mint ${units(o.amount)} to ${acct(o.receiver_id)}</dd><dt>Guardian nonce</dt><dd class="mono">${esc(o.nonce)}</dd><dt>Proposal hash</dt><dd class="mono">${esc(o.proposal_hash)}</dd><dt>Operation</dt><dd class="mono" style="color:var(--dim)">${esc(o.message_hex.slice(0, 64))}… 320 bytes: network, Guardian, token, config, nonce, deadline, action</dd>`;
+  $('op-fields').innerHTML = `<dt>Action</dt><dd>mint ${units(o.amount)} to ${acct(o.receiver_id)} · nonce ${esc(o.nonce)}</dd><dt>Proposal</dt><dd class="mono" title="sha256 of the 320-byte operation: network, Guardian, token, config, nonce, deadline, action">${esc(o.proposal_hash.slice(0, 24))}…</dd>`;
   $('sigs').innerHTML = [0, 1, 2].map((i) => {
     const a = o.approvals.find((x) => x.index === i);
     if (!a) return `<div class="sig off"><div class="h"><b>Signer ${i}</b><span class="v">${o.approvals.length ? 'not needed · 2 of 3' : 'relayed'}</span></div></div>`;
@@ -436,6 +480,8 @@ async function attack(kind, out) {
 }
 $('try-both').onclick = async () => { $('try-both').disabled = true; try { await Promise.all([attack('owner-mint', 'attack-mint-result'), attack('token-deploy', 'attack-deploy-result')]); } finally { $('try-both').disabled = false; } };
 $('rerun').onclick = runReport;
+$('open-more').onclick = () => $('more').showModal();
+$('close-more').onclick = () => $('more').close();
 
 (async () => {
   renderWallet();
@@ -460,50 +506,75 @@ $('rerun').onclick = runReport;
   ].join('');
 })();
 
-// ---------- Protocol cards in ASCII ----------
+// ---------- Protocol cards ----------
 // Upgrade authority of each contract, read from NEAR mainnet in November 2026: a DAO and its council size, or a
-// single full-access key on the account.
+// single full-access key on the account. Monograms only: no project logos.
 const PROTOCOLS = [
-  { name: 'Rhea Finance', what: 'exchange', admin: 'DAO council', keys: 5 },
-  { name: 'Rhea Lending', what: 'lending', admin: 'DAO council', keys: 5 },
-  { name: 'Omni Bridge', what: 'bridge', admin: 'DAO council', keys: 5 },
-  { name: 'NEAR Intents', what: 'intents', admin: 'DAO council', keys: 5 },
-  { name: 'LiNEAR', what: 'liquid staking', admin: 'DAO council', keys: 5 },
-  { name: 'Meta Pool', what: 'liquid staking', admin: 'DAO council', keys: 4 },
-  { name: 'Aurora', what: 'EVM', admin: 'account key', keys: 1 },
-  { name: 'USDC', what: 'stablecoin', admin: 'account key', keys: 1 },
+  { name: 'Rhea Finance', sub: 'Exchange', admin: 'DAO', keys: 5, hue: '#7FB8FF' },
+  { name: 'Rhea Lending', sub: 'Lending', admin: 'DAO', keys: 5, hue: '#9FA8FF' },
+  { name: 'Omni Bridge', sub: 'Bridge', admin: 'DAO', keys: 5, hue: '#C9A7FF' },
+  { name: 'NEAR Intents', sub: 'Intents', admin: 'DAO', keys: 5, hue: '#E8E6E0' },
+  { name: 'LiNEAR', sub: 'Liquid staking', admin: 'DAO', keys: 5, hue: '#8FE3D6' },
+  { name: 'Meta Pool', sub: 'Liquid staking', admin: 'DAO', keys: 4, hue: '#F2C14E' },
+  { name: 'Aurora', sub: 'EVM', admin: 'Key', keys: 1, hue: '#9BE07B' },
+  { name: 'USDC', sub: 'Stablecoin', admin: 'Key', keys: 1, hue: '#6FA8FF' },
 ];
-const W = 34; // inner width of every card, in characters
-const pad = (segs) => { const n = segs.reduce((a, [t]) => a + [...t].length, 0); return [...segs, [' '.repeat(Math.max(0, W - n))]]; };
-const line = (segs) => [['│ '], ...pad(segs), [' │']];
-function card(c) {
-  const top = `┌─ `, title = c.name.toUpperCase(), rest = W - [...title].length - 1;
-  const rows = [
-    [[top], [title, 't'], [' ' + '─'.repeat(Math.max(0, rest)) + '┐']],
-    line([]),
-    line([[c.what, 'k']]),
-    line([]),
-    line([['admin   ', 'k'], [c.admin, 'v']]),
-    line([['keys    ', 'k'], [c.live ? c.keyArt : Array(c.keys).fill('▣').join(' '), c.live ? 'g' : 'q'], [c.live ? '' : `  ${c.keys} ed25519`, 'k']]),
-    line([['quantum ', 'k'], [c.live ? '2 of 3 ML-DSA-87' : 'breakable', c.live ? 'g' : 'r']]),
-    line([]),
-    line([[c.live ? '● live on testnet' : '○ classical', c.live ? 'g' : 'r']]),
-    [['└' + '─'.repeat(W + 2) + '┘']],
-  ];
-  const pre = document.createElement('pre'); pre.className = `ac${c.live ? ' live' : ''}`; pre.setAttribute('aria-label', `${c.name}: ${c.live ? 'Guardian, two of three ML-DSA-87 approvals' : `${c.admin}, ${c.keys} classical key${c.keys > 1 ? 's' : ''}`}`);
-  pre.innerHTML = rows.map((r) => r.map(([t, cls]) => (cls ? `<span class="${cls}">${esc(t)}</span>` : esc(t))).join('')).join('\n');
-  // On hover the title decodes from noise, once per hover.
-  const t = pre.querySelector('.t'), real = t.textContent, glyphs = '░▒▓█<>/\\|=+*#';
-  let busy = false;
-  pre.addEventListener('mouseenter', () => {
-    if (busy || matchMedia('(prefers-reduced-motion: reduce)').matches) return; busy = true;
-    let f = 0; const total = 14;
-    const step = () => { f++; t.textContent = [...real].map((ch, i) => (ch === ' ' || i < (f / total) * real.length ? ch : glyphs[(Math.random() * glyphs.length) | 0])).join(''); if (f < total) requestAnimationFrame(step); else { t.textContent = real; busy = false; } };
-    requestAnimationFrame(step);
-  });
-  return pre;
+const mono = (n) => n.replace(/[^A-Za-z ]/g, '').split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase();
+// An ASCII field per card: classical keys show as dense blocks that crack; the Guardian card is a calm lattice.
+function field(cv, c) {
+  const ctx = cv.getContext('2d'), dpr = Math.min(2, devicePixelRatio || 1), w = cv.clientWidth, h = cv.clientHeight;
+  cv.width = w * dpr; cv.height = h * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const cw = 7.2, ch = 12, cols = Math.floor(w / cw), rows = Math.floor(h / ch);
+  ctx.font = '500 11px "JetBrains Mono", "Geist Mono", monospace'; ctx.textBaseline = 'top';
+  let seed = [...c.name].reduce((a, x) => a * 31 + x.charCodeAt(0), 7) >>> 0;
+  const rnd = () => ((seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296);
+  const t = (c.phase ?? 0);
+  return () => {
+    ctx.clearRect(0, 0, w, h);
+    for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) {
+      let chr = '·', a = 0.12, col = c.live ? '123,224,166' : '255,90,71';
+      if (c.live) {
+        const on = x % 4 === 0 || y % 2 === 0;
+        chr = x % 4 === 0 && y % 2 === 0 ? '+' : x % 4 === 0 ? '|' : y % 2 === 0 ? '-' : ' ';
+        const wave = 0.5 + 0.5 * Math.sin(x * 0.18 - c.t * 2.2);
+        a = on ? 0.25 + 0.55 * wave : 0;
+      } else {
+        // one block of keys per classical key, spread over the field
+        const slot = Math.floor((x / cols) * c.keys), cx = ((slot + 0.5) / c.keys) * cols, d = Math.abs(x - cx) / (cols / c.keys / 2);
+        const inKey = d < 0.55 && y > 0 && y < rows - 1;
+        const n = Math.sin(x * 12.9898 + y * 78.233 + slot) * 43758.5453 % 1;
+        const crack = Math.abs(Math.sin((x + y * 1.7) * 0.9 + c.t * 3 + slot)) > 0.93;
+        if (inKey) { chr = crack ? ' ' : '▓▒#%'[Math.abs(Math.floor(n * 4)) % 4]; a = crack ? 0 : 0.55 + 0.3 * Math.abs(n); col = '242,118,68'; }
+        else { chr = Math.abs(n) > 0.82 ? ':' : '·'; a = 0.1 + 0.08 * Math.sin(x * 0.3 + c.t); }
+      }
+      if (a <= 0) continue;
+      ctx.fillStyle = `rgba(${col},${a})`; ctx.fillText(chr, x * cw, y * ch);
+    }
+  };
 }
-$('atlas').replaceChildren(...PROTOCOLS.map(card), card({ name: 'Guardian demo token', what: 'GDEMO, NEAR testnet', admin: 'Guardian, 0 keys', live: true, keyArt: '◆ ◆ ◇' }));
+const cards = PROTOCOLS.map((c) => {
+  const el = document.createElement('article'); el.className = `pc${c.live ? ' live' : ''}`;
+  el.setAttribute('aria-label', c.live ? `${c.name}: Guardian, two of three ML-DSA-87 approvals, live on testnet` : `${c.name}: ${c.admin === 'DAO' ? 'a DAO council' : 'one account key'}, ${c.keys} classical key${c.keys > 1 ? 's' : ''}`);
+  el.innerHTML = `<div class="pc-top"><div class="av" style="background:${c.hue}">${c.live ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M18.7 11a7.7 7.7 0 1 0-7.7 7.7" stroke="#0B0B0A" stroke-width="2.8" stroke-linecap="round"/><rect x="14.6" y="14.6" width="6.6" height="6.6" rx="1.5" fill="#0B0B0A"/></svg>' : mono(c.name)}</div>
+    <div style="min-width:0"><div class="pc-name">${esc(c.name)}</div><div class="pc-sub"><i></i>${esc(c.sub)}</div></div></div>
+    <canvas aria-hidden="true"></canvas>
+    <div><div class="pc-row"><span class="l">Upgrade by</span><span class="l">Signature</span></div>
+    <div class="pc-row" style="margin-top:8px"><span class="v">${c.live ? '2 of 3' : c.admin === 'DAO' ? `DAO · ${c.keys}` : '1 key'}</span><span class="v">${c.live ? 'ML-DSA-87' : 'ed25519'}</span></div></div>
+    <div><div class="pc-row"><span class="l">Post-quantum</span><span class="v" style="font-size:.92rem">${c.live ? '100%' : '0%'}</span></div>
+    <div class="meter"><i style="width:${c.live ? 100 : 0}%"></i><b style="left:${c.live ? 100 : 0}%"></b></div></div>`;
+  c.t = 0; c.el = el; return c;
+});
+$('atlas').replaceChildren(...cards.map((c) => c.el));
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const draws = () => cards.forEach((c) => { c.draw = field(c.el.querySelector('canvas'), c); c.draw(); });
+draws(); addEventListener('resize', draws); document.fonts?.ready.then(draws);
+// Only a hovered card moves: its keys crack, or its lattice pulses.
+cards.forEach((c) => {
+  let raf = 0, last = 0;
+  const loop = (now) => { c.t += Math.min(0.05, (now - last) / 1000); last = now; c.draw(); raf = requestAnimationFrame(loop); };
+  c.el.addEventListener('mouseenter', () => { if (reduceMotion) return; last = performance.now(); raf = requestAnimationFrame(loop); });
+  c.el.addEventListener('mouseleave', () => cancelAnimationFrame(raf));
+});
 </script>
 </body>
 </html>

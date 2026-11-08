@@ -190,6 +190,26 @@
       "name": "fractional and large amounts format exactly",
       "ok": true,
       "detail": ""
+    },
+    {
+      "name": "rpc: HTTP 503 with a JSON body moves to the next URL",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "rpc: HTTP 429 with a JSON body moves to the next URL",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "rpc: a body that is not a JSON-RPC answer is an error, not a result",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "rpc: send_tx is never resent after a server error",
+      "ok": true,
+      "detail": ""
     }
   ]
 }

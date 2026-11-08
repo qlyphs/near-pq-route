@@ -251,7 +251,7 @@ async function refresh() {
     const s = await api('/api/state');
     decimals = Number(s.metadata?.decimals ?? 18);
     offset = BigInt(Date.now()) * 1000000n - BigInt(s.now_ns);
-    if (s.repo_url) { $('repo').hidden = false; $('repo').innerHTML = `Source, tests and every transaction: <a href="${esc(s.repo_url)}" target="_blank" rel="noopener">${esc(s.repo_url.replace(/^https:\/\//, ''))}</a>`; }
+    if (/^https:\/\//.test(s.repo_url ?? '')) { $('repo').hidden = false; $('repo').innerHTML = `Source, tests and every transaction: <a href="${esc(s.repo_url)}" target="_blank" rel="noopener">${esc(s.repo_url.replace(/^https:\/\//, ''))}</a>`; }
     writableDemo = s.writable;
     if (!s.writable) { $('request').disabled = true; show($('mint-result'), 'unverified', 'This copy of the demo is read-only. Use the hosted demo to request a mint.'); }
     if (!current && s.guardian?.active) current = { proposal_hash: s.guardian.active.proposal_hash, watched: true };

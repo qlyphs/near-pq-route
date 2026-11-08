@@ -69,7 +69,11 @@ export class Rpc {
       let j;
       try {
         const r = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ jsonrpc: '2.0', id: 'g', method, params }) });
-        j = await r.json().catch(() => ({ error: { code: r.status, message: `HTTP ${r.status}` } }));
+        const body = await r.json().catch(() => null);
+        // The HTTP status counts on its own: a 429 or 5xx with a JSON body is still a rate limit or a server error.
+        if (r.status === 429 || r.status >= 500) j = { error: { code: r.status, message: `HTTP ${r.status}` } };
+        else if (body && typeof body === 'object' && ('result' in body || body.error)) j = body;
+        else j = { error: { code: r.status, message: `HTTP ${r.status}: not a JSON-RPC answer` } };
       } catch (e) { j = { error: { code: 'network', message: String(e.message ?? e) } }; }
       if (j.error) {
         const msg = JSON.stringify(j.error);

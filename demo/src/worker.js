@@ -6,13 +6,10 @@ import deployment from '../../deployments/guardian-qlyphs-guardian.json';
 import evidence from '../../evidence/guardian-qlyphs-guardian.json';
 import { encodeOperation, envelope, sha256, verifyControl, isAccountId, GUARDIAN_CONTEXT } from '../../sdk/guardian.mjs';
 import { Rpc, edKey, functionCall, deployContract } from './near.js';
-import { PROTOCOLS, readProtocol } from './protocols.js';
 import { ownerMintVerdict, deletedKeyVerdict, UNVERIFIED } from './verdicts.js';
 
 // Public testnet RPCs, in order; the client moves to the next one on a rate limit or a server error.
 const RPC = ['https://test.rpc.fastnear.com', 'https://rpc.testnet.near.org'];
-// Public mainnet RPCs for the read-only protocol directory.
-const MAINNET_RPC = ['https://rpc.mainnet.fastnear.com', 'https://free.rpc.fastnear.com'];
 const TGAS = 10n ** 12n;
 const NEAR = 10n ** 24n;
 const DECIMALS = 18n; // the reviewed token's ft_metadata
@@ -119,12 +116,6 @@ export default {
     try {
       if (url.pathname === '/api/report') return json(await cached('report', 20000, () => report(rpc)));
       if (url.pathname === '/api/state') return json(await cached('state', 2000, () => state(rpc, env)));
-      if (url.pathname === '/api/protocols') return json(PROTOCOLS.map(({ id, name, category, contract }) => ({ id, name, category, contract })));
-      if (url.pathname.startsWith('/api/protocols/')) {
-        const id = url.pathname.slice(15);
-        if (!PROTOCOLS.some((p) => p.id === id)) return json({ error: 'unknown protocol' }, 404);
-        return json(await cached(`protocol:${id}`, 600000, () => readProtocol(new Rpc(MAINNET_RPC), id)));
-      }
       if (url.pathname === '/api/retired-keys') {
         return json({ owner: { account: accounts.owner, secret: env.RETIRED_OWNER_KEY ?? null }, token: { account: accounts.token, secret: env.RETIRED_TOKEN_KEY ?? null, deleted_in: deployment.cutover.delete_keys_tx } });
       }

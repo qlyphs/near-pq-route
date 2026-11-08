@@ -4,6 +4,7 @@
 import { writeFileSync } from 'node:fs';
 import { ownerMintVerdict, deletedKeyVerdict, formatUnits, BLOCKED, SUCCEEDED, UNVERIFIED } from '../demo/src/verdicts.js';
 import { followed, summarize, trackFor } from '../demo/public/follow.js';
+import { Rpc } from '../demo/src/near.js';
 
 const results = [];
 let failures = 0;
@@ -69,6 +70,23 @@ record('track: unavailable infers no history', trackFor('unavailable').join() ==
 
 record('100 GDEMO formats from base units', formatUnits(100n * 10n ** 18n, 18) === '100');
 record('fractional and large amounts format exactly', formatUnits(1234500000000000000n, 18) === '1.2345' && formatUnits(10n ** 27n, 18) === '1,000,000,000' && formatUnits(100n, 18) === '0.0000000000000001');
+
+
+// RPC failover: a rate limit or server error moves to the next URL whatever its body; a transaction is never resent.
+{
+  const realFetch = globalThis.fetch;
+  const answers = (list) => { const calls = []; globalThis.fetch = async (url) => { calls.push(url); const [status, body] = list[Math.min(calls.length - 1, list.length - 1)]; return new Response(typeof body === 'string' ? body : JSON.stringify(body), { status }); }; return calls; };
+  const ok = { jsonrpc: '2.0', id: 'g', result: { fine: true } };
+  let calls = answers([[503, { message: 'Service unavailable' }], [200, ok]]);
+  record('rpc: HTTP 503 with a JSON body moves to the next URL', (await new Rpc(['a', 'b']).call('block', {})).fine === true && calls.join() === 'a,b');
+  calls = answers([[429, { message: 'Too Many Requests' }], [200, ok]]);
+  record('rpc: HTTP 429 with a JSON body moves to the next URL', (await new Rpc(['a', 'b']).call('block', {})).fine === true && calls.join() === 'a,b');
+  calls = answers([[200, { hello: 1 }]]);
+  record('rpc: a body that is not a JSON-RPC answer is an error, not a result', await new Rpc(['a']).call('block', {}).then(() => false, () => true));
+  calls = answers([[503, 'down'], [200, ok]]);
+  record('rpc: send_tx is never resent after a server error', await new Rpc(['a', 'b']).call('send_tx', {}).then(() => false, () => true) && calls.length === 1);
+  globalThis.fetch = realFetch;
+}
 
 writeFileSync('evidence/demo-unit.json', JSON.stringify({ suite: 'demo.unit', results }, null, 2) + '\n');
 console.log(`${results.length - failures}/${results.length} passed`);

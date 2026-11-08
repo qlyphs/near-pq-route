@@ -79,7 +79,7 @@ Release `qlyphs-guardian.testnet`. Journal of every step: `deployments/guardian-
 
 | Claim | Evidence |
 |---|---|
-| The token has no access keys and is guarded by the Guardian; the Guardian has no keys; both run reviewed builds | Live: the demo's report. Recorded: `evidence/guardian-qlyphs-guardian.json` (`report`, final block 276779338) |
+| The token has no access keys and is guarded by the Guardian; the Guardian has no keys; both run reviewed builds | Live: the demo's report. Recorded: `evidence/guardian-qlyphs-guardian.json` (`report`, final block 276781808) |
 | The Guardian was created by exactly CreateAccount, Transfer, DeployContract (pinned code), init (exact config bytes), with complete final execution | tx `6gL6FeB2Pgm2bTv8bfqRnrzkLjhdQ4wCjMtgRX4bSBFf`, re-audited by every report |
 | Cutover: handover to the Guardian, then the token's only key deleted, in that order | handover `CxDJg7EMpHjMBTmMGpCrvBw8g3LDwe7jfrcqMzLGA37i`, key deletion `9gHUP4qwthzgr7kGZrgpMpRzfPMadY6BREyADdrjeXSD`, re-audited by every report |
 | A PQ-approved mint and a PQ-approved upgrade V1 → V2 work after cutover; early execution is refused; balances, Guardian and replay state are kept | mint execute `FkyuGc7R5n14DBiyq4QQykJ3VKGiCLEw67cLUnrK88Xx`, upgrade execute `6AgZNcgPHbHfD1h9hsp465swo7ZU2V9x9kVJ9VNbMzcN`, early executes in the journal |

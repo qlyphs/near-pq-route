@@ -102,7 +102,8 @@
       "execute_tx": "9NNG4BituLmxucmEdACHwkwMTnq4oo2ykZsjikJdCwZg",
       "settled": "failed",
       "callback_tgas": 3.429275827177,
-      "note": "execute hash recorded after the run stopped on this expected failure (looked up in the explorer index, then checked with EXPERIMENTAL_tx_status: FINAL, dispatched nonce 0, migration refused, callback logged failed nonce 0)"
+      "note": "execute hash recorded after the run stopped on this expected failure (looked up in the explorer index, then checked with EXPERIMENTAL_tx_status: FINAL, dispatched nonce 0, migration refused, callback logged failed nonce 0)",
+      "execute_tgas": 28.695468886973
     },
     "max_upgrade": {
       "nonce": "1",
@@ -148,5 +149,6 @@
       ]
     },
     "failing_rollback_checked": true
-  }
+  },
+  "upgrade_checked": "{\"version\":2,\"owner\":null,\"guardian\":\"guardian.qlyphs-guardian.testnet\",\"next_op\":\"2\",\"total_supply\":\"1255000\"}"
 }

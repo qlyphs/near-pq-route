@@ -72,6 +72,56 @@
       "detail": ""
     },
     {
+      "name": "handover included first but executed after the key deletion: unverified",
+      "ok": true,
+      "detail": "keys were deleted before the handover executed"
+    },
+    {
+      "name": "handover and deletion executed in the same block: unverified",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "historical block headers without a height: unverified",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "historical block answered for another hash: unverified",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "report block older than the completed cutover: unverified",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "deletion receipt run by another account: unverified",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "target state with negative next_op: fail",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "target state with non-numeric supply: fail",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "target state with next_op above u64: fail",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Guardian state without its active field: fail",
+      "ok": true,
+      "detail": ""
+    },
+    {
       "name": "decode round-trips a mint",
       "ok": true,
       "detail": ""

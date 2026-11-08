@@ -56,6 +56,9 @@ function encodeTx({ signerId, pub, nonce, receiverId, blockHash, actions }) {
   return w.done();
 }
 
+// Base64 in bounded chunks: spreading a large array into one call can exceed engine argument limits.
+function toBase64(bytes) { let s = ''; for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000)); return btoa(s); }
+
 export class Rpc {
   constructor(url) { this.url = url; }
   async call(method, params) {
@@ -92,7 +95,7 @@ export class Rpc {
       const hash = sha256(tx), sig = ed25519.sign(hash, key.seed);
       const signed = new Uint8Array(tx.length + 65); signed.set(tx); signed[tx.length] = 0; signed.set(sig, tx.length + 1);
       try {
-        const out = await this.call('send_tx', { signed_tx_base64: btoa(String.fromCharCode(...signed)), wait_until: 'EXECUTED_OPTIMISTIC' });
+        const out = await this.call('send_tx', { signed_tx_base64: toBase64(signed), wait_until: 'EXECUTED_OPTIMISTIC' });
         const failures = [out.status, ...out.receipts_outcome.map((o) => o.outcome.status)].filter((s) => s && 'Failure' in s).map((s) => s.Failure);
         return { hash: b58encode(hash), ok: failures.length === 0, failure: failures.length ? JSON.stringify(failures[0]) : null, outcome: out };
       } catch (e) {

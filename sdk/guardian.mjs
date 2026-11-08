@@ -193,7 +193,24 @@ export async function auditGuardianCreation(provider, { txHash, sender, guardian
   return { tx: txHash, actions: kinds, receipts: r.receipts_outcome.length, block_hash: r.transaction_outcome.block_hash };
 }
 
-/** The cutover: the owner's handover naming this Guardian, then the token deleting the listed keys, both final. */
+/** Height of a historical block, refusing an answer for another block or without a valid height. */
+async function checkedHeight(provider, hash) {
+  const h = (await provider.sendJsonRpc('block', { block_id: hash }))?.header;
+  if (h?.hash !== hash || !Number.isSafeInteger(h.height) || h.height < 0) throw new Error(`invalid block evidence for ${hash}`);
+  return h.height;
+}
+
+/** The receipt that carries a transaction's actions: the transaction outcome's first receipt, executed by the
+ * expected account, successful. Its block is when the actions took effect (inclusion can be earlier). */
+async function actionReceipt(provider, r, executor) {
+  const id = r.transaction_outcome.outcome.status.SuccessReceiptId ?? r.transaction_outcome.outcome.receipt_ids?.[0];
+  const o = r.receipts_outcome.find((x) => x.id === id);
+  if (!o || o.outcome.executor_id !== executor || failed(o.outcome.status)) throw new Error(`${r.transaction.hash}: action receipt missing, failed or run by another account`);
+  return checkedHeight(provider, o.block_hash);
+}
+
+/** The cutover: the owner's handover naming this Guardian, then the token deleting the listed keys, both final,
+ * with the deletion executed in a later block than the handover (same block: order not established). */
 export async function auditCutover(provider, { owner, target, guardian, handoverTx, deleteKeysTx, deletedKeys }) {
   const h = await finalTx(provider, { txHash: handoverTx, sender: owner, receiver: target });
   const ha = h.transaction.actions;
@@ -205,12 +222,15 @@ export async function auditCutover(provider, { owner, target, guardian, handover
   if (!da.length || !da.every((a) => kindOf(a) === 'DeleteKey')) throw new Error('key deletion transaction holds other actions');
   const removed = da.map((a) => a.DeleteKey.public_key).sort();
   if (JSON.stringify(removed) !== JSON.stringify([...deletedKeys].sort())) throw new Error('key deletion removed other keys than recorded');
-  const height = async (hash) => (await provider.sendJsonRpc('block', { block_id: hash })).header.height;
-  const [hh, dh] = await Promise.all([height(h.transaction_outcome.block_hash), height(d.transaction_outcome.block_hash)]);
-  if (dh < hh) throw new Error('keys were deleted before the handover');
-  const last = Math.max(...await Promise.all(d.receipts_outcome.map((o) => height(o.block_hash))));
-  return { handover_tx: handoverTx, delete_keys_tx: deleteKeysTx, deleted_keys: removed, completed_at_height: last };
+  const [hh, dh] = [await actionReceipt(provider, h, target), await actionReceipt(provider, d, target)];
+  if (dh <= hh) throw new Error(dh < hh ? 'keys were deleted before the handover executed' : 'handover and key deletion executed in the same block: order not established');
+  const heights = [];
+  for (const o of [...h.receipts_outcome, ...d.receipts_outcome]) heights.push(await checkedHeight(provider, o.block_hash));
+  return { handover_tx: handoverTx, delete_keys_tx: deleteKeysTx, deleted_keys: removed, handover_height: hh, delete_height: dh, completed_at_height: Math.max(...heights) };
 }
+
+const U64_MAX = (1n << 64n) - 1n, U128_MAX = (1n << 128n) - 1n;
+const decimal = (v, max) => typeof v === 'string' && /^(0|[1-9]\d*)$/.test(v) && BigInt(v) <= max;
 
 const REQUIRED = ['Guardian has no access keys', 'Target has no access keys', 'Guardian runs the reproducible build', 'Target runs a reviewed build',
   'Guardian config bytes match', 'Guardian state agrees', 'Target is guarded by this Guardian, no owner', 'Creation audited on chain', 'Cutover audited on chain'];
@@ -223,6 +243,7 @@ const REQUIRED = ['Guardian has no access keys', 'Target has no access keys', 'G
  */
 export async function verifyControl(provider, expected) {
   const final = await provider.block({ finality: 'final' });
+  if (typeof final?.header?.hash !== 'string' || !Number.isSafeInteger(final.header.height) || final.header.height < 0) throw new Error('invalid finalized block header');
   const block = final.header.hash;
   const results = new Map(REQUIRED.map((n) => [n, { name: n, status: 'unverified', detail: 'not checked' }]));
   const set = (name, status, detail) => results.set(name, { name, status, detail });
@@ -281,14 +302,14 @@ export async function verifyControl(provider, expected) {
     const good = g.chain === expected.network && g.target === expected.target && g.config_sha256 === cfgHash
       && g.delay_seconds === Number(cfg.readBigUInt64LE(65)) && g.window_seconds === Number(cfg.readBigUInt64LE(73))
       && Array.isArray(g.signer_key_sha256) && JSON.stringify(g.signer_key_sha256) === JSON.stringify(keyHashes)
-      && typeof g.next_nonce === 'string' && /^\d+$/.test(g.next_nonce);
+      && decimal(g.next_nonce, U64_MAX) && 'active' in g && (g.active === null || (typeof g.active === 'object' && decimal(g.active.nonce, U64_MAX)));
     set('Guardian state agrees', good ? 'pass' : 'fail',
       `2 of 3 signers, delay ${g.delay_seconds} s, window ${g.window_seconds} s, next nonce ${g.next_nonce}, active ${g.active ? `${g.active.action} #${g.active.nonce} ${g.active.status}` : 'none'}`);
   });
   await attempt('Target is guarded by this Guardian, no owner', async () => {
     const t = await call(expected.target, 'state');
-    const good = t.guardian === expected.guardian && t.owner === null && typeof t.version === 'number' && typeof t.next_op === 'string'
-      && typeof t.total_supply === 'string' && (!targetVersion || `v${t.version}` === targetVersion);
+    const good = t.guardian === expected.guardian && t.owner === null && Number.isSafeInteger(t.version) && decimal(t.next_op, U64_MAX)
+      && decimal(t.total_supply, U128_MAX) && (!targetVersion || `v${t.version}` === targetVersion);
     set('Target is guarded by this Guardian, no owner', good ? 'pass' : 'fail', `version ${t.version}, next op ${t.next_op}, supply ${t.total_supply}`);
   });
   const d = expected.deployment ?? {};
@@ -302,7 +323,7 @@ export async function verifyControl(provider, expected) {
     if (!bound || !d.cutover?.handover_tx) throw new Error('no cutover record for this deployment');
     const c = await auditCutover(provider, { owner: d.accounts.owner, target: expected.target, guardian: expected.guardian, handoverTx: d.cutover.handover_tx, deleteKeysTx: d.cutover.delete_keys_tx, deletedKeys: d.cutover.deleted_keys });
     if (final.header.height < c.completed_at_height) throw new Error(`report block ${final.header.height} is older than the cutover (${c.completed_at_height})`);
-    set('Cutover audited on chain', 'pass', `handover ${c.handover_tx}, then ${c.deleted_keys.length} key(s) deleted in ${c.delete_keys_tx}`);
+    set('Cutover audited on chain', 'pass', `handover executed at ${c.handover_height}, then ${c.deleted_keys.length} key(s) deleted at ${c.delete_height} (${c.handover_tx}, ${c.delete_keys_tx})`);
   });
   const checks = REQUIRED.map((n) => results.get(n));
   const ok = checks.every((c) => c.status === 'pass');

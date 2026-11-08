@@ -10,7 +10,7 @@ import { connect, KeyPair, keyStores, transactions, utils } from 'near-api-js';
 import { chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { Key } from '../sdk/vault.mjs';
-import { encodeConfig, encodeOperation, approve, envelope, sha256, auditGuardianCreation, verifyControl } from '../sdk/guardian.mjs';
+import { encodeConfig, encodeOperation, decodeOperation, approve, envelope, sha256, auditGuardianCreation, verifyControl } from '../sdk/guardian.mjs';
 import { Rpc, edKey as rawKey, deployContract } from '../demo/src/near.js';
 
 const NODE = process.env.NEAR_RPC ?? 'https://test.rpc.fastnear.com';
@@ -143,11 +143,38 @@ d.cutover ??= {};
 await cutover(ids.token, ids.guardian, config, d.cutover, ids.owner, 'token');
 
 // 5. PQ operations, journaled: the exact message and the real propose transaction are saved before execution.
+// A journaled proposal is reused only if it is the operation this run asks for (same Guardian, target, config,
+// action and fields); its nonce and deadline are the original ones.
+function sameIntent(j, gid, cfg, target, fields) {
+  const m = Buffer.from(j.message_hex, 'hex');
+  const op = decodeOperation(m);
+  if (op.proposalHash !== j.proposal_hash || op.guardian !== gid || op.target !== target || op.configHash !== hex(sha256(cfg)) || op.action !== fields.action) return false;
+  if (fields.action === 'mint') return op.receiver === fields.receiver && op.amount === fields.amount;
+  return op.codeSha256 === hex(sha256(fields.code)) && op.codeLength === fields.code.length && op.from === fields.from && op.to === fields.to;
+}
+
+// Judges an execution from its transaction and the Guardian's settlement record, then completes the journal.
+async function settle(key, gid, j, expect) {
+  const r = await provider.sendJsonRpc('EXPERIMENTAL_tx_status', { tx_hash: j.execute_tx, sender_account_id: ids.relayer, wait_until: 'FINAL' });
+  const cb = r.receipts_outcome.find((o) => o.outcome.logs.some((l) => /^(applied|failed), nonce/.test(l)));
+  const last = (await view(gid, 'state')).last;
+  must(last?.proposal_hash === j.proposal_hash || j.settled, `${key}: settlement is for another operation`);
+  const settled = last?.proposal_hash === j.proposal_hash ? last.status : j.settled;
+  must(settled === expect.settled, `${key}: settled ${settled}, expected ${expect.settled}: ${failure(r)}`);
+  if (expect.settled === 'applied') must(okTx(r), `${key} execute failed: ${failure(r)}`);
+  else must(failure(r).includes(expect.reason), `${key}: the target failed for another reason: ${failure(r)}`);
+  Object.assign(j, { execute_tgas: gas(r), callback_tgas: cb ? Number(BigInt(cb.outcome.gas_burnt)) / 1e12 : null, settled }); save();
+  step(`${key}: executed, settled ${settled}`, { tx: j.execute_tx, detail: `${j.execute_tgas} Tgas, callback ${j.callback_tgas} Tgas` });
+  return j;
+}
+
 async function runOp(key, gid, cfg, target, fields, code, pair, expect = { settled: 'applied' }) {
   d.operations ??= {};
   let j = d.operations[key];
+  if (j) must(sameIntent(j, gid, cfg, target, fields), `${key}: the journaled proposal is not the operation this run asks for`);
+  // Execution already sent: evaluate it, never dispatch twice.
+  if (j?.execute_tx) return j.settled && j.execute_tgas !== undefined ? j : settle(key, gid, j, expect);
   const gs = await view(gid, 'state');
-  if (j?.execute_tx) return j;
   if (!j) {
     must(gs.active === null, `${gid} has an unexpected active operation`);
     const m = encodeOperation({ chain: 'testnet', guardian: gid, target, configHash: sha256(cfg), nonce: BigInt(gs.next_nonce), deadlineNs: (await nowNs()) + 3600n * 10n ** 9n, ...fields });
@@ -169,28 +196,21 @@ async function runOp(key, gid, cfg, target, fields, code, pair, expect = { settl
   while ((await nowNs()) < BigInt(act.eta_ns)) await sleep(3000);
   const sent = await (await acct(ids.relayer)).signAndSendTransaction({ receiverId: gid, actions: [fc('execute', Buffer.alloc(0), 300n * TGAS)], returnError: true });
   j.execute_tx = sent.transaction.hash; save();
-  const r = await provider.sendJsonRpc('EXPERIMENTAL_tx_status', { tx_hash: j.execute_tx, sender_account_id: ids.relayer, wait_until: 'FINAL' });
-  const cb = r.receipts_outcome.find((o) => o.outcome.logs.some((l) => /^(applied|failed), nonce/.test(l)));
-  const last = (await view(gid, 'state')).last;
-  must(last?.proposal_hash === j.proposal_hash, `${key}: settlement is for another operation`);
-  must(last.status === expect.settled, `${key}: settled ${last.status}, expected ${expect.settled}: ${failure(r)}`);
-  if (expect.settled === 'applied') must(okTx(r), `${key} execute failed: ${failure(r)}`);
-  else must(failure(r).includes(expect.reason), `${key}: the target failed for another reason: ${failure(r)}`);
-  Object.assign(j, { execute_tgas: gas(r), callback_tgas: cb ? Number(BigInt(cb.outcome.gas_burnt)) / 1e12 : null, settled: last.status }); save();
-  step(`${key}: executed, settled ${last.status}`, { tx: j.execute_tx, detail: `${j.execute_tgas} Tgas, callback ${j.callback_tgas} Tgas` });
-  return j;
+  return settle(key, gid, j, expect);
 }
 const mint = await runOp('mint', ids.guardian, config, ids.token, { action: 'mint', receiver: ids.parent, amount: 5000n }, undefined, [0, 1]);
 must(mint.settled === 'applied', 'PQ mint did not apply');
 const up = await runOp('upgrade', ids.guardian, config, ids.token, { action: 'upgrade', code: v2, from: 1, to: 2 }, v2, [1, 2]);
 must(up.settled === 'applied', 'PQ upgrade did not apply');
-{
+// Checked once, right after the upgrade; afterwards the demo keeps minting, so a resumed run trusts the journal.
+if (!d.upgrade_checked) {
   const t = await view(ids.token, 'state');
   must(t.version === 2 && t.guardian === ids.guardian && t.owner === null && t.next_op === String(BigInt(up.nonce) + 1n), `token state after upgrade: ${JSON.stringify(t)}`);
   must((await view(ids.token, 'ft_balance_of', { account_id: ids.parent })) === '1005000' && (await view(ids.token, 'ft_balance_of', { account_id: ids.owner })) === '250000', 'balances changed across the upgrade');
   must((await view(ids.token, 'ft_metadata')).name === 'Guardian Demo Token v2', 'V2 metadata not live');
-  step('after the upgrade: V2 live; balances, Guardian and op high-water mark kept', { detail: JSON.stringify(t) });
+  d.upgrade_checked = JSON.stringify(t); save();
 }
+step('after the upgrade: V2 live; balances, Guardian and op high-water mark kept', { detail: d.upgrade_checked });
 
 // 6. Retired credentials: the refusals must be the expected ones, not any error.
 {

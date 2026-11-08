@@ -21,7 +21,7 @@
     {
       "name": "former owner mint refused: only the Guardian can do this",
       "ok": true,
-      "tx": "Up1D2h2NJJmeiDvRZmGXGctmZdfzqqbP6ktWNmViGx4"
+      "tx": "GXqfrvZaYXTKXzZvtmKvW4HK37FySUs79b9awWuhJVEL"
     },
     {
       "name": "deleted token key refused by the network: InvalidAccessKeyError AccessKeyNotFound",
@@ -40,6 +40,12 @@
       "detail": "handover 9R8T2cwUwovzVSALxVt5zaWUYhFtS5gMPMcYoDTUtgC2, delete BTdUZue5eeoeKCsUmLeC7MX13iu8ihjmfwrx3Tx3EtqN"
     },
     {
+      "name": "max_failing: executed, settled failed",
+      "ok": true,
+      "tx": "9NNG4BituLmxucmEdACHwkwMTnq4oo2ykZsjikJdCwZg",
+      "detail": "28.695468886973 Tgas, callback 3.429275827177 Tgas"
+    },
+    {
       "name": "131,072-byte upgrade with a failing migration: settled failed, V1 code kept",
       "ok": true,
       "tx": "9NNG4BituLmxucmEdACHwkwMTnq4oo2ykZsjikJdCwZg"
@@ -52,13 +58,13 @@
     }
   ],
   "attacks": {
-    "former_owner_mint_tx": "Up1D2h2NJJmeiDvRZmGXGctmZdfzqqbP6ktWNmViGx4",
+    "former_owner_mint_tx": "GXqfrvZaYXTKXzZvtmKvW4HK37FySUs79b9awWuhJVEL",
     "deleted_key_deploy": "{\"name\":\"HANDLER_ERROR\",\"cause\":{\"info\":{},\"name\":\"INVALID_TRANSACTION\"},\"code\":-32000,\"message\":\"Server error\",\"data\":{\"TxExecutionError\":{\"InvalidTxError\":{\"InvalidAccessKeyError\":{\"AccessKeyNotFoun"
   },
   "report": {
     "block": {
-      "hash": "BinuirGjXqaiCAJR1wect3QEGSAxCXMBr5DtSXtyYLkv",
-      "height": 276779338
+      "hash": "G6nxr28xvkhakEtvq1fd2SmYdR8nxAj9XmfbW9mTiZZy",
+      "height": 276781808
     },
     "ok": true,
     "checks": [
@@ -90,12 +96,12 @@
       {
         "name": "Guardian state agrees",
         "status": "pass",
-        "detail": "2 of 3 signers, delay 60 s, window 86400 s, next nonce 2, active none"
+        "detail": "2 of 3 signers, delay 60 s, window 86400 s, next nonce 4, active none"
       },
       {
         "name": "Target is guarded by this Guardian, no owner",
         "status": "pass",
-        "detail": "version 2, next op 2, supply 1255000"
+        "detail": "version 2, next op 4, supply 1255200"
       },
       {
         "name": "Creation audited on chain",
@@ -105,9 +111,9 @@
       {
         "name": "Cutover audited on chain",
         "status": "pass",
-        "detail": "handover CxDJg7EMpHjMBTmMGpCrvBw8g3LDwe7jfrcqMzLGA37i, then 1 key(s) deleted in 9gHUP4qwthzgr7kGZrgpMpRzfPMadY6BREyADdrjeXSD"
+        "detail": "handover executed at 276778628, then 1 key(s) deleted at 276778634 (CxDJg7EMpHjMBTmMGpCrvBw8g3LDwe7jfrcqMzLGA37i, 9gHUP4qwthzgr7kGZrgpMpRzfPMadY6BREyADdrjeXSD)"
       }
     ],
-    "statement": "At finalized block 276779338 these accounts had no access keys and ran these reviewed builds with this configuration, after the audited creation and cutover."
+    "statement": "At finalized block 276781808 these accounts had no access keys and ran these reviewed builds with this configuration, after the audited creation and cutover."
   }
 }

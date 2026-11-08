@@ -20,7 +20,7 @@ const expected = { network: 'testnet', guardian: 'guardian.release.testnet', tar
     guardian_creation: { tx: 'CreateTx' }, cutover: { handover_tx: 'HandoverTx', delete_keys_tx: 'DeleteTx', deleted_keys: ['ed25519:OldKey'] } } };
 
 const ok = { SuccessValue: '' };
-const outcome = (id, block = 'B1', status = ok, receipt_ids = []) => ({ id, block_hash: block, outcome: { status, receipt_ids } });
+const outcome = (id, block = 'B1', status = ok, receipt_ids = [], executor_id = 'token.release.testnet') => ({ id, block_hash: block, outcome: { status, receipt_ids, executor_id } });
 function txs(over = {}) {
   const create = { final_execution_status: 'FINAL', status: ok, transaction: { hash: 'CreateTx', signer_id: 'release.testnet', receiver_id: 'guardian.release.testnet', actions: ['CreateAccount', { Transfer: { deposit: '1' } }, { DeployContract: { code: sha256(guardianCode).toString('base64') } }, { FunctionCall: { method_name: 'init', args: config.toString('base64'), deposit: '0' } }] },
     transaction_outcome: outcome('t1', 'B1', { SuccessReceiptId: 'r1' }, ['r1']), receipts_outcome: [outcome('r1', 'B2')] };
@@ -30,15 +30,15 @@ function txs(over = {}) {
     transaction_outcome: outcome('t3', 'B4', { SuccessReceiptId: 'r3' }, ['r3']), receipts_outcome: [outcome('r3', 'B4')] };
   return { CreateTx: create, HandoverTx: handover, DeleteTx: del, ...over };
 }
-const heights = { B1: 10, B2: 11, B3: 20, B4: 21, [BLOCK]: 100 };
+const heights = { B1: 10, B2: 11, B3: 20, B4: 21, B30: 30, [BLOCK]: 100 };
 const gState = () => ({ version: 'qlyphs/near-guardian/v1', chain: 'testnet', target: 'token.release.testnet', config_sha256: hex(config), delay_seconds: 60, window_seconds: 86400,
   signer_key_sha256: keys.map((k) => hex(k)), next_nonce: '2', active: null, last: null });
 const tState = () => ({ version: 2, owner: null, guardian: 'guardian.release.testnet', next_op: '2', total_supply: '10' });
 
-function provider({ state = {}, query = {}, tx = txs(), blockOf = () => BLOCK } = {}) {
+function provider({ state = {}, query = {}, tx = txs(), blockOf = () => BLOCK, header = (hash) => ({ hash, height: heights[hash] }), finalHeight = 100 } = {}) {
   return {
-    block: async (p) => (p.finality ? { header: { hash: BLOCK, height: 100 } } : { header: { hash: p.block_id, height: heights[p.block_id] ?? 0 } }),
-    sendJsonRpc: async (method, params) => { if (method === 'block') return { header: { hash: params.block_id, height: heights[params.block_id] ?? 0 } }; const r = tx[params.tx_hash]; if (!r) throw new Error(`unknown transaction ${params.tx_hash}`); return structuredClone(r); },
+    block: async (p) => ({ header: { hash: BLOCK, height: finalHeight } }),
+    sendJsonRpc: async (method, params) => { if (method === 'block') return { header: header(params.block_id) }; const r = tx[params.tx_hash]; if (!r) throw new Error(`unknown transaction ${params.tx_hash}`); return structuredClone(r); },
     query: async (p) => {
       const base = { block_hash: blockOf(p), block_height: 100 };
       if (p.request_type === 'view_access_key_list') return { ...base, keys: [], ...(query.keys?.[p.account_id] ?? {}) };
@@ -103,7 +103,7 @@ const status = (r, name) => r.checks.find((c) => c.name === name)?.status;
   await rejects('creation audit refuses another signer', auditGuardianCreation(provider({ tx: t }), { txHash: 'CreateTx', sender: 'release.testnet', guardian: expected.guardian, codeSha256: expected.guardianSha256, config }), 'not the expected transaction');
 }
 {
-  const t = txs(); t.DeleteTx.transaction_outcome.block_hash = 'B1';
+  const t = txs(); t.DeleteTx.receipts_outcome = [outcome('r3', 'B2')];
   const r = await verifyControl(provider({ tx: t }), expected);
   record('keys deleted before the handover: unverified', !r.ok && status(r, 'Cutover audited on chain') === 'unverified');
 }
@@ -111,6 +111,44 @@ const status = (r, name) => r.checks.find((c) => c.name === name)?.status;
   const t = txs(); t.HandoverTx.transaction.actions[0].FunctionCall.args = Buffer.from(JSON.stringify({ guardian_id: 'other.testnet' })).toString('base64');
   const r = await verifyControl(provider({ tx: t }), expected);
   record('handover to another Guardian: unverified', !r.ok && status(r, 'Cutover audited on chain') === 'unverified');
+}
+
+// Cutover order is judged by when the actions executed, from validated block headers.
+{
+  const t = txs(); t.HandoverTx.receipts_outcome = [outcome('r2', 'B30')];
+  const r = await verifyControl(provider({ tx: t }), expected);
+  record('handover included first but executed after the key deletion: unverified', !r.ok && status(r, 'Cutover audited on chain') === 'unverified', r.checks.find((c) => c.name === 'Cutover audited on chain').detail);
+}
+{
+  const t = txs(); t.HandoverTx.receipts_outcome = [outcome('r2', 'B4')];
+  const r = await verifyControl(provider({ tx: t }), expected);
+  record('handover and deletion executed in the same block: unverified', !r.ok && status(r, 'Cutover audited on chain') === 'unverified');
+}
+{
+  const r = await verifyControl(provider({ header: (hash) => ({ hash }) }), expected);
+  record('historical block headers without a height: unverified', !r.ok && status(r, 'Cutover audited on chain') === 'unverified');
+}
+{
+  const r = await verifyControl(provider({ header: (hash) => ({ hash: 'SomeOtherBlock', height: heights[hash] }) }), expected);
+  record('historical block answered for another hash: unverified', !r.ok && status(r, 'Cutover audited on chain') === 'unverified');
+}
+{
+  const r = await verifyControl(provider({ finalHeight: 15 }), expected);
+  record('report block older than the completed cutover: unverified', !r.ok && status(r, 'Cutover audited on chain') === 'unverified');
+}
+{
+  const t = txs(); t.DeleteTx.receipts_outcome = [outcome('r3', 'B4', ok, [], 'someone.testnet')];
+  const r = await verifyControl(provider({ tx: t }), expected);
+  record('deletion receipt run by another account: unverified', !r.ok && status(r, 'Cutover audited on chain') === 'unverified');
+}
+for (const [label, target] of [['negative next_op', { ...tState(), next_op: '-1' }], ['non-numeric supply', { ...tState(), total_supply: 'not-a-number' }], ['next_op above u64', { ...tState(), next_op: '18446744073709551616' }]]) {
+  const r = await verifyControl(provider({ state: { target } }), expected);
+  record(`target state with ${label}: fail`, !r.ok && status(r, 'Target is guarded by this Guardian, no owner') === 'fail');
+}
+{
+  const g = gState(); delete g.active;
+  const r = await verifyControl(provider({ state: { guardian: g } }), expected);
+  record('Guardian state without its active field: fail', !r.ok && status(r, 'Guardian state agrees') === 'fail');
 }
 
 // Client encoders.

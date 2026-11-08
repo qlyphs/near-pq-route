@@ -1,0 +1,62 @@
+{
+ "route": "Quantus development network ↔ NEAR testnet via the NEAR Intents verifier",
+ "bridge": "qtc.qlyphs-pqroute-a.testnet",
+ "verifier": "intents.qlyphs-pqroute-b.testnet",
+ "signers": "three separately keyed signer processes, all operated by the Qlyphs team",
+ "steps": {
+  "request": {
+   "sealed_bytes": 18022,
+   "fresh_account": "re4dde0e176e652c30b10.qlyphs-pqroute-c.testnet",
+   "alice_card": "cfad2a1fb4f8b6b0"
+  },
+  "lock": {
+   "quantus_tx": "0xdea9d6ed512e2afa25fcbba7e062b15dc4965113a1fd2dc3555f33b3e39f3b70",
+   "block": 224420,
+   "extrinsic": 1,
+   "planck": "2000000000000",
+   "deposit_id": "b3e28c28b4c764c8dd6d2b997f01a8749bded0f5326fc4a72f64109ac698a98f",
+   "depositor": "qzppsPak2eHzVHMMRGUqHbtvd17Ap9oEW3HaT5YsALeDUQ5rh"
+  },
+  "mint": {
+   "near_tx": "BCbcSy9BsiYtsF7FLPXodqqFqxr8qVWi7frcaTVtkVSD",
+   "attesters": [
+    1,
+    2
+   ],
+   "intents_balance": "2000000000000"
+  },
+  "withdraw": {
+   "account_creation_tx": "HrJj7MivbAscxgianMJjcjX5EinGtFmTDi3f4SwMYBQh",
+   "ft_withdraw_tx": "8UCVeWVL5iqFSVrzhQJWjzZhJXkD3fMHf3cbCJfRmdxm",
+   "quantus_destination": "qzjdgfzxCKR8tR8iA971aptTKB5Xn3tmKn3C8k34iSekaTgRR"
+  },
+  "release": {
+   "request": {
+    "destination": "07f81a9542503d26b9f3029f4aabb9b24186be828c91a59f42e231aebf79864a",
+    "planck": "2000000000000"
+   },
+   "result": {
+    "id": "near:qtc.qlyphs-pqroute-a.testnet:1",
+    "destination": "qzjdgfzxCKR8tR8iA971aptTKB5Xn3tmKn3C8k34iSekaTgRR",
+    "planck": "2000000000000",
+    "proposalId": 3,
+    "propose": "0x6d07d93552e94303a3affc87cb156835268c0d0fee0d6a53fc94cb5ba2431d91",
+    "approve": "0xdd0c6f4d51ee6ec1b2f2eb7dfb651d823b9e40f2e9266821b825607b1997324d",
+    "execute": "0x83a03c16891c44a146fbf44828e0a6920b02c9d036a9dc014b1a4b62e7312604"
+   }
+  }
+ },
+ "status": {
+  "bridge": "qtc.qlyphs-pqroute-a.testnet",
+  "verifier": "intents.qlyphs-pqroute-b.testnet",
+  "lock": "qzpPEKhGncdyaUgZSxY1zMq3VvB5ng5LmZBP4arD83PFp46jE",
+  "supply_planck": "0",
+  "lock_planck": "25000000000500",
+  "buffer_planck": "1000000000000",
+  "backed": true,
+  "redemptions": 2,
+  "released_through": 2,
+  "signers": "three separately keyed signer processes, all operated by the Qlyphs team"
+ },
+ "seconds": 205
+}

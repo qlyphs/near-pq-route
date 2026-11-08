@@ -1,0 +1,24 @@
+{
+  "schema": "qlyphs-wqtc-lock-v1",
+  "network": "quantus-development",
+  "genesis": "0xca0a88635de136b803302f00defdc1f559e5b2a6cf34e817ce0030ba4377e7a3",
+  "address": "qzpPEKhGncdyaUgZSxY1zMq3VvB5ng5LmZBP4arD83PFp46jE",
+  "accountId": "da1f22169753932899a40df86f038aa32410cdb6e80ea8393813a5ba39308bf2",
+  "signers": [
+    "qznnCC8jztkB5QJnKcFC9yeBgFjQpRqjvZMzKp18iKGJM5Nwp",
+    "qzpGe3yLWLeDs4Tn6VQQDxZSpdcvcUPxNH4v2n7iKWKgG27zi",
+    "qzqE74gFhAqzRMTgDQon49HY5Kz6Lu5GA5T7L3AuemmRBRTtg"
+  ],
+  "threshold": 2,
+  "nonce": "0",
+  "createdAt": {
+    "blockNumber": 120436,
+    "blockHash": "0x01ac342f63876fa4f529a3b4693076a0fcbe5285fbe9a3d419f414759694d18f",
+    "extrinsicIndex": 1,
+    "txHash": "0xb41ae863535d8bff46ed5171ecc99ecdb91998f0b199a38a5e660246978c97c1"
+  },
+  "buffer": {
+    "planck": "1000000000000",
+    "txHash": "0xce8c147a817ef67f5d2a41383c24c4ab6e40ac15eca6d19749ff59432674dd1f"
+  }
+}

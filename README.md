@@ -6,7 +6,8 @@ ML-DSA-87 signers** approve the exact operation and an **on-chain delay** has pa
 cancel it during the delay. The old admin key stops working, and the contract keeps running and can still
 be upgraded.
 
-- **Live demo (NEAR testnet):** https://qlyphs-guardian-demo.qlyphs.workers.dev
+- **Product page:** https://qlyphs-guardian-demo.qlyphs.workers.dev
+- **Live demo (NEAR testnet):** https://qlyphs-guardian-demo.qlyphs.workers.dev/demo
 - **Video (60 s, real testnet session):** [demo/public/guardian-demo.mp4](demo/public/guardian-demo.mp4), also served at https://qlyphs-guardian-demo.qlyphs.workers.dev/guardian-demo.mp4
 - **Spec:** [docs/GUARDIAN.md](docs/GUARDIAN.md)
 
@@ -24,7 +25,7 @@ classical bypass is left.
 
 ## Try it in two minutes
 
-Open the [demo](https://qlyphs-guardian-demo.qlyphs.workers.dev) and:
+Open the [demo](https://qlyphs-guardian-demo.qlyphs.workers.dev/demo) and follow its three steps:
 
 1. **Verify control.** The page reads one finalized block and checks: Guardian and token have zero access
    keys, both run reviewed builds (reproducible hashes), the Guardian's configuration bytes are the expected
@@ -47,7 +48,7 @@ The page also lists every transaction of the testnet cutover, each linked to the
 | [`contract/token.c`](contract/token.c) | The reference target: a small token that starts with a classical owner, hands mint and upgrade to the Guardian once, and upgrades itself in one atomic deploy-and-migrate receipt. |
 | [`sdk/guardian.mjs`](sdk/guardian.mjs) | Message encoding, approvals, the per-deployment creation audit and the `verifyControl` report. |
 | [`tests/`](tests) | Unit checks of the SDK (33) and of the demo's experiment verdicts and followed-operation logic (29), sandbox suites (Guardian 67, token 48) and the testnet ceremony. |
-| [`demo/`](demo) | The hosted demo: one Cloudflare Worker and one page. |
+| [`demo/`](demo) | The hosted product page and demo: one Cloudflare Worker, a landing page (`/`) and the guided demo (`/demo`). |
 
 The ML-DSA-87 verifier in [`core/`](core) is the same C code as the Qlyphs vault (below), verified
 against OpenSSL and FIPS 204 vectors.
@@ -131,7 +132,7 @@ RELEASE_PARENT=<new-name>.testnet node tests/guardian.testnet.mjs
 ```
 
 The demo page runs locally against the public testnet release, read-only: `cd demo && npm ci && npx wrangler
-dev`, then open http://localhost:8787. The report, the state and the recorded evidence work; requesting a mint
+dev`, then open http://localhost:8787 (product page) or http://localhost:8787/demo. The report, the state and the recorded evidence work; requesting a mint
 and the retired-key experiments need the operator's keys and answer 503. The hosted demo is the place to act.
 
 ## Limits

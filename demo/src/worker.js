@@ -6,9 +6,13 @@ import deployment from '../../deployments/guardian-qlyphs-guardian.json';
 import evidence from '../../evidence/guardian-qlyphs-guardian.json';
 import { encodeOperation, envelope, sha256, verifyControl, isAccountId, GUARDIAN_CONTEXT } from '../../sdk/guardian.mjs';
 import { Rpc, edKey, functionCall, deployContract } from './near.js';
+import { PROTOCOLS, readProtocol } from './protocols.js';
 import { ownerMintVerdict, deletedKeyVerdict, UNVERIFIED } from './verdicts.js';
 
-const RPC = 'https://test.rpc.fastnear.com';
+// Public testnet RPCs, in order; the client moves to the next one on a rate limit or a server error.
+const RPC = ['https://test.rpc.fastnear.com', 'https://rpc.testnet.near.org'];
+// Public mainnet RPCs for the read-only protocol directory.
+const MAINNET_RPC = ['https://rpc.mainnet.fastnear.com', 'https://rpc.mainnet.near.org'];
 const TGAS = 10n ** 12n;
 const NEAR = 10n ** 24n;
 const DECIMALS = 18n; // the reviewed token's ft_metadata
@@ -23,6 +27,9 @@ const fromHex = (h) => Uint8Array.from(Buffer.from(h, 'hex'));
 // ML-DSA-87 over the 320-byte operation with the Guardian context.
 const signer = (seedHex) => { const kp = ml_dsa87.keygen(fromHex(seedHex)); return { sign: (m, ctx) => Buffer.from(ml_dsa87.sign(Uint8Array.from(m), kp.secretKey, { context: Uint8Array.from(ctx) })) }; };
 const recent = new Map(); // per-isolate request pacing, a courtesy limit only
+// Short per-isolate caches so that many visitors do not multiply RPC load. A cached report keeps its own block.
+const cache = new Map();
+const cached = async (key, ttlMs, fn) => { const hit = cache.get(key); if (hit && Date.now() - hit.at < ttlMs) return hit.value; const value = await fn(); cache.set(key, { at: Date.now(), value }); return value; };
 const writable = (env) => Boolean(env.SIGNER_A && env.SIGNER_B && env.RELAYER_KEY);
 const readOnly = () => json({ error: 'This copy of the demo runs read-only: it has no operator keys. Use the hosted demo to act.', verdict: UNVERIFIED }, 503);
 
@@ -98,8 +105,14 @@ export default {
     const url = new URL(request.url);
     const rpc = new Rpc(RPC);
     try {
-      if (url.pathname === '/api/report') return json(await report(rpc));
-      if (url.pathname === '/api/state') return json(await state(rpc, env));
+      if (url.pathname === '/api/report') return json(await cached('report', 20000, () => report(rpc)));
+      if (url.pathname === '/api/state') return json(await cached('state', 2000, () => state(rpc, env)));
+      if (url.pathname === '/api/protocols') return json(PROTOCOLS.map(({ id, name, category, contract }) => ({ id, name, category, contract })));
+      if (url.pathname.startsWith('/api/protocols/')) {
+        const id = url.pathname.slice(15);
+        if (!PROTOCOLS.some((p) => p.id === id)) return json({ error: 'unknown protocol' }, 404);
+        return json(await cached(`protocol:${id}`, 600000, () => readProtocol(new Rpc(MAINNET_RPC), id)));
+      }
       if (url.pathname === '/api/retired-keys') {
         return json({ owner: { account: accounts.owner, secret: env.RETIRED_OWNER_KEY ?? null }, token: { account: accounts.token, secret: env.RETIRED_TOKEN_KEY ?? null, deleted_in: deployment.cutover.delete_keys_tx } });
       }

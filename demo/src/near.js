@@ -60,14 +60,22 @@ function encodeTx({ signerId, pub, nonce, receiverId, blockHash, actions }) {
 function toBase64(bytes) { let s = ''; for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000)); return btoa(s); }
 
 export class Rpc {
-  constructor(url) { this.url = url; }
+  /** urls: one RPC URL or several; a rate limit, a server error or a network failure moves to the next one. */
+  constructor(urls) { this.urls = [].concat(urls); this.at = 0; }
   async call(method, params) {
+    const tries = this.urls.length * 2;
     for (let i = 0; ; i++) {
-      const r = await fetch(this.url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ jsonrpc: '2.0', id: 'g', method, params }) });
-      const j = await r.json().catch(() => ({ error: { message: `HTTP ${r.status}` } }));
+      const url = this.urls[this.at % this.urls.length];
+      let j;
+      try {
+        const r = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ jsonrpc: '2.0', id: 'g', method, params }) });
+        j = await r.json().catch(() => ({ error: { code: r.status, message: `HTTP ${r.status}` } }));
+      } catch (e) { j = { error: { code: 'network', message: String(e.message ?? e) } }; }
       if (j.error) {
         const msg = JSON.stringify(j.error);
-        if (i < 3 && /TIMEOUT|HTTP 5\d\d|try again/i.test(msg) && method !== 'send_tx') { await new Promise((ok) => setTimeout(ok, 1500)); continue; }
+        const transient = /-?429|Rate limit|HTTP 5\d\d|network|TIMEOUT|try again/i.test(msg);
+        // A transaction is never resent to another node: its answer, even an error, is final for this attempt.
+        if (transient && method !== 'send_tx' && i < tries) { this.at++; await new Promise((ok) => setTimeout(ok, 300)); continue; }
         const e = new Error(j.error.data && typeof j.error.data === 'string' ? j.error.data : msg); e.rpc = j.error; throw e;
       }
       return j.result;

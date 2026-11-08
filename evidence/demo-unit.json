@@ -137,6 +137,51 @@
       "detail": ""
     },
     {
+      "name": "summary: all pass gives four passing lines",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "summary: a key on the token fails its line",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "summary: the admin line claims only the binding and the audits",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "summary: an unreadable check is unverified, not a pass",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "track: applied marks every stage done",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "track: canceled shows neither the delay nor the execution as done",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "track: expired shows the delay elapsed but no execution",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "track: failed shows an attempted execution",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "track: unavailable infers no history",
+      "ok": true,
+      "detail": ""
+    },
+    {
       "name": "100 GDEMO formats from base units",
       "ok": true,
       "detail": ""

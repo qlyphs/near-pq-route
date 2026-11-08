@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NEAR protocols, post-quantum · Qlyphs Guardian</title>
+<meta name="description" content="Who can upgrade the big NEAR protocols today, read live from mainnet, and what the same contracts look like with a post-quantum Guardian as admin.">
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400..600&family=Geist+Mono:wght@400..700&display=swap" rel="stylesheet">
+<style>
+  :root { --bg: #0E0E0E; --fg: #E8E6E0; --muted: #8A8784; --dim: #4a4845; --line: #232220; --panel: #131312; --flare: #FF6B35; --ok: #5be49b; --warn: #f2c14e; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.55 "Geist", ui-sans-serif, system-ui, sans-serif; }
+  a { color: inherit; }
+  .mono { font-family: "Geist Mono", ui-monospace, monospace; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 24px; }
+  nav { display: flex; align-items: center; justify-content: space-between; height: 72px; }
+  .brand { display: inline-flex; align-items: center; gap: 10px; font-weight: 600; text-decoration: none; }
+  .navlinks { display: flex; gap: 8px; }
+  .btn { display: inline-flex; align-items: center; gap: 8px; font: 600 0.92rem/1 "Geist", sans-serif; text-decoration: none; border-radius: 999px; padding: 11px 18px; border: 1px solid #3d3b38; color: var(--fg); background: none; cursor: pointer; }
+  .btn:hover { border-color: var(--muted); }
+  .btn.primary { background: var(--flare); border-color: var(--flare); color: #160a04; }
+
+  .hero { min-height: 62dvh; display: flex; flex-direction: column; justify-content: center; padding: 4dvh 0 6dvh; }
+  .band { font: 600 15px/1 "Geist Mono", monospace; letter-spacing: 0; white-space: nowrap; overflow: hidden; color: var(--flare); user-select: none; }
+  .band.hero-band { font-size: 22px; margin-bottom: 34px; opacity: .9; }
+  h1 { font-size: clamp(2.6rem, 7vw, 5.2rem); line-height: 1; letter-spacing: -0.04em; font-weight: 600; margin: 0 0 22px; }
+  h1 em { font-style: normal; color: var(--flare); }
+  .sub { font-size: clamp(1.05rem, 1.9vw, 1.25rem); color: var(--muted); max-width: 680px; margin: 0 0 30px; }
+  .counter { font: 500 0.95rem/1.7 "Geist Mono", monospace; color: var(--muted); display: flex; gap: 26px; flex-wrap: wrap; }
+  .counter b { color: var(--fg); font-weight: 600; font-size: 1.6rem; display: block; letter-spacing: -0.02em; }
+  .counter .bad b { color: var(--flare); }
+
+  .steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; border: 1px solid var(--line); border-radius: 16px; overflow: hidden; margin: 0 0 56px; }
+  .steps div { padding: 20px 22px; border-right: 1px solid var(--line); }
+  .steps div:last-child { border-right: 0; }
+  .steps .n { font: 700 0.85rem/1 "Geist Mono", monospace; color: var(--flare); }
+  .steps h3 { margin: 10px 0 6px; font-size: 1.02rem; font-weight: 600; letter-spacing: -0.01em; }
+  .steps p { margin: 0; color: var(--muted); font-size: 0.92rem; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 16px; }
+  .tile { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; transition: border-color .25s; }
+  .tile.pq { border-color: color-mix(in srgb, var(--ok) 45%, var(--line)); }
+  .tile .band { padding: 12px 16px 0; font-size: 13px; color: var(--dim); transition: color .3s; }
+  .tile.pq .band { color: var(--ok); }
+  .tile header { padding: 12px 16px 0; display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+  .tile h2 { margin: 0; font-size: 1.25rem; letter-spacing: -0.02em; font-weight: 600; }
+  .tile .cat { font: 500 0.75rem/1 "Geist Mono", monospace; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; white-space: nowrap; }
+  .switch { display: grid; grid-template-columns: 1fr 1fr; margin: 14px 16px 0; border: 1px solid var(--line); border-radius: 999px; padding: 3px; }
+  .switch button { font: 600 0.78rem/1 "Geist Mono", monospace; letter-spacing: .05em; background: none; border: 0; color: var(--muted); padding: 9px 0; border-radius: 999px; cursor: pointer; }
+  .switch button[aria-pressed="true"] { background: #262523; color: var(--fg); }
+  .tile.pq .switch button[aria-pressed="true"] { background: color-mix(in srgb, var(--ok) 18%, #1a1a19); color: var(--ok); }
+  pre.body { margin: 0; padding: 16px; font: 500 12.5px/1.75 "Geist Mono", monospace; white-space: pre-wrap; word-break: break-all; min-height: 196px; flex: 1; color: var(--fg); }
+  pre.body .k { color: var(--muted); }
+  pre.body .hot { color: var(--flare); font-weight: 700; }
+  pre.body .good { color: var(--ok); font-weight: 700; }
+  pre.body .note { color: var(--muted); }
+  .tile footer { padding: 10px 16px 14px; border-top: 1px solid var(--line); font: 500 0.75rem/1.4 "Geist Mono", monospace; color: var(--muted); display: flex; justify-content: space-between; gap: 10px; }
+  .tile footer .blk { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+  .tile footer a { white-space: nowrap; text-decoration: none; border-bottom: 1px solid var(--dim); }
+  .tile.live-tile { border-color: color-mix(in srgb, var(--flare) 55%, var(--line)); }
+  .tile.live-tile .band { color: var(--flare); }
+  .tile.live-tile .cta { margin: 0 16px 16px; }
+
+  section.more { padding: 12dvh 0 6dvh; display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: start; }
+  h2.big { font-size: clamp(1.8rem, 3.6vw, 2.6rem); line-height: 1.08; letter-spacing: -0.03em; margin: 0 0 14px; font-weight: 600; }
+  .lede { color: var(--muted); font-size: 1.08rem; margin: 0 0 22px; }
+  ul.list { list-style: none; padding: 0; margin: 0; }
+  ul.list li { padding: 13px 0; border-top: 1px solid var(--line); color: var(--muted); font-size: 0.97rem; }
+  ul.list li b { color: var(--fg); font-weight: 500; display: block; }
+  footer.page { border-top: 1px solid var(--line); padding: 26px 0 40px; color: var(--muted); font-size: 0.85rem; }
+  footer.page p { margin: 0 0 8px; max-width: 820px; }
+  @media (max-width: 860px) { .steps { grid-template-columns: 1fr 1fr; } .steps div:nth-child(2) { border-right: 0; } .steps div:nth-child(-n+2) { border-bottom: 1px solid var(--line); } section.more { grid-template-columns: 1fr; } }
+  @media (max-width: 420px) { .grid { grid-template-columns: 1fr; } .steps { grid-template-columns: 1fr; } .steps div { border-right: 0; border-bottom: 1px solid var(--line); } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav>
+    <a class="brand" href="/"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M18.7 11a7.7 7.7 0 1 0-7.7 7.7" stroke="#F27644" stroke-width="2.6" stroke-linecap="round"/><rect x="14.6" y="14.6" width="6.6" height="6.6" rx="1.5" fill="#F27644"/></svg>Qlyphs Guardian</a>
+    <div class="navlinks"><a class="btn" href="/demo">Try it on testnet</a></div>
+  </nav>
+
+  <header class="hero">
+    <div class="band hero-band" id="hero-band" aria-hidden="true"></div>
+    <h1>NEAR protocols,<br><em>post-quantum.</em></h1>
+    <p class="sub">Who can upgrade the big NEAR protocols today, read live from mainnet. Flip any tile to see the same contract with a Guardian as its admin: two of three ML-DSA-87 approvals and an on-chain delay.</p>
+    <div class="counter" aria-live="polite">
+      <span><b id="c-protocols">0</b>protocols read</span>
+      <span class="bad"><b id="c-keys">0</b>ed25519 keys behind their admin</span>
+      <span><b id="c-pq">0</b>post-quantum admin keys</span>
+    </div>
+  </header>
+
+  <div class="steps">
+    <div><span class="n">01</span><h3>Read the admin path</h3><p>Each tile asks the contract who its admin is, at one finalized mainnet block.</p></div>
+    <div><span class="n">02</span><h3>Follow it to the keys</h3><p>A DAO or multisig is opened up to the accounts that vote, then to their full-access keys.</p></div>
+    <div><span class="n">03</span><h3>Flip to the PQ version</h3><p>Same contract and state. The admin becomes a Guardian with no keys; approvals use ML-DSA-87.</p></div>
+    <div><span class="n">04</span><h3>See one run</h3><p>A token on NEAR testnet already went through the cutover. Try its old keys yourself.</p></div>
+  </div>
+
+  <main class="grid" id="grid">
+    <article class="tile live-tile">
+      <div class="band" data-band="live" aria-hidden="true"></div>
+      <header><h2>Demo token</h2><span class="cat">Testnet · live</span></header>
+      <div class="switch"><button aria-pressed="false" disabled>TODAY</button><button aria-pressed="true">PQ VERSION</button></div>
+      <pre class="body" id="live-body"><span class="k">contract    </span>token.qlyphs-guardian.testnet
+<span class="k">keys on it  </span><span class="good">0</span>
+<span class="k">admin       </span>guardian.qlyphs-guardian.testnet
+<span class="k">            </span>a Guardian, <span class="good">0 keys</span>
+<span class="k">approvals   </span><span class="good">2 of 3 ML-DSA-87</span>
+<span class="k">delay       </span>on-chain timelock, cancellable
+<span class="k">upgraded    </span>V1 → V2 through the Guardian</pre>
+      <a class="btn primary cta" href="/demo">Check it and try the old keys →</a>
+    </article>
+  </main>
+
+  <section class="more">
+    <div>
+      <h2 class="big">What the PQ version changes.</h2>
+      <p class="lede">The protocol keeps its code, its state and its users. Only the admin path moves, from accounts held by classical keys to a Guardian that has none.</p>
+      <a class="btn primary" href="/demo">See it on a real contract →</a>
+    </div>
+    <ul class="list">
+      <li><b>The contract adds one rule</b>Admin methods and upgrades accept only the Guardian as caller.</li>
+      <li><b>The Guardian holds no keys</b>It acts only on two of three ML-DSA-87 approvals of the exact operation, verified on chain.</li>
+      <li><b>Every action waits in public</b>An on-chain delay leaves time to see it and cancel it before anyone can execute.</li>
+      <li><b>What it does not cover</b>NEAR consensus, users' own keys, and roles a tile does not read. Guardian is an unaudited testnet prototype.</li>
+    </ul>
+  </section>
+
+  <footer class="page">
+    <p>Public data read live from NEAR mainnet at a finalized block; each tile names its block. No protocol listed here uses Guardian or is affiliated with Qlyphs. A PQ version is what the same contract would look like if its own governance handed its admin to a Guardian.</p>
+    <p>A tile reads one admin view per contract (named in its footer). Contracts can have other roles that it does not cover.</p>
+  </footer>
+</div>
+
+<script type="module">
+const GLYPHS = '░▒▓█';
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const short = (id, n = 30) => (id.length > n ? `${id.slice(0, 10)}…${id.slice(-8)}` : id);
+const plural = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
+
+// A band of block glyphs: a gradient wave that drifts. Purely decorative.
+function band(el, seed, width) {
+  let t = seed;
+  const draw = () => {
+    const cols = width ?? Math.max(20, Math.floor(el.clientWidth / (parseFloat(getComputedStyle(el).fontSize) * 0.6)));
+    let s = '';
+    for (let i = 0; i < cols; i++) { const v = (Math.sin(i * 0.23 + t) + Math.sin(i * 0.071 - t * 0.6 + seed)) / 2; s += GLYPHS[Math.max(0, Math.min(3, Math.floor((v + 1) * 2)))]; }
+    el.textContent = s;
+  };
+  draw();
+  if (!reduce) setInterval(() => { t += 0.12; draw(); }, 110);
+}
+band(document.getElementById('hero-band'), 0);
+document.querySelectorAll('[data-band]').forEach((el, i) => band(el, i * 1.7 + 3));
+
+// Swaps a tile body with a short glyph scramble, line by line.
+function scramble(pre, html) {
+  if (reduce) { pre.innerHTML = html; return; }
+  const tmp = document.createElement('pre'); tmp.innerHTML = html;
+  const target = tmp.textContent;
+  const start = performance.now(), dur = 380;
+  const step = (now) => {
+    const p = Math.min(1, (now - start) / dur);
+    if (p >= 1) { pre.innerHTML = html; return; }
+    let s = '';
+    for (let i = 0; i < target.length; i++) { const c = target[i]; s += c === '\n' || c === ' ' || i / target.length < p ? c : GLYPHS[(Math.random() * 4) | 0]; }
+    pre.textContent = s;
+    requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+
+const row = (k, v) => `<span class="k">${k.padEnd(12)}</span>${v}`;
+const keysText = (keys) => Object.entries(keys).map(([c, n]) => `${n} ${c}`).join(' + ') || 'none';
+
+function describe(c) {
+  if (c.kind === 'dao') return [`a DAO, ${c.votes} of ${c.member_count} council votes`];
+  if (c.kind === 'multisig') return [`a multisig, ${c.votes ?? '?'} of ${c.member_count} confirmations`];
+  if (c.kind === 'locked') return ['<span class="good">no keys, no code</span>: closed'];
+  if (c.kind === 'contract') return ['a contract, rules not read here'];
+  if (c.kind === 'account') return [`an account with ${keysText(c.keys)} full-access key${Object.values(c.keys).reduce((a, b) => a + b, 0) === 1 ? '' : 's'}`];
+  return ['account not found'];
+}
+
+function todayView(r) {
+  const lines = [row('contract', esc(short(r.contract))), row('keys on it', Object.keys(r.contract_keys).length ? `<span class="hot">${esc(keysText(r.contract_keys))}</span>` : '0')];
+  r.admins.forEach((a, i) => { lines.push(row(i ? '' : 'admin', esc(short(a.id)))); describe(a).forEach((d) => lines.push(row('', d))); });
+  if (!r.admins.length) lines.push(row('admin', 'none returned'));
+  if (r.extra?.accounts?.length) lines.push(row(r.extra.label.split(' ')[0], esc(r.extra.accounts.map((x) => short(x, 18)).join(', '))));
+  const t = r.totals;
+  if (t.classical) lines.push(row('at the end', `<span class="hot">${plural(t.classical, 'ed25519 key')}</span>${t.unresolved ? ' <span class="note">+ parts not read</span>' : ''}`));
+  else lines.push(row('at the end', t.locked ? '<span class="good">admin path closed</span>' : 'no classical key found'));
+  return lines.join('\n');
+}
+
+function pqView(r) {
+  const t = r.totals;
+  if (!t.classical && t.locked && !t.unresolved) {
+    return [row('contract', esc(short(r.contract))), row('admin', esc(short(r.admins[0]?.id ?? '—'))), row('', '<span class="good">already closed</span>'), '', '<span class="note">Nothing to move on this path. A Guardian\nwould matter only for roles this tile\ndoes not read.</span>'].join('\n');
+  }
+  return [
+    row('contract', `${esc(short(r.contract))}`), row('', '<span class="note">same code, same state</span>'),
+    row('admin', 'a Guardian, <span class="good">0 keys</span>'),
+    row('approvals', '<span class="good">2 of 3 ML-DSA-87</span> (FIPS 204)'),
+    row('delay', 'on-chain timelock, cancellable'),
+    row('replaces', `<span class="note">${plural(t.classical, 'ed25519 key')}</span>`),
+    row('at the end', '<span class="good">0 classical keys</span>'),
+  ].join('\n');
+}
+
+const totals = { protocols: 0, keys: 0, seen: new Set() };
+function count(r) {
+  totals.protocols++;
+  // A DAO behind several contracts holds the same keys: count each admin account once.
+  for (const a of r.admins) if (!totals.seen.has(a.id)) { totals.seen.add(a.id); const walk = (c) => { totals.keys += Object.entries(c.keys).filter(([k]) => k === 'ed25519').reduce((s, [, n]) => s + n, 0); (c.members ?? []).forEach(walk); }; walk(a); }
+  totals.keys += r.contract_keys.ed25519 ?? 0;
+  document.getElementById('c-protocols').textContent = totals.protocols;
+  document.getElementById('c-keys').textContent = totals.keys;
+}
+
+function tile(p) {
+  const el = document.createElement('article');
+  el.className = 'tile';
+  el.innerHTML = `<div class="band" aria-hidden="true"></div>
+    <header><h2>${esc(p.name)}</h2><span class="cat">${esc(p.category)}</span></header>
+    <div class="switch" role="group" aria-label="View"><button aria-pressed="true" data-v="today">TODAY</button><button aria-pressed="false" data-v="pq" disabled>PQ VERSION</button></div>
+    <pre class="body"><span class="note">reading ${esc(short(p.contract))}\non NEAR mainnet…</span></pre>
+    <footer><span class="blk">—</span><a href="https://nearblocks.io/address/${encodeURIComponent(p.contract)}" target="_blank" rel="noopener">contract ↗</a></footer>`;
+  band(el.querySelector('.band'), Math.random() * 6);
+  document.getElementById('grid').appendChild(el);
+  return el;
+}
+
+const list = await (await fetch('/api/protocols')).json();
+const tiles = list.map((p) => [p, tile(p)]);
+// One at a time: keeps the public RPC load low.
+for (const [p, el] of tiles) {
+  const pre = el.querySelector('pre');
+  let r;
+  try { const res = await fetch(`/api/protocols/${p.id}`); r = await res.json(); if (!res.ok || !r?.totals) throw new Error(r?.error ?? 'read failed'); }
+  catch (e) { pre.innerHTML = `<span class="note">Could not read NEAR mainnet right now.\n${esc(String(e.message).slice(0, 120))}</span>`; continue; }
+  const views = { today: todayView(r), pq: pqView(r) };
+  scramble(pre, views.today);
+  el.querySelector('.blk').textContent = `block ${r.block.height.toLocaleString('en-US')} · ${r.admin_method}`;
+  const buttons = el.querySelectorAll('.switch button');
+  buttons.forEach((b) => {
+    b.disabled = false;
+    b.onclick = () => {
+      if (b.getAttribute('aria-pressed') === 'true') return;
+      buttons.forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+      el.classList.toggle('pq', b.dataset.v === 'pq');
+      scramble(pre, views[b.dataset.v]);
+    };
+  });
+  count(r);
+}
+</script>
+</body>
+</html>

@@ -3,7 +3,7 @@
 // is reported as one. Also the exact token-unit formatting. Writes evidence/demo-unit.json.
 import { writeFileSync } from 'node:fs';
 import { ownerMintVerdict, deletedKeyVerdict, formatUnits, BLOCKED, SUCCEEDED, UNVERIFIED } from '../demo/src/verdicts.js';
-import { followed } from '../demo/public/follow.js';
+import { followed, summarize, trackFor } from '../demo/public/follow.js';
 
 const results = [];
 let failures = 0;
@@ -50,6 +50,22 @@ record('A failed, B now active: A reported failed', followed(A, { active: { prop
 record('B applied after A failed: A not reported applied', followed(A, { active: null, last: { proposal_hash: B, status: 'applied' } }).status === 'unavailable');
 record('A in neither active nor last: unavailable', followed(A, { active: { proposal_hash: B, status: 'queued' }, last: null }).mode === 'unavailable');
 record('A still active: followed as active', followed(A, { active: { proposal_hash: A, status: 'queued' }, last: null }).mode === 'active');
+
+// The plain summary says only what each line's checks establish; the progress track never shows stages an outcome does not prove.
+const NINE = ['Guardian has no access keys', 'Target has no access keys', 'Guardian runs the reproducible build', 'Target runs a reviewed build', 'Guardian config bytes match', 'Guardian state agrees', 'Target is guarded by this Guardian, no owner', 'Creation audited on chain', 'Cutover audited on chain'];
+const report = (over = {}) => NINE.map((name) => ({ name, status: over[name] ?? 'pass' }));
+record('summary: all pass gives four passing lines', summarize(report()).every(([, st]) => st === 'pass'));
+{
+  const s = summarize(report({ 'Target has no access keys': 'fail' }));
+  record('summary: a key on the token fails its line', s[0][1] === 'fail');
+  record('summary: the admin line claims only the binding and the audits', /names this Guardian as admin/.test(s[3][0]) && !/only admin/.test(s[3][0]));
+}
+record('summary: an unreadable check is unverified, not a pass', summarize(report({ 'Creation audited on chain': 'unverified' }))[3][1] === 'unverified');
+record('track: applied marks every stage done', trackFor('applied').join() === 'ok,ok,ok,ok');
+record('track: canceled shows neither the delay nor the execution as done', trackFor('canceled').join() === 'ok,,,bad');
+record('track: expired shows the delay elapsed but no execution', trackFor('expired').join() === 'ok,ok,,bad');
+record('track: failed shows an attempted execution', trackFor('failed').join() === 'ok,ok,ok,bad');
+record('track: unavailable infers no history', trackFor('unavailable').join() === ',,,bad');
 
 record('100 GDEMO formats from base units', formatUnits(100n * 10n ** 18n, 18) === '100');
 record('fractional and large amounts format exactly', formatUnits(1234500000000000000n, 18) === '1.2345' && formatUnits(10n ** 27n, 18) === '1,000,000,000' && formatUnits(100n, 18) === '0.0000000000000001');

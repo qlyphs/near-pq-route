@@ -7,7 +7,7 @@ import { join } from 'node:path';
 
 const [pwDir, outDir] = process.argv.slice(2);
 const { chromium } = createRequire(join(pwDir, 'x.js'))('playwright');
-const URL = process.env.DEMO_URL ?? 'https://qlyphs-guardian-demo.qlyphs.workers.dev';
+const URL = process.env.DEMO_URL ?? 'https://qlyphs-guardian-demo.qlyphs.workers.dev/demo';
 const RECEIVER = process.env.RECEIVER ?? 'alice.testnet';
 mkdirSync(outDir, { recursive: true });
 
@@ -36,7 +36,7 @@ mark('intro');
 await caption('Qlyphs Guardian: post-quantum admin control for NEAR contracts');
 await wait(3500);
 mark('verify');
-await caption('Step 1: is it locked down? Checked on chain, no trust needed');
+await caption('Step 1: check the code, keys and recorded cutover on NEAR');
 await scrollTo('#verify');
 // The recording only proceeds on real verdicts: a report with nine passing checks, typed refusals, a settled mint.
 await page.waitForFunction(() => document.getElementById('statement').dataset.ok === 'true' && [...document.querySelectorAll('#checks li')].filter((li) => li.dataset.status === 'pass').length === 9, null, { timeout: 30000 });

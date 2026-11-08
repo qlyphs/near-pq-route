@@ -177,7 +177,7 @@ addEventListener('resize', fit); fit();
 
 // The story: each scene sets the words, then plays its motion. One button moves forward.
 const scenes = [
-  { mode: 'classical', title: 'This is how most protocols are run today.', note: 'A council of five signs upgrades and mints with classical ed25519 keys.', act: 'Bring a quantum computer' },
+  { mode: 'classical', title: 'This is how many protocols are run today.', note: 'A council of five signs upgrades and mints with classical ed25519 keys.', act: 'Bring a quantum computer' },
   { mode: 'classical', title: 'Break three keys. Own the protocol.', note: 'A future quantum computer recovers the keys from public data. A majority is enough to upgrade the contract.', act: 'Hand control to Guardian',
     play: async () => { $('attacker').classList.add('show'); for (const i of [0, 2, 4]) { await wait(420); eds[i].classList.add('cracked'); } await wait(300); $('token').classList.add('taken'); $('owner').textContent = 'attacker'; } },
   { mode: 'pq', title: 'Now the admin is a contract with zero keys.', note: 'Guardian can only mint or upgrade this one contract, and only with two of three ML-DSA-87 approvals.', act: 'Approve a mint',

@@ -1,0 +1,151 @@
+{
+  "date": "2026-11-08",
+  "wasm_sha256": "34587632ef1aa0b4cd65247e5f1e1db5b904ae0de190ea9224ee8a3e35f77034",
+  "results": [
+    {
+      "name": "init only by the bridge account",
+      "ok": true,
+      "detail": "only the bridge account"
+    },
+    {
+      "name": "init refuses duplicate attester keys",
+      "ok": true,
+      "detail": "must differ"
+    },
+    {
+      "name": "init with genesis and three keys",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "init only once",
+      "ok": true,
+      "detail": "already initialized"
+    },
+    {
+      "name": "state reports genesis and attester key hashes",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "one attester twice is not a quorum",
+      "ok": true,
+      "detail": "two different attesters"
+    },
+    {
+      "name": "an outsider key is not an attester",
+      "ok": true,
+      "detail": "invalid attestation signature"
+    },
+    {
+      "name": "index pointing at another attester",
+      "ok": true,
+      "detail": "invalid attestation signature"
+    },
+    {
+      "name": "signatures do not transfer to a changed amount",
+      "ok": true,
+      "detail": "invalid attestation signature"
+    },
+    {
+      "name": "signatures do not transfer to a changed receiver",
+      "ok": true,
+      "detail": "invalid attestation signature"
+    },
+    {
+      "name": "signatures do not transfer to another deposit",
+      "ok": true,
+      "detail": "invalid attestation signature"
+    },
+    {
+      "name": "attestation for another network",
+      "ok": true,
+      "detail": "another network"
+    },
+    {
+      "name": "attestation for another bridge",
+      "ok": true,
+      "detail": "another bridge"
+    },
+    {
+      "name": "attestation for another Quantus chain",
+      "ok": true,
+      "detail": "another Quantus chain"
+    },
+    {
+      "name": "nonzero reserved bytes",
+      "ok": true,
+      "detail": "bad padding"
+    },
+    {
+      "name": "receipt must match its commitment",
+      "ok": true,
+      "detail": "receipt does not match"
+    },
+    {
+      "name": "truncated input",
+      "ok": true,
+      "detail": "bad mint input"
+    },
+    {
+      "name": "refusals minted nothing",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "2-of-3 attested deposit mints",
+      "ok": true,
+      "detail": "13.974973821879 Tgas"
+    },
+    {
+      "name": "deposit recorded as minted",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "same deposit cannot mint twice",
+      "ok": true,
+      "detail": "deposit already minted"
+    },
+    {
+      "name": "same deposit, new amount, still once",
+      "ok": true,
+      "detail": "deposit already minted"
+    },
+    {
+      "name": "encrypted receipt published and readable by everyone",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "transfer to an unregistered account",
+      "ok": true,
+      "detail": "not a registered holder"
+    },
+    {
+      "name": "transfer to a registered holder",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "redeem needs exactly 1 yoctoNEAR",
+      "ok": true,
+      "detail": "exactly 1 yoctoNEAR"
+    },
+    {
+      "name": "redeem refuses a bad Quantus account",
+      "ok": true,
+      "detail": "lowercase hex"
+    },
+    {
+      "name": "redeem more than the balance",
+      "ok": true,
+      "detail": "insufficient balance"
+    },
+    {
+      "name": "redeem burns and records the Quantus destination",
+      "ok": true,
+      "detail": ""
+    }
+  ]
+}

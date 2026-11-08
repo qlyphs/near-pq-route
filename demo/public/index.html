@@ -8,219 +8,327 @@
 <link rel="icon" href="/icon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400..700&family=Geist+Mono:wght@400..600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@500..650&family=Geist+Mono:wght@500;600&display=swap" rel="stylesheet">
+<script type="importmap">{ "imports": { "three": "https://unpkg.com/three@0.170.0/build/three.module.js", "three/addons/": "https://unpkg.com/three@0.170.0/examples/jsm/" } }</script>
 <style>
-  :root {
-    --paper: #F2F0EA; --card: #FBFAF7; --ink: #131312; --soft: #66625B; --faint: #A6A299; --rule: #DDD9D0;
-    --q: #F27644; --ok: #1E7A4C; --bad: #C23B2B;
-    --sans: "Geist", ui-sans-serif, system-ui, -apple-system, "Helvetica Neue", sans-serif;
-    --mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
-    --spring: linear(0, 0.009, 0.035 2.1%, 0.141 4.4%, 0.723 12.9%, 0.938 16.7%, 1.017 19.4%, 1.067, 1.084 24.3%, 1.077 26.2%, 1.035 31.9%, 1.008 36.6%, 0.997 41.9%, 1);
-    --ease: cubic-bezier(.2, .8, .2, 1);
-    --pad: clamp(18px, 3.4vw, 44px);
-  }
+  :root { --bg: #0B0B0A; --fg: #ECE9E2; --soft: #8E8A82; --q: #F27644; --ok: #7BE0A6; --mono: "Geist Mono", ui-monospace, Menlo, monospace; --sans: "Geist", system-ui, sans-serif; }
   * { box-sizing: border-box; }
-  html, body { margin: 0; height: 100%; background: var(--paper); color: var(--ink); font: 400 16px/1.45 var(--sans); -webkit-font-smoothing: antialiased; }
-  body { display: grid; grid-template-rows: auto 1fr auto; overflow: hidden; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: var(--bg); color: var(--fg); font: 500 16px/1.4 var(--sans); -webkit-font-smoothing: antialiased; }
+  canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
   a { color: inherit; }
-  :focus-visible { outline: 2px solid var(--q); outline-offset: 3px; border-radius: 8px; }
+  :focus-visible { outline: 2px solid var(--q); outline-offset: 4px; border-radius: 10px; }
 
-  nav, .foot { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 18px var(--pad); }
-  .brand { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; font-weight: 650; font-size: 1.12rem; letter-spacing: -0.02em; }
-  .brand small { font: 500 0.72rem/1 var(--mono); color: var(--soft); }
-  .go { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; font-weight: 600; font-size: 0.95rem; background: var(--ink); color: var(--paper); padding: 11px 18px; border-radius: 12px; transition: transform .25s var(--ease), background .2s; }
-  .go:hover { background: #2b2a28; } .go:active { transform: scale(.96); }
+  .brand { position: fixed; top: 22px; left: 26px; display: inline-flex; align-items: center; gap: 10px; text-decoration: none; font-weight: 650; font-size: 1.15rem; letter-spacing: -0.02em; }
+  .brand small { font: 500 .72rem/1 var(--mono); color: var(--soft); }
+  .live { position: fixed; top: 28px; right: 26px; display: inline-flex; align-items: center; gap: 8px; font: 500 .74rem/1 var(--mono); color: var(--soft); text-decoration: none; }
+  .live i { width: 7px; height: 7px; border-radius: 50%; background: #3a3936; }
+  .live.ok i { background: var(--ok); box-shadow: 0 0 0 4px rgba(123,224,166,.15); }
 
-  main { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); align-items: center; gap: clamp(20px, 4vw, 64px); padding: 0 var(--pad); min-height: 0; }
+  .tag { position: fixed; left: 0; top: 0; padding: 5px 9px; border-radius: 8px; background: rgba(11,11,10,.7); border: 1px solid #262522; font: 500 .74rem/1 var(--mono); color: var(--fg); white-space: nowrap; pointer-events: none; transition: opacity .6s cubic-bezier(.2,.8,.2,1); will-change: transform; }
+  .tags.hide .tag:not(.keep) { opacity: 0; }
 
-  /* Left: what is happening, in one sentence, and the one button. */
-  .story { max-width: 560px; }
-  .state { display: inline-flex; align-items: center; gap: 8px; font: 600 0.78rem/1 var(--mono); letter-spacing: 0.04em; text-transform: uppercase; padding: 8px 12px; border-radius: 999px; transition: background .5s var(--ease), color .5s var(--ease); }
-  .state i { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
-  [data-mode="classical"] .state { background: #F1DDD7; color: var(--bad); }
-  [data-mode="pq"] .state { background: #DCEBE2; color: var(--ok); }
-  h1 { font-size: clamp(2.1rem, 4.6vw, 4.3rem); line-height: 1; letter-spacing: -0.045em; font-weight: 650; margin: 22px 0 18px; min-height: 3em; text-wrap: balance; }
-  h1 .w { display: inline-block; opacity: 0; transform: translateY(0.35em); filter: blur(6px); transition: opacity .5s var(--ease), transform .6s var(--ease), filter .5s var(--ease); }
-  h1.in .w { opacity: 1; transform: none; filter: none; }
-  .note { color: var(--soft); font-size: 1.08rem; max-width: 40ch; margin: 0 0 30px; min-height: 3em; transition: opacity .3s; }
-  .act { font: 600 1rem/1 var(--sans); border: 0; border-radius: 14px; padding: 17px 24px; cursor: pointer; background: var(--q); color: #1d0c04; display: inline-flex; align-items: center; gap: 12px; transition: transform .3s var(--spring), background .2s, opacity .2s; }
-  .act:hover { background: #ff8a5a; } .act:active { transform: scale(.95); }
-  .act[disabled] { opacity: .45; cursor: default; transform: none; }
-  .act kbd { font: 500 0.75rem/1 var(--mono); opacity: .6; }
-  .steps { display: flex; gap: 6px; margin-top: 26px; }
-  .steps i { width: 26px; height: 4px; border-radius: 2px; background: var(--rule); transition: background .4s var(--ease), width .5s var(--spring); }
-  .steps i.on { background: var(--ink); width: 40px; }
-
-  /* Right: the stage. Fixed coordinates inside, scaled to fit. */
-  .wrap { position: relative; height: 100%; min-height: 0; display: grid; place-items: center; }
-  .stage { position: relative; width: 560px; height: 520px; transform: scale(var(--s, 1)); transform-origin: center; flex: none; }
-  .el { position: absolute; transition: transform .8s var(--spring), opacity .5s var(--ease), background .5s var(--ease), color .5s var(--ease), border-color .5s var(--ease); }
-
-  .card { left: 110px; width: 340px; height: 126px; border-radius: 22px; background: var(--card); border: 1.5px solid var(--rule); padding: 18px 22px; box-shadow: 0 30px 60px -44px rgba(19,19,18,.45); }
-  .card .k { font: 500 0.74rem/1 var(--mono); color: var(--soft); }
-  .card .n { font-size: 1.45rem; font-weight: 650; letter-spacing: -0.02em; margin: 8px 0 12px; }
-  .card .m { display: flex; justify-content: space-between; font: 500 0.8rem/1 var(--mono); color: var(--soft); }
-  .card .m b { color: var(--ink); font-weight: 600; transition: color .4s; }
-  #token { top: 170px; }
-  [data-mode="pq"] #token { transform: translateY(196px); }
-  #token.taken { border-color: var(--bad); background: #FBEDE9; animation: shake .5s var(--ease); }
-  #token.taken .m b.owner { color: var(--bad); }
-  #token.bump { animation: bump .6s var(--spring); }
-
-  #guardian { top: 170px; opacity: 0; transform: translateY(-24px) scale(.94); background: var(--ink); color: var(--paper); border-color: var(--ink); }
-  #guardian .k, #guardian .m { color: #9E9A92; }
-  #guardian .m b { color: var(--paper); }
-  [data-mode="pq"] #guardian { opacity: 1; transform: none; }
-  .delay { position: absolute; left: 22px; right: 22px; bottom: 14px; height: 4px; border-radius: 2px; background: #33322f; overflow: hidden; }
-  .delay i { display: block; height: 100%; width: 100%; background: var(--q); transform: scaleX(0); transform-origin: left; }
-  .delay.run i { transform: scaleX(1); transition: transform 2.4s linear; }
-  #guardian.refuse { animation: shake .45s var(--ease); }
-
-  /* Keys: five classical tiles, three ML-DSA-87 tiles. */
-  .key { top: 54px; width: 72px; height: 72px; border-radius: 18px; display: grid; place-items: center; text-align: center; font: 600 0.72rem/1.15 var(--mono); }
-  .ed { background: #EADBD5; color: #8F2F22; }
-  .ed.cracked { background: var(--bad); color: #fff; transform: rotate(var(--r, -6deg)) translateY(6px) !important; }
-  [data-mode="pq"] .ed { opacity: 0; transform: translateY(120px) scale(.4) !important; }
-  .pqk { background: transparent; border: 1.5px dashed var(--faint); color: var(--faint); opacity: 0; transform: translateY(-30px); }
-  [data-mode="pq"] .pqk { opacity: 1; transform: none; }
-  .pqk.signed { background: var(--q); border: 1.5px solid var(--q); color: #1d0c04; transform: translateY(-6px) !important; }
-  .pqk.signed::after { content: "signed"; position: absolute; bottom: -22px; left: 0; right: 0; font: 500 0.66rem/1 var(--mono); color: var(--soft); }
-  .attacker { top: 10px; left: 0; width: 100%; text-align: center; font: 600 0.8rem/1 var(--mono); color: var(--bad); opacity: 0; transform: translateY(-14px); }
-  .attacker.show { opacity: 1; transform: none; }
-  .attacker.pq { top: 10px; }
-
-  .packet { left: 245px; top: 270px; width: 70px; height: 34px; border-radius: 10px; background: var(--q); color: #1d0c04; display: grid; place-items: center; font: 600 0.8rem/1 var(--mono); opacity: 0; transform: translateY(0) scale(.6); }
-  .packet.go { opacity: 1; transform: translateY(78px) scale(1); }
-  .packet.done { opacity: 0; transform: translateY(110px) scale(.7); }
-
-  .foot { font-size: 0.84rem; color: var(--soft); align-items: flex-end; }
-  .foot p { margin: 0; max-width: 62ch; }
-  .foot p b { color: var(--ink); font-weight: 600; }
-  .live { display: inline-flex; align-items: center; gap: 8px; font: 500 0.78rem/1.3 var(--mono); white-space: nowrap; text-decoration: none; }
-  .live i { width: 8px; height: 8px; border-radius: 50%; background: var(--faint); }
-  .live.ok i { background: var(--ok); box-shadow: 0 0 0 4px color-mix(in srgb, var(--ok) 18%, transparent); }
-
-  @keyframes shake { 20% { translate: -7px 0; } 40% { translate: 6px 0; } 60% { translate: -4px 0; } 80% { translate: 2px 0; } }
-  @keyframes bump { 40% { scale: 1.03; } }
-
-  @media (max-width: 860px) {
-    body { overflow: auto; }
-    main { grid-template-columns: 1fr; padding-top: 8px; }
-    .wrap { height: 380px; }
-    h1 { min-height: 0; }
-    .foot { flex-direction: column; align-items: flex-start; }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after { transition-duration: 0s !important; animation: none !important; }
-  }
+  .bottom { position: fixed; left: 0; right: 0; bottom: 30px; display: grid; justify-items: center; gap: 18px; pointer-events: none; }
+  .cap { font: 600 .78rem/1 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--soft); min-height: 1em; }
+  .cap .w { display: inline-block; opacity: 0; transform: translateY(6px); filter: blur(4px); transition: opacity .5s cubic-bezier(.2,.8,.2,1), transform .6s cubic-bezier(.2,.8,.2,1), filter .5s; }
+  .cap.in .w { opacity: 1; transform: none; filter: none; }
+  .cap.ok { color: var(--ok); }
+  .act { pointer-events: auto; font: 600 1rem/1 var(--sans); border: 0; border-radius: 999px; padding: 16px 28px; cursor: pointer; background: var(--fg); color: #111; display: inline-flex; align-items: center; gap: 12px; text-decoration: none; transition: transform .35s cubic-bezier(.3,1.6,.5,1), background .2s, opacity .25s; }
+  .act:hover { background: #fff; } .act:active { transform: scale(.94); }
+  .act[disabled] { opacity: .35; cursor: default; }
+  .act.q { background: var(--q); color: #1d0c04; }
+  .act kbd { font: 500 .72rem/1 var(--mono); opacity: .5; }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition-duration: 0s !important; } }
 </style>
 </head>
-<body data-mode="classical">
-<nav>
-  <a class="brand" href="/" aria-label="Qlyphs Guardian home">
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M18.7 11a7.7 7.7 0 1 0-7.7 7.7" stroke="#F27644" stroke-width="2.6" stroke-linecap="round"/><rect x="14.6" y="14.6" width="6.6" height="6.6" rx="1.5" fill="#F27644"/></svg>
-    Qlyphs<small>Guardian</small>
-  </a>
-  <a class="go" href="/demo">Try it on testnet →</a>
-</nav>
-
-<main>
-  <div class="story">
-    <span class="state" id="state"><i></i><span id="state-text">Classical keys</span></span>
-    <h1 id="title" aria-live="polite"></h1>
-    <p class="note" id="note"></p>
-    <button class="act" id="act" type="button"><span id="act-text"></span><kbd>↵</kbd></button>
-    <div class="steps" id="steps" aria-hidden="true"></div>
-  </div>
-
-  <div class="wrap" id="wrap">
-    <div class="stage" id="stage" aria-hidden="true">
-      <div class="el attacker" id="attacker">a quantum computer is working on these keys</div>
-      <div class="el key ed" style="left:60px;--r:-8deg">ed<br>25519</div>
-      <div class="el key ed" style="left:150px;--r:5deg">ed<br>25519</div>
-      <div class="el key ed" style="left:240px;--r:-4deg">ed<br>25519</div>
-      <div class="el key ed" style="left:330px;--r:7deg">ed<br>25519</div>
-      <div class="el key ed" style="left:420px;--r:-5deg">ed<br>25519</div>
-      <div class="el key pqk" style="left:150px">ML-DSA<br>87</div>
-      <div class="el key pqk" style="left:244px">ML-DSA<br>87</div>
-      <div class="el key pqk" style="left:338px">ML-DSA<br>87</div>
-      <div class="el card" id="guardian">
-        <div class="k">guardian.qlyphs-guardian.testnet</div>
-        <div class="n">Guardian</div>
-        <div class="m"><span>access keys <b>0</b></span><span>needs <b>2 of 3</b></span><span id="g-status">idle</span></div>
-        <div class="delay" id="delay"><i></i></div>
-      </div>
-      <div class="el packet" id="packet">+100</div>
-      <div class="el card" id="token">
-        <div class="k">token.qlyphs-guardian.testnet</div>
-        <div class="n">Your protocol</div>
-        <div class="m"><span>admin <b class="owner" id="owner">5 keys</b></span><span>supply <b id="supply">1,000</b></span></div>
-      </div>
-    </div>
-  </div>
-</main>
-
-<footer class="foot">
-  <p><b>Qlyphs</b> builds crypto that stays safe after quantum computers. Its open-source wallet signs with ML-DSA-87 (NIST FIPS 204, highest level) and runs today on Quantus. Guardian brings those signatures to the admin keys of NEAR protocols. Unaudited testnet prototype.</p>
-  <a class="live" id="live" href="/demo"><i></i><span id="live-text">reading NEAR testnet…</span></a>
-</footer>
+<body>
+<canvas id="c" aria-hidden="true"></canvas>
+<div class="tags" id="tags" aria-hidden="true"></div>
+<a class="brand" href="/" aria-label="Qlyphs Guardian"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M18.7 11a7.7 7.7 0 1 0-7.7 7.7" stroke="#F27644" stroke-width="2.6" stroke-linecap="round"/><rect x="14.6" y="14.6" width="6.6" height="6.6" rx="1.5" fill="#F27644"/></svg>Qlyphs<small>Guardian</small></a>
+<a class="live" id="live" href="/demo"><i></i><span id="live-text">NEAR testnet</span></a>
+<div class="bottom">
+  <div class="cap" id="cap" aria-live="polite"></div>
+  <button class="act" id="act" type="button"><span id="act-text">Continue</span><kbd>↵</kbd></button>
+</div>
 
 <script type="module">
+import * as THREE from 'three';
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const $ = (id) => document.getElementById(id);
+const clamp01 = (x) => Math.min(1, Math.max(0, x));
+const damp = (a, b, k, dt) => a + (b - a) * (1 - Math.exp(-k * dt));
+const spring = (t) => (t <= 0 ? 0 : t >= 1 ? 1 : 1 - Math.exp(-6 * t) * Math.cos(9 * t));
 const wait = (ms) => new Promise((r) => setTimeout(r, reduce ? 0 : ms));
-const eds = [...document.querySelectorAll('.ed')], pqs = [...document.querySelectorAll('.pqk')];
+const C = { warm: new THREE.Color('#F27644'), red: new THREE.Color('#FF3B2E'), white: new THREE.Color('#EDEAE2'), dim: new THREE.Color('#55534e') };
 
-// Fit the fixed-size stage to its column.
-const fit = () => { const w = $('wrap').getBoundingClientRect(); $('stage').style.setProperty('--s', Math.min(1.25, w.width / 580, w.height / 540)); };
-addEventListener('resize', fit); fit();
+// NEAR mainnet protocols and how many classical keys stand behind their upgrade path (DAO council size, or
+// a single full-access key). Read on chain in November 2026.
+const PROTOCOLS = [['Rhea Finance', 5], ['Rhea Lending', 5], ['LiNEAR', 5], ['Meta Pool', 4], ['NEAR Intents', 5], ['Omni Bridge', 5], ['Aurora', 1], ['USDC', 1]];
 
-// The story: each scene sets the words, then plays its motion. One button moves forward.
-const scenes = [
-  { mode: 'classical', title: 'This is how many protocols are run today.', note: 'A council of five signs upgrades and mints with classical ed25519 keys.', act: 'Bring a quantum computer' },
-  { mode: 'classical', title: 'Break three keys. Own the protocol.', note: 'A future quantum computer recovers the keys from public data. A majority is enough to upgrade the contract.', act: 'Hand control to Guardian',
-    play: async () => { $('attacker').classList.add('show'); for (const i of [0, 2, 4]) { await wait(420); eds[i].classList.add('cracked'); } await wait(300); $('token').classList.add('taken'); $('owner').textContent = 'attacker'; } },
-  { mode: 'pq', title: 'Now the admin is a contract with zero keys.', note: 'Guardian can only mint or upgrade this one contract, and only with two of three ML-DSA-87 approvals.', act: 'Approve a mint',
-    play: async () => { $('attacker').classList.remove('show'); $('token').classList.remove('taken'); $('owner').textContent = 'Guardian'; } },
-  { mode: 'pq', title: 'Two signers approve. Then everyone waits.', note: 'The exact operation is public during the delay. The signers can still cancel it.', act: 'Execute it',
-    play: async () => { for (const i of [0, 1]) { await wait(380); pqs[i].classList.add('signed'); } await wait(300); $('g-status').textContent = 'in delay'; $('delay').classList.add('run'); await wait(2450); $('g-status').textContent = 'ready'; } },
-  { mode: 'pq', title: 'Anyone can execute it. The mint lands.', note: 'Same contract, same balances, same upgrade path. Only the hands on the controls changed.', act: 'Bring the quantum computer back',
-    play: async () => { $('packet').classList.add('go'); await wait(650); $('packet').classList.add('done'); $('token').classList.add('bump'); $('supply').textContent = '1,100'; $('g-status').textContent = 'executed'; pqs.forEach((k) => k.classList.remove('signed')); $('delay').classList.remove('run'); } },
-  { mode: 'pq', title: 'Broken classical keys get nothing.', note: 'There is no classical key left to break. Try it with the real retired keys on testnet.', act: 'Start again', href: true,
-    play: async () => { const a = $('attacker'); a.textContent = 'the same quantum computer, no classical key to break'; a.classList.add('show', 'pq'); await wait(500); $('guardian').classList.add('refuse'); $('g-status').textContent = 'refused'; } },
-];
+// ---------- Renderer, scene, ASCII pass ----------
+const renderer = new THREE.WebGLRenderer({ canvas: $('c'), antialias: false, powerPreference: 'high-performance' });
+renderer.setPixelRatio(1);
+const scene = new THREE.Scene(); scene.background = new THREE.Color(0x000000);
+const camera = new THREE.PerspectiveCamera(34, 1, 0.1, 300);
+scene.add(new THREE.HemisphereLight(0xffffff, 0x1a1a1a, 1.0));
+const sun = new THREE.DirectionalLight(0xffffff, 2.6); sun.position.set(6, 10, 7); scene.add(sun);
+const rim = new THREE.DirectionalLight(0xffffff, 0.9); rim.position.set(-8, 3, -6); scene.add(rim);
 
-let at = -1, busy = false;
-$('steps').innerHTML = scenes.map(() => '<i></i>').join('');
-function words(t) { const h = $('title'); h.classList.remove('in'); h.innerHTML = ''; t.split(' ').forEach((w, i) => { const s = document.createElement('span'); s.className = 'w'; s.textContent = w; s.style.transitionDelay = `${i * 35}ms`; h.append(s, ' '); }); requestAnimationFrame(() => requestAnimationFrame(() => h.classList.add('in'))); }
-function reset() {
-  eds.forEach((k) => k.classList.remove('cracked')); pqs.forEach((k) => k.classList.remove('signed'));
-  for (const id of ['token', 'guardian', 'packet', 'attacker', 'delay']) $(id).className = $(id).className.split(' ').filter((c) => ['el', 'card', 'packet', 'attacker', 'delay'].includes(c)).join(' ');
-  $('attacker').textContent = 'a quantum computer is working on these keys'; $('owner').textContent = '5 keys'; $('supply').textContent = '1,000'; $('g-status').textContent = 'idle';
+const CHARS = ' .:-=+*#%@';
+const rt = new THREE.WebGLRenderTarget(2, 2, { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter });
+function glyphAtlas(cw, ch) {
+  const s = 3, c = document.createElement('canvas'); c.width = cw * s * CHARS.length; c.height = ch * s;
+  const g = c.getContext('2d'); g.fillStyle = '#000'; g.fillRect(0, 0, c.width, c.height);
+  g.fillStyle = '#fff'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.font = `600 ${Math.round(ch * s * 0.8)}px "Geist Mono", ui-monospace, Menlo, monospace`;
+  [...CHARS].forEach((k, i) => g.fillText(k, (i + 0.5) * cw * s, ch * s * 0.54));
+  const t = new THREE.CanvasTexture(c); t.minFilter = t.magFilter = THREE.LinearFilter; t.generateMipmaps = false; return t;
 }
-async function go(i) {
-  if (busy) return; busy = true; $('act').disabled = true;
-  if (i >= scenes.length) { reset(); i = 0; }
-  at = i; const s = scenes[i];
-  document.body.dataset.mode = s.mode;
-  $('state-text').textContent = s.mode === 'pq' ? 'Post-quantum' : 'Classical keys';
-  words(s.title); $('note').textContent = s.note;
-  [...$('steps').children].forEach((el, k) => el.classList.toggle('on', k === i));
-  $('act-text').textContent = s.act;
-  if (s.play) await s.play();
+const ascii = new THREE.ShaderMaterial({
+  uniforms: { tScene: { value: rt.texture }, tGlyph: { value: null }, res: { value: new THREE.Vector2() }, cell: { value: new THREE.Vector2(8, 14) }, n: { value: CHARS.length }, bg: { value: new THREE.Color('#0B0B0A') } },
+  vertexShader: 'void main(){ gl_Position = vec4(position.xy, 0., 1.); }',
+  fragmentShader: `
+    uniform sampler2D tScene, tGlyph; uniform vec2 res, cell; uniform float n; uniform vec3 bg;
+    void main() {
+      vec2 p = gl_FragCoord.xy, id = floor(p / cell), uv = (id + .5) * cell / res, o = cell / res * .25;
+      vec3 c = (texture2D(tScene, uv + vec2(-o.x, -o.y)).rgb + texture2D(tScene, uv + vec2(o.x, -o.y)).rgb
+              + texture2D(tScene, uv + vec2(-o.x, o.y)).rgb + texture2D(tScene, uv + vec2(o.x, o.y)).rgb) * .25;
+      c = pow(c, vec3(1. / 2.2));
+      float l = dot(c, vec3(.299, .587, .114));
+      float idx = floor(clamp(pow(l, .85) * 1.08, 0., .999) * n);
+      vec2 f = fract(p / cell);
+      float g = texture2D(tGlyph, vec2((idx + f.x) / n, f.y)).r;
+      vec3 hue = c / max(max(c.r, max(c.g, c.b)), 1e-3);
+      gl_FragColor = vec4(mix(bg, hue * (.5 + .7 * clamp(l * 1.5, 0., 1.)), g), 1.);
+    }`,
+  depthTest: false, depthWrite: false,
+});
+const post = new THREE.Scene(), postCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+post.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), ascii));
+let W = 1, H = 1;
+function resize() {
+  W = innerWidth; H = innerHeight;
+  const small = W < 760, cw = small ? 7 : 8, ch = small ? 12 : 14;
+  renderer.setSize(W, H, false); rt.setSize(Math.ceil(W / cw) * 2, Math.ceil(H / ch) * 2);
+  ascii.uniforms.res.value.set(W, H); ascii.uniforms.cell.value.set(cw, ch);
+  ascii.uniforms.tGlyph.value?.dispose(); ascii.uniforms.tGlyph.value = glyphAtlas(cw, ch);
+  camera.aspect = W / H; camera.setViewOffset(W, H, 0, H * 0.1, W, H); camera.updateProjectionMatrix();
+}
+addEventListener('resize', resize); resize(); document.fonts?.ready.then(resize);
+
+// ---------- Fragments, for anything that breaks ----------
+const FR = 900;
+const frag = new THREE.InstancedMesh(new THREE.BoxGeometry(0.1, 0.1, 0.1), new THREE.MeshStandardMaterial({ roughness: 0.5 }), FR);
+frag.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+const frags = [...Array(FR)].map(() => ({ p: new THREE.Vector3(), v: new THREE.Vector3(), r: new THREE.Vector3(), life: 0, max: 1 }));
+for (let i = 0; i < FR; i++) frag.setColorAt(i, C.red);
+scene.add(frag);
+let fragNext = 0;
+function burst(at, color, n, speed = 3.2, out = null) {
+  for (let k = 0; k < n; k++) {
+    const i = fragNext, f = frags[i]; fragNext = (fragNext + 1) % FR;
+    f.p.copy(at); f.v.set(Math.random() - 0.5, Math.random() * 0.9, Math.random() - 0.5).normalize().multiplyScalar(speed * (0.4 + Math.random()));
+    if (out) f.v.addScaledVector(out, speed * 0.8);
+    f.r.set(Math.random() * 6, Math.random() * 6, Math.random() * 6); f.life = f.max = 1.1 + Math.random() * 0.9; frag.setColorAt(i, color);
+  }
+  frag.instanceColor.needsUpdate = true;
+}
+
+// ---------- A lattice: the shell of a 5x5x5 grid that assembles around a protocol ----------
+const G = 5, SP = 1.25, OFF = ((G - 1) * SP) / 2;
+const latticeNodes = [], latticeIndex = new Map();
+for (let x = 0; x < G; x++) for (let y = 0; y < G; y++) for (let z = 0; z < G; z++) {
+  if (![x, y, z].some((v) => v === 0 || v === G - 1)) continue;
+  latticeIndex.set(`${x},${y},${z}`, latticeNodes.length);
+  latticeNodes.push({ target: new THREE.Vector3(x * SP - OFF, y * SP - OFF + 0.1, z * SP - OFF), delay: y * 0.1 + Math.random() * 0.22 });
+}
+const latticeEdges = [];
+for (const [k, i] of latticeIndex) {
+  const [x, y, z] = k.split(',').map(Number);
+  for (const [dx, dy, dz] of [[1, 0, 0], [0, 1, 0], [0, 0, 1]]) {
+    const j = latticeIndex.get(`${x + dx},${y + dy},${z + dz}`); if (j === undefined) continue;
+    const m = latticeNodes[i].target.clone().add(latticeNodes[j].target).multiplyScalar(0.5);
+    if (Math.max(Math.abs(m.x), Math.abs(m.y - 0.1), Math.abs(m.z)) < OFF - 0.01) continue;
+    latticeEdges.push([i, j]);
+  }
+}
+const nodeGeo = new THREE.IcosahedronGeometry(0.11, 1), edgeGeo = new THREE.CylinderGeometry(0.03, 0.03, 1, 6, 1);
+const tmp = new THREE.Object3D(), up = new THREE.Vector3(0, 1, 0), v1 = new THREE.Vector3(), col = new THREE.Color();
+function makeLattice(parent) {
+  const nodes = latticeNodes.map((n) => ({ ...n, start: n.target.clone().normalize().multiplyScalar(9 + Math.random() * 5).add(new THREE.Vector3((Math.random() - 0.5) * 4, (Math.random() - 0.5) * 4, (Math.random() - 0.5) * 4)), pos: new THREE.Vector3(), t: 0, flash: 0 }));
+  const nm = new THREE.InstancedMesh(nodeGeo, new THREE.MeshStandardMaterial({ roughness: 0.4 }), nodes.length);
+  const em = new THREE.InstancedMesh(edgeGeo, new THREE.MeshStandardMaterial({ roughness: 0.5 }), latticeEdges.length);
+  nm.instanceMatrix.setUsage(THREE.DynamicDrawUsage); em.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  for (let i = 0; i < nodes.length; i++) nm.setColorAt(i, C.dim); for (let i = 0; i < latticeEdges.length; i++) em.setColorAt(i, C.dim);
+  nm.visible = em.visible = false; parent.add(nm, em);
+  const L = { nodes, L: 0, Lt: 0, sweep: -10, rate: 0.9,
+    update(dt, t) {
+      L.L += Math.sign(L.Lt - L.L) * Math.min(Math.abs(L.Lt - L.L), dt * L.rate);
+      nm.visible = em.visible = L.L > 0.001;
+      if (!nm.visible) return;
+      nodes.forEach((n, i) => {
+        n.t = clamp01((L.L - n.delay) / 0.75); const e = spring(n.t);
+        n.pos.lerpVectors(n.start, n.target, e); n.pos.y += Math.sin(t * 1.4 + i) * 0.03 * e;
+        n.flash = Math.max(0, n.flash - dt * 1.8);
+        tmp.position.copy(n.pos); tmp.rotation.set(0, 0, 0); tmp.scale.setScalar(Math.max(0.0001, Math.min(1, n.t * 2))); tmp.updateMatrix(); nm.setMatrixAt(i, tmp.matrix);
+        const band = Math.exp(-((n.target.y - L.sweep) ** 2) / 0.35);
+        nm.setColorAt(i, col.copy(C.dim).lerp(C.white, 0.35 + band * 0.65).lerp(C.warm, band * 0.5).lerp(C.red, n.flash));
+      });
+      latticeEdges.forEach(([i, j], k) => {
+        const A = nodes[i], B = nodes[j], s = Math.min(A.t, B.t);
+        v1.subVectors(B.pos, A.pos); const len = v1.length();
+        tmp.position.addVectors(A.pos, B.pos).multiplyScalar(0.5); tmp.quaternion.setFromUnitVectors(up, v1.normalize());
+        tmp.scale.set(Math.max(0.0001, s), s > 0.98 ? len : 0.0001, Math.max(0.0001, s)); tmp.updateMatrix(); em.setMatrixAt(k, tmp.matrix); tmp.quaternion.identity();
+        const band = Math.exp(-((((A.target.y + B.target.y) / 2) - L.sweep) ** 2) / 0.35);
+        em.setColorAt(k, col.copy(C.dim).lerp(C.white, 0.15 + band * 0.75).lerp(C.warm, band * 0.5).lerp(C.red, Math.max(A.flash, B.flash)));
+      });
+      nm.instanceMatrix.needsUpdate = em.instanceMatrix.needsUpdate = nm.instanceColor.needsUpdate = em.instanceColor.needsUpdate = true;
+    },
+    hit(pLocal) { nodes.forEach((n) => { const d = n.pos.distanceTo(pLocal); if (d < 2.2) n.flash = Math.max(n.flash, 1 - d / 2.2); }); },
+  };
+  return L;
+}
+
+// ---------- Protocols on a ring, each with its keys and its own lattice ----------
+const RING = 11, monoGeo = new RoundedBoxGeometry(1.5, 2.6, 1.5, 4, 0.14), keyGeo = new THREE.OctahedronGeometry(0.34, 0);
+const tags = $('tags');
+const P = PROTOCOLS.map(([name, nkeys], i) => {
+  const a = (i / PROTOCOLS.length) * Math.PI * 2 + Math.PI / 2;
+  const g = new THREE.Group(); g.position.set(Math.cos(a) * RING, 0, Math.sin(a) * RING); scene.add(g);
+  const mat = new THREE.MeshStandardMaterial({ color: C.warm.clone(), roughness: 0.55, metalness: 0.05 });
+  const mono = new THREE.Mesh(monoGeo, mat); mono.rotation.y = -a; g.add(mono);
+  const keys = [...Array(nkeys)].map((_, k) => { const m = new THREE.Mesh(keyGeo, new THREE.MeshStandardMaterial({ color: C.warm.clone(), roughness: 0.35, flatShading: true })); m.userData = { alive: 1, s: 1, k }; g.add(m); return m; });
+  const slab = new THREE.Mesh(new RoundedBoxGeometry(1.5, 0.34, 1.5, 3, 0.08), new THREE.MeshStandardMaterial({ color: C.white, roughness: 0.5, emissive: C.warm, emissiveIntensity: 0.2 })); slab.visible = false; g.add(slab);
+  const tag = document.createElement('span'); tag.className = 'tag'; tag.textContent = name; tags.append(tag);
+  return { name, nkeys, g, mat, mono, keys, slab, tag, colT: C.warm.clone(), lattice: makeLattice(g), keyN: 1, slabT: -1, shake: 0, s: 1, hit: false };
+});
+// Three signer pillars, around whichever protocol the story follows.
+const pillars = [0, 1, 2].map((i) => {
+  const a = Math.PI / 2 + (i * Math.PI * 2) / 3;
+  const m = new THREE.Mesh(new RoundedBoxGeometry(0.46, 3.6, 0.46, 3, 0.1), new THREE.MeshStandardMaterial({ color: C.dim.clone(), roughness: 0.45, emissive: C.warm.clone(), emissiveIntensity: 0 }));
+  m.userData = { sign: 0, cur: 0, ox: Math.cos(a) * 4.2, oz: Math.sin(a) * 4.2 }; m.visible = false; scene.add(m); return m;
+});
+const shots = [];
+function fire(p, n) {
+  for (let i = 0; i < n; i++) {
+    const a = Math.random() * Math.PI * 2, y = (Math.random() - 0.3) * 4;
+    const m = new THREE.Mesh(keyGeo, new THREE.MeshStandardMaterial({ color: C.red, flatShading: true, emissive: C.red, emissiveIntensity: 0.4 }));
+    m.position.set(p.g.position.x + Math.cos(a) * 11, y, p.g.position.z + Math.sin(a) * 11); scene.add(m);
+    shots.push({ m, p, delay: i * 0.35, v: p.g.position.clone().sub(m.position).normalize().multiplyScalar(7.5) });
+  }
+}
+// The quantum wave: a red ring that sweeps the whole ring of protocols.
+const wave = new THREE.Mesh(new THREE.TorusGeometry(1, 0.06, 8, 96), new THREE.MeshStandardMaterial({ color: C.red, emissive: C.red, emissiveIntensity: 0.8 }));
+wave.rotation.x = Math.PI / 2; wave.visible = false; scene.add(wave);
+
+// ---------- Camera and per-frame update ----------
+const S = { focus: new THREE.Vector3(), focusT: new THREE.Vector3(), dist: 48, distT: 48, el: 0.8, elT: 0.8, sel: null, pillars: 0, pillarsT: 0, wave: -1 };
+const pointer = { x: 0, y: 0 };
+addEventListener('pointermove', (e) => { pointer.x = e.clientX / W - 0.5; pointer.y = e.clientY / H - 0.5; });
+const proj = new THREE.Vector3(), local = new THREE.Vector3(), wp = new THREE.Vector3();
+let az = 0.3, last = performance.now(), t = 0;
+function frame(now) {
+  const dt = Math.min(0.05, (now - last) / 1000) * (reduce ? 4 : 1); last = now; t += dt;
+  if (!reduce) az += dt * (S.sel ? 0.12 : 0.05);
+  S.focus.lerp(S.focusT, 1 - Math.exp(-2.2 * dt)); S.dist = damp(S.dist, S.distT, 2.2, dt); S.el = damp(S.el, S.elT, 2.2, dt);
+  const a = az + pointer.x * 0.3, el = S.el - pointer.y * 0.1;
+  camera.position.set(S.focus.x + Math.sin(a) * Math.cos(el) * S.dist, S.focus.y + Math.sin(el) * S.dist + 0.4, S.focus.z + Math.cos(a) * Math.cos(el) * S.dist);
+  camera.lookAt(S.focus.x, S.focus.y + 0.2, S.focus.z);
+
+  P.forEach((p, i) => {
+    p.s = damp(p.s, S.sel && S.sel !== p ? 0 : 1, 4, dt); p.g.visible = p.s > 0.01; p.g.scale.setScalar(Math.max(0.0001, p.s));
+    p.mat.color.lerp(p.colT, 1 - Math.exp(-3 * dt));
+    p.shake = Math.max(0, p.shake - dt * 1.6);
+    p.mono.position.set(Math.sin(t * 55) * p.shake * 0.08, Math.sin(t * 0.6 + i) * 0.12, 0);
+    p.keys.forEach((k) => { const d = k.userData; d.s = damp(d.s, p.keyN * d.alive, 6, dt); const ang = (d.k / p.nkeys) * Math.PI * 2 + t * 0.35; k.position.set(Math.cos(ang) * 2.6, 0.2 + Math.sin(t * 0.9 + d.k) * 0.35, Math.sin(ang) * 2.6); k.rotation.set(t * 0.7 + d.k, t * 0.9, 0); k.scale.setScalar(Math.max(0.0001, d.s)); k.visible = d.s > 0.01; });
+    if (p.slabT >= 0) { p.slabT = Math.min(1, p.slabT + dt * 1.3); p.slab.visible = true; p.slab.position.y = 1.49 + (1 - spring(p.slabT)) * 3.2; }
+    p.lattice.update(dt, t);
+    proj.set(p.g.position.x, 2.0, p.g.position.z).project(camera);
+    p.tag.style.transform = `translate(${(proj.x * 0.5 + 0.5) * W}px, ${(-proj.y * 0.5 + 0.5) * H}px) translate(-50%, -100%)`;
+    p.tag.style.visibility = proj.z > 1 || !p.g.visible ? 'hidden' : 'visible';
+  });
+
+  S.pillars += Math.sign(S.pillarsT - S.pillars) * Math.min(Math.abs(S.pillarsT - S.pillars), dt * 0.8);
+  const anchor = S.sel ? S.sel.g.position : S.focusT;
+  pillars.forEach((p, i) => {
+    const d = p.userData; p.position.set(anchor.x + d.ox, -9 + spring(clamp01((S.pillars - i * 0.18) / 0.8)) * 9.2, anchor.z + d.oz); p.visible = p.position.y > -8.5;
+    d.cur = damp(d.cur, d.sign, 5, dt); p.material.color.copy(C.dim).lerp(C.white, 0.25).lerp(C.warm, d.cur); p.material.emissiveIntensity = d.cur * 0.7; p.rotation.y = t * 0.2 + i;
+  });
+
+  for (let i = 0; i < FR; i++) {
+    const f = frags[i];
+    if (f.life > 0) { f.life -= dt; f.v.y -= 5.5 * dt; f.v.multiplyScalar(1 - dt * 0.6); f.p.addScaledVector(f.v, dt); }
+    const s = f.life > 0 ? Math.min(1, (f.life / f.max) * 1.6) : 0;
+    tmp.position.copy(f.p); tmp.rotation.set(f.r.x * t, f.r.y * t, f.r.z * t); tmp.scale.setScalar(Math.max(0.0001, s)); tmp.updateMatrix(); frag.setMatrixAt(i, tmp.matrix);
+  }
+  frag.instanceMatrix.needsUpdate = true;
+
+  for (let i = shots.length - 1; i >= 0; i--) {
+    const s = shots[i];
+    if (s.delay > 0) { s.delay -= dt; continue; }
+    s.m.position.addScaledVector(s.v, dt); s.m.rotation.x += dt * 4; s.m.rotation.y += dt * 5;
+    local.copy(s.m.position).sub(s.p.g.position);
+    if (Math.max(Math.abs(local.x), Math.abs(local.y - 0.1), Math.abs(local.z)) < OFF + 0.15) {
+      burst(s.m.position, C.red, 34, 2.6, local.clone().normalize()); s.p.lattice.hit(local);
+      scene.remove(s.m); s.m.material.dispose(); shots.splice(i, 1);
+    }
+  }
+
+  // The wave grows from the center; each protocol it reaches loses its keys and turns red.
+  if (S.wave >= 0) {
+    S.wave += dt * 7; wave.visible = true; wave.scale.setScalar(S.wave); wave.material.emissiveIntensity = Math.max(0, 1.2 - S.wave / 16);
+    if (S.wave > RING - 0.3) P.forEach((p) => { if (p.hit) return; p.hit = true; p.keys.forEach((k) => { k.userData.alive = 0; burst(k.getWorldPosition(wp), C.red, 14, 3); }); p.colT.copy(C.red); p.shake = 0.8; });
+    if (S.wave > 20) { S.wave = -1; wave.visible = false; }
+  }
+
+  renderer.setRenderTarget(rt); renderer.render(scene, camera);
+  renderer.setRenderTarget(null); renderer.render(post, postCam);
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+// ---------- The story, one click per beat ----------
+const hero = P[0];
+const sweepDelay = (p, ms) => new Promise((r) => { const t0 = performance.now(); const step = () => { const k = (performance.now() - t0) / (reduce ? 1 : ms); p.lattice.sweep = -3 + k * 6.4; if (k < 1) requestAnimationFrame(step); else { p.lattice.sweep = -10; r(); } }; step(); });
+const beats = [
+  { cap: 'NEAR today · upgrade keys', run: async () => {} },
+  { cap: 'a quantum computer', run: async () => { S.wave = 0.5; await wait(2400); } },
+  { cap: 'Rhea Finance · taken', run: async () => { S.sel = hero; S.focusT.copy(hero.g.position); S.distT = 12; S.elT = 0.22; tags.classList.add('hide'); hero.tag.classList.add('keep'); await wait(1600); } },
+  { cap: 'Guardian · zero keys', ok: true, run: async () => { hero.keyN = 0; hero.colT.copy(C.white); S.distT = 19; S.elT = 0.36; await wait(300); hero.lattice.Lt = 1.25; await wait(1200); S.pillarsT = 1.4; await wait(900); } },
+  { cap: '2 of 3 ML-DSA-87 · then a public delay', ok: true, run: async () => { for (const i of [0, 1]) { pillars[i].userData.sign = 1; await wait(520); } await sweepDelay(hero, 2600); } },
+  { cap: 'executed', ok: true, run: async () => { hero.slabT = 0; await wait(900); pillars.forEach((p) => (p.userData.sign = 0)); } },
+  { cap: 'nothing left to break', ok: true, run: async () => { S.distT = 18; fire(hero, 5); await wait(2800); } },
+  { cap: 'every protocol', ok: true, run: async () => {
+      S.sel = null; S.focusT.set(0, 0, 0); S.distT = 48; S.elT = 0.8; S.pillarsT = 0; tags.classList.remove('hide');
+      await wait(900);
+      for (const p of P) { if (p === hero) continue; p.keyN = 0; p.colT.copy(C.white); p.lattice.rate = 1.3; p.lattice.Lt = 1.25; await wait(240); }
+      await wait(1200);
+  } },
+  { cap: 'live on NEAR testnet', ok: true, final: true, run: async () => {} },
+];
+let at = -1, busy = false;
+function caption(text, ok) {
+  const c = $('cap'); c.classList.remove('in'); c.classList.toggle('ok', !!ok); c.replaceChildren();
+  text.split(' ').forEach((w, i) => { const s = document.createElement('span'); s.className = 'w'; s.textContent = w; s.style.transitionDelay = `${i * 40}ms`; c.append(s, ' '); });
+  requestAnimationFrame(() => requestAnimationFrame(() => c.classList.add('in')));
+}
+async function next() {
+  if (busy) return;
+  if (beats[at]?.final) { location.href = '/demo'; return; }
+  busy = true; $('act').disabled = true;
+  at += 1; const b = beats[at]; caption(b.cap, b.ok);
+  await b.run();
+  if (b.final) { $('act-text').textContent = 'Try it on testnet →'; $('act').classList.add('q'); }
   busy = false; $('act').disabled = false;
 }
-$('act').addEventListener('click', () => go(at + 1));
-addEventListener('keydown', (e) => { if (e.key === 'Enter' && document.activeElement === document.body) go(at + 1); });
-go(0);
+$('act').addEventListener('click', next);
+addEventListener('keydown', (e) => { if ((e.key === 'Enter' || e.key === ' ') && document.activeElement === document.body) { e.preventDefault(); next(); } });
+next();
 
-// Live proof in the corner: the same report the demo shows, read at a finalized block.
 try {
   const r = await (await fetch('/api/report')).json();
-  const passed = r.checks.filter((c) => c.status === 'pass').length;
-  $('live').classList.toggle('ok', !!r.ok);
-  $('live-text').textContent = `Live on NEAR testnet · ${passed}/${r.checks.length} checks · block ${r.block.height.toLocaleString('en-US')}`;
-} catch { $('live-text').textContent = 'Live on NEAR testnet'; }
+  $('live').classList.toggle('ok', !!r.ok); $('live-text').textContent = `NEAR testnet · ${r.checks.filter((c) => c.status === 'pass').length}/${r.checks.length} checks`;
+} catch {}
 </script>
 </body>
 </html>

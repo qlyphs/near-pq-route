@@ -1,5 +1,7 @@
 # Qlyphs: a post-quantum route for NEAR Intents
 
+**0 classical keys in the authorization path · 17/17 on-chain checks you can rerun · 7/7 live attacks refused.**
+
 **QTC enters and leaves NEAR Intents with no classical key in the authorization path.** QTC is the coin of
 Quantus, a chain that signs every transaction with ML-DSA. Today the route that brings it to NEAR mints on the
 word of one ed25519 key. On this route, every authorization is post-quantum:
@@ -45,6 +47,25 @@ Its output is `evidence/route-onchain.json`.
    inside NEAR Intents for the recipient.
 3. **My payments.** From the backup alone, the browser reads every public receipt, keeps the ones it can open,
    and withdraws from NEAR Intents to a Quantus address with that payment's ML-DSA-65 key.
+
+## Attack lab (live, NEAR testnet)
+
+`node scripts/ops/attack-route.mjs` sends forged mints to the real bridge; each one must be refused
+(`evidence/route-attacks.json`, with transaction links):
+
+| # | Attack | Refused with |
+|---|---|---|
+| 1 | Replay a real mint | `deposit already minted` |
+| 2 | Replay it with a changed amount | `deposit already minted` |
+| 3 | Real signatures on another deposit id | `invalid attestation signature` |
+| 4 | Another deposit id and the amount doubled | `invalid attestation signature` |
+| 5 | Another deposit id and another receiver | `invalid attestation signature` |
+| 6 | Credited directly instead of into Intents | `invalid attestation signature` |
+| 7 | One attester counted twice | `two different attesters are required` |
+| 8 | A queued claim redirecting someone's deposit, without the depositor's key | `address(publicKey) is not the sender of the deposit` |
+| 9 | A second attester service on the same state | `state directory is in use` |
+
+Sandbox: 34 more refusals and edge cases in `tests/bridge.sandbox.mjs`.
 
 ## On-chain evidence (NEAR testnet)
 

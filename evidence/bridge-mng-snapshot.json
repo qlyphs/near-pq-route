@@ -1,0 +1,20 @@
+{
+  "date": "2026-11-09",
+  "network": "mainnet",
+  "block_height": 223674074,
+  "block_hash": "8E4k738m1eLyw1CDQzkbFqSX5T2jADdSxpvNREi8GA9V",
+  "account": "bridge-mng.near",
+  "access_keys": [
+    {
+      "public_key": "ed25519:22Rh9RxeqhJ63KxKD4EJ5AgyMZ5xMcb5iqNEPFpR86S6",
+      "permission": "FullAccess"
+    }
+  ],
+  "qtc_omft_total_supply_planck": "214888979868936040",
+  "sample_qtc_mint": {
+    "note": "a qtc.omft.near ft_deposit transaction, signed by bridge-mng.near (signer of the omft.near ft_deposit call)",
+    "signer": "bridge-mng.near",
+    "receiver": "omft.near"
+  },
+  "how_to_check": "view_access_key_list for bridge-mng.near at this block; signer_account_id of any omft.near ft_deposit that mints qtc.omft.near"
+}

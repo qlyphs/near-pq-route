@@ -215,6 +215,21 @@
       "name": "rpc: send_tx is never resent after a server error",
       "ok": true,
       "detail": ""
+    },
+    {
+      "name": "browser transaction encoder matches the Worker encoder byte for byte",
+      "ok": true,
+      "detail": "9746 bytes"
+    },
+    {
+      "name": "wallet login URL points at MyNearWallet testnet with success and failure URLs",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "wallet sign URL carries base64 transactions, the callback and the meta tag",
+      "ok": true,
+      "detail": ""
     }
   ]
 }

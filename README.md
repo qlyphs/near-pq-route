@@ -8,7 +8,6 @@ be upgraded.
 
 - **Product page:** https://qlyphs-guardian-demo.qlyphs.workers.dev
 - **Live demo (NEAR testnet):** https://qlyphs-guardian-demo.qlyphs.workers.dev/demo
-- **Video (60 s, real testnet session):** [demo/public/guardian-demo.mp4](demo/public/guardian-demo.mp4), also served at https://qlyphs-guardian-demo.qlyphs.workers.dev/guardian-demo.mp4
 - **Spec:** [docs/GUARDIAN.md](docs/GUARDIAN.md)
 
 Unaudited testnet prototype. Read [Limits](#limits) before drawing conclusions.

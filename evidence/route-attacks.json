@@ -1,0 +1,60 @@
+{
+ "date": "2026-11-09",
+ "network": "NEAR testnet",
+ "bridge": "pqqtc.qlyphs-pqroute-a.testnet",
+ "contract_attacks": [
+  {
+   "attack": "replay of a real mint",
+   "refused_with": "deposit already minted",
+   "tx": "DYtQLU9dWdmDfw1fKzAGztr31FvJdv8EHssDsyxPH2wB",
+   "ok": true
+  },
+  {
+   "attack": "replay with the amount changed",
+   "refused_with": "deposit already minted",
+   "tx": "Gen8eVQNMJFthBr97h41XqDU1y2T6ndqiJqCXuqAVugE",
+   "ok": true
+  },
+  {
+   "attack": "real signatures on another deposit id",
+   "refused_with": "invalid attestation signature",
+   "tx": "9tr4EJouFY8H3wGEPRuuCYMr9UzSRNcxU2sqwG3YiEqu",
+   "ok": true
+  },
+  {
+   "attack": "another deposit id and the amount doubled",
+   "refused_with": "invalid attestation signature",
+   "tx": "4ci7fxYbTazzwKdYS1S5WMmrexqnsRUEZY9PkQNmSJ3Q",
+   "ok": true
+  },
+  {
+   "attack": "another deposit id and another receiver",
+   "refused_with": "invalid attestation signature",
+   "tx": "4AiGcJ3J85SsBAzkWDoYbzjopx5EmN2YBmoLev5D6oFi",
+   "ok": true
+  },
+  {
+   "attack": "another deposit id, credited directly instead of into Intents",
+   "refused_with": "invalid attestation signature",
+   "tx": "9Zo54pfNQMbEkqXzaCwgWtB1fDabS9EVPGok6qX5x7uF",
+   "ok": true
+  },
+  {
+   "attack": "one attester twice",
+   "refused_with": "two different attesters are required",
+   "tx": "2NEnhyTFmYDvRrtmtiACYcYy2DC8gQGMZ6ZSwbByGuwE",
+   "ok": true
+  }
+ ],
+ "service_attacks": [
+  {
+   "attack": "claim queued on the route Worker that redirects a real, already routed deposit to another receiver, with a key that did not make the deposit",
+   "refused_with": "address(publicKey) is not the sender of the deposit"
+  },
+  {
+   "attack": "a second service process on the same state directory",
+   "refused_with": "state-curve is in use by process <pid>"
+  }
+ ],
+ "how_to_rerun": "node scripts/ops/attack-route.mjs (needs the relayer seed; any NEAR account can send the same inputs)"
+}

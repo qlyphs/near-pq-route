@@ -67,7 +67,9 @@ minted; it records the deposit id before crediting.
 memo: "WITHDRAW_TO:<64 hex Quantus account id>"})`. The verifier calls the bridge's `ft_transfer` to itself,
 which burns and records `{amount, quantus_to, block, account}` under a sequential redemption id. The attesters
 read redemptions at the final block and release each one once, journaled per redemption id: a restart
-replays the journal and never pays twice.
+replays the journal and never pays twice. Withdrawals under 0.01 QTC are recorded as refused and not released
+(the burned amount stays burned), so dust cannot hold the queue; a release that keeps failing is set aside
+after five attempts with its error, for a person to look at.
 
 ## Payment requests (sdk/route-crypto.mjs)
 

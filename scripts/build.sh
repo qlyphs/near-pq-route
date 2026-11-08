@@ -30,6 +30,8 @@ for chain in sandbox testnet mainnet; do
     "${ldflags[@]}" -o "build/vault-$chain.wasm"
   "$clang" "${cflags[@]}" -DQP_CHAIN="\"$chain\"" core/pq87.c core/freestanding.c contract/guardian.c \
     "${ldflags[@]}" -o "build/guardian-$chain.wasm"
+  "$clang" "${cflags[@]}" -DQP_CHAIN="\"$chain\"" core/pq87.c core/freestanding.c contract/bridge.c \
+    "${ldflags[@]}" -o "build/bridge-$chain.wasm"
   # The factory embeds the exact vault bytes it deploys (#embed, C23).
   "$clang" "${cflags[@]}" -std=c23 --embed-dir=build -DQP_CHAIN="\"$chain\"" -DVAULT_WASM="\"vault-$chain.wasm\"" \
     core/freestanding.c contract/factory.c "${ldflags[@]}" -o "build/factory-$chain.wasm"

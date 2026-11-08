@@ -248,11 +248,12 @@ static void emit(const char *event, const uint8_t *owner, size_t olen, u128 amou
   log_utf8(on, PTR(out));
 }
 
-/* new(genesis 32 | key 1 | key 2 | key 3 | verifier id length u8 | verifier id): once, by the bridge account
- * itself, before its deploy key is deleted. The verifier is the NEAR Intents contract deposits can go into. */
+/* new(genesis 32 | key 1 | key 2 | key 3 | verifier id length u8 | verifier id): once, by the parent account in
+ * the batch that creates the bridge account and deploys this code. The verifier is the NEAR Intents contract deposits can go into. */
 EXPORT(new) void new_(void) {
   input(0); size_t n = read_reg(0, in, sizeof(in)); load_ids();
-  REQUIRE(same(caller, caller_len, self_id, self_len), "only the bridge account can initialize it");
+  /* Only the direct parent, inside the batch that creates and deploys the account: the bridge never holds a key. */
+  REQUIRE(self_len > caller_len + 1 && self_id[self_len - caller_len - 1] == '.' && memcmp(self_id + self_len - caller_len, caller, caller_len) == 0, "init must come from the parent account");
   REQUIRE(storage_read(1, PTR("c"), 0) != 1, "already initialized");
   REQUIRE(n > CONFIG + 1 && n == CONFIG + 1 + in[CONFIG] && valid_id(in + CONFIG + 1, in[CONFIG]), "config is genesis, three ML-DSA-87 public keys and the Intents verifier id");
   REQUIRE(!same(in + CONFIG + 1, in[CONFIG], self_id, self_len), "the verifier cannot be the bridge");

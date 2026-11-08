@@ -33,12 +33,12 @@ try {
   const bob = await root.createSubAccount('bob', { initialBalance: 5n * NEAR });
   const relayer = await root.createSubAccount('relayer', { initialBalance: 50n * NEAR });
 
-  await refused('init only by the bridge account', () => alice.callRaw(bridge, 'new', new Uint8Array(config), { gas: 30n * TGAS }), 'only the bridge account');
+  await refused('init only from the parent account', () => alice.callRaw(bridge, 'new', new Uint8Array(config), { gas: 30n * TGAS }), 'init must come from the parent');
   const dup = Buffer.from(config); keys[0].publicKey.copy(dup, 32 + 2592);
-  await refused('init refuses duplicate attester keys', () => bridge.callRaw(bridge, 'new', new Uint8Array(dup), { gas: 30n * TGAS }), 'must differ');
-  const init = await bridge.callRaw(bridge, 'new', new Uint8Array(config), { gas: 30n * TGAS });
+  await refused('init refuses duplicate attester keys', () => root.callRaw(bridge, 'new', new Uint8Array(dup), { gas: 30n * TGAS }), 'must differ');
+  const init = await root.callRaw(bridge, 'new', new Uint8Array(config), { gas: 30n * TGAS });
   record('init with genesis and three keys', init.succeeded);
-  await refused('init only once', () => bridge.callRaw(bridge, 'new', new Uint8Array(config), { gas: 30n * TGAS }), 'already initialized');
+  await refused('init only once', () => root.callRaw(bridge, 'new', new Uint8Array(config), { gas: 30n * TGAS }), 'already initialized');
   const st = await bridge.view('state');
   record('state reports genesis and attester key hashes', st.quantus_genesis === genesis.toString('hex') && st.attesters[2] === sha256(keys[2].publicKey).toString('hex') && st.supply === '0');
 

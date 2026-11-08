@@ -16,4 +16,8 @@
   with `@noble/post-quantum`, `@noble/hashes`, `@scure/bip39` and `@quantus-network/wasm`, which the signer
   in `wallet/` loads after checking their content hashes.
 
+- The Guardian demo Worker (`demo/`) bundles `@noble/post-quantum` 0.7.1 (ML-DSA-87 signing for the demo
+  signers), `@noble/curves` 1.8.1 (ed25519) and `@noble/hashes` 1.7.1, all MIT, Paul Miller. The tests use
+  `near-workspaces` and `near-api-js` (MIT/Apache-2.0), not redistributed.
+
 Original files in this repository are MIT unless a header says otherwise.

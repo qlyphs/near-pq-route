@@ -1,175 +1,160 @@
-# Qlyphs ML-DSA-87 vault on NEAR
+# Qlyphs Guardian
 
-A NEAR contract that verifies an **ML-DSA-87 signature (FIPS 204, the scheme Quantus uses) on-chain, in a
-single call**, before it moves NEAR or NEP-141 tokens out of a vault. The vault account has no access key:
-only a post-quantum signature from its owner can spend from it. Anyone can relay the signed payment and pay
-the gas, but cannot change it.
+**Post-quantum admin control for NEAR contracts.** A protocol hands its admin powers (here: mint and code
+upgrade) to a Guardian contract that has no keys at all. The Guardian acts only after **two of three
+ML-DSA-87 signers** approve the exact operation and an **on-chain delay** has passed; two signers can
+cancel it during the delay. The old admin key stops working, and the contract keeps running and can still
+be upgraded.
 
-It reuses, byte for byte, the C verifier of the Qlyphs Solana vault. Solana needs about 21 transactions per
-verification. NEAR needs one call of about 7 Tgas, 2 % of the per-call limit.
+- **Live demo (NEAR testnet):** https://qlyphs-guardian-demo.qlyphs.workers.dev
+- **Video:** `[link added at submission]`
+- **Spec:** [docs/GUARDIAN.md](docs/GUARDIAN.md)
 
-**Status: research proof of concept. Not audited. No real funds.** Testnet only. Read
-[SECURITY.md](SECURITY.md) for what this does and does not protect, and [docs/PROTOCOL.md](docs/PROTOCOL.md)
-for the exact rules.
+Unaudited testnet prototype. Read [Limits](#limits) before drawing conclusions.
 
-## What is shown, and where the proof is
+## Why
 
-| Claim | Evidence |
+On the day a classical key can be broken, an attacker does not need to rob users one by one. One admin
+key, the owner of a token, the upgrade authority of a protocol, a bridge's multisig, can mint, upgrade or
+drain a whole protocol. Those keys are classical today. NEAR already supports native ML-DSA-65 access keys;
+what is missing is an admin *workflow* that a protocol can adopt without losing its contract, its
+balances or its ability to upgrade: a quorum, a delay, a cancel path, and a way for anyone to check that no
+classical bypass is left.
+
+## Try it in two minutes
+
+Open the [demo](https://qlyphs-guardian-demo.qlyphs.workers.dev) and:
+
+1. **Verify control.** The page reads one finalized block and checks: Guardian and token have zero access
+   keys, both run reviewed builds (reproducible hashes), the Guardian's configuration bytes are the expected
+   ones, the token is guarded by this Guardian with no owner. Expect nine green checks.
+2. **Try the old keys.** The former owner's key and the token's deleted deployment key are published on the
+   page. Click both buttons. Expect `only the Guardian can do this` from the token, and
+   `AccessKeyNotFound` from the network.
+3. **Request a mint.** Enter any testnet account id. Two demo signers approve the 320-byte operation with
+   ML-DSA-87, the Guardian queues it, and a 60-second timelock starts. Expect the Execute button to stay
+   disabled until it ends, then click it. Expect `applied` and 100 demo tokens on that account.
+
+The page also lists every transaction of the testnet cutover, each linked to the explorer.
+
+## What was built
+
+| Part | What it does |
 |---|---|
-| Testnet: vault created by a keyless, audited factory; preflight passes; 0.1 NEAR and 0.05 wNEAR (`wrap.testnet`, a real NEP-141) paid by one ML-DSA-87 signature each; replay, tampered amount and foreign key refused on-chain | `evidence/vault-testnet.json` (every tx hash), `deployments/testnet.json` |
-| Sandbox: 53 checks: factory creation, registry and refunds (failed creation, third-party refund, no double refund, a refund to a deleted caller stays owed); the two attacks found in review (a vault made outside the factory, a vault planted by an earlier life of the factory id) refused by the preflight; every message-field refusal; u128 edge cases; exact `ft_transfer` arguments; failed-delivery refund | `evidence/vault-sandbox.json` |
-| The verifier is the Solana POC's, unchanged | `core/SOURCE.sha256` |
-| Relayer on testnet: a payment relayed and followed to delivery; a repeat answered with the same hash; a replay of delivered bytes refused by the vault and read as unknown with attemptRejected; a tampered signature refused before any transaction; gas price checked at the signing block; a second relayer on the same state refused | `evidence/relayer-testnet.json` |
-| Wallet in a real browser: the Qlyphs extension (development build) signs through `window.qlyphs`, the relayer pays, the outcome reads delivered; a competing message refused before any review; a 12-word account refused | `evidence/wallet-e2e-testnet.json` |
-| Verification alone costs 6.47 Tgas on testnet, one call, 9/9 vectors | `evidence/testnet.json`, `evidence/gas.json` |
+| [`contract/guardian.c`](contract/guardian.c) | The Guardian. Immutable, no owner, no keys. `propose` and `cancel` share one validator (framing, network, Guardian, target, config hash, deadline, two distinct valid ML-DSA-87 approvals). `execute` marks the operation Executing before its single dispatch; a private callback settles it. |
+| [`contract/token.c`](contract/token.c) | The reference target: a small token that starts with a classical owner, hands mint and upgrade to the Guardian once, and upgrades itself in one atomic deploy-and-migrate receipt. |
+| [`sdk/guardian.mjs`](sdk/guardian.mjs) | Message encoding, approvals, the per-deployment creation audit and the `verifyControl` report. |
+| [`tests/`](tests) | Sandbox suites (Guardian 65 checks, token 32) and the testnet ceremony. |
+| [`demo/`](demo) | The hosted demo: one Cloudflare Worker and one page. |
 
-Testnet accounts: factory `pq87-vaults-r3.qlyphs-grad-c48a-parent.testnet`, vault
-`1decab283ca92482.pq87-vaults-r3.qlyphs-grad-c48a-parent.testnet`. Earlier deployments predate review
-fixes and are not trusted: `pq87-vault.…` and `pq87-factory.…` (`deployments/superseded-testnet-r1.json`),
-and `pq87-vaults.…`, whose factory refunded failed creations from its callback
-(`deployments/superseded-testnet-r2.json`), and `pq87-vaults-r2.…`, whose refund removed the debt before
-the transfer was delivered (`deployments/superseded-testnet-r3.json`).
+The ML-DSA-87 verifier in [`core/`](core) is the same C code as the Qlyphs vault (below), verified
+against OpenSSL and FIPS 204 vectors.
 
 ## How it works
 
-1. The **factory** is created by one transaction with no `FunctionCall`, so it never had a key and nothing
-   could be scheduled before its code ran. `auditFactoryCreation` checks that once per release.
-2. `factory.create(public key)` with at least 0.25 NEAR records the vault in the factory's registry and
-   creates it at an address derived from the key, in one atomic receipt: create, fund, deploy the vault
-   code embedded in the factory, `init`. If creation fails, the record is marked failed and
-   `refund`, which anyone may call, pays the recorded deposit back to the recorded caller.
-3. Before signing, the wallet runs `checkVault`. At one final block it checks the pinned factory and its
-   code, the registry record, the vault code, zero access keys on both, and that the vault storage is
-   exactly the owner's key and a usable nonce.
-4. The owner signs a 256-byte message: network, vault, NEAR or token, receiver, amount, nonce, validity
-   window, `ft_transfer` gas.
-5. Anyone calls `execute(signature ‖ message)`. The contract checks every field, verifies the signature,
-   spends the nonce, then sends the NEAR or calls `ft_transfer` with 1 yoctoNEAR.
+```
+Owner (legacy key) ──handover──▶ Token ◀──mint / upgrade── Guardian ◀── propose(op, 2 × ML-DSA-87)
+                                  │                          │  └──── cancel(op hash, 2 × ML-DSA-87)
+                     keys deleted ┘                          └─ execute() by anyone after the delay
+```
 
-## Gas
+1. **Operation.** Signers approve 320 bytes: network, Guardian, target, config hash, nonce, action (mint:
+   receiver and amount; upgrade: code hash, length and versions; cancel: the proposal hash) and a
+   submission deadline. Pure ML-DSA-87, context `qlyphs/near-guardian/v1`.
+2. **Queue.** `propose` checks everything, verifies two approvals from distinct signers, consumes the
+   nonce and stores the operation (and the upgrade code) with `eta = now + delay`. The exact bytes are
+   readable on-chain during the whole delay.
+3. **Execute.** After `eta`, anyone calls `execute`. The Guardian calls the token's `mint` or `upgrade`,
+   which accept only the Guardian as immediate caller. An upgrade is one batch receipt to the token itself:
+   deploy, then migrate, atomic. The operation id is the Guardian nonce, recorded by the token, so nothing
+   applies twice, even across upgrades.
+4. **Cancel / expire.** Two signers can cancel a queued operation by its proposal hash; an operation not
+   executed within its window can be expired by anyone.
 
-| | Tgas (testnet) |
+The full rules, the state machine and the trust boundary are in [docs/GUARDIAN.md](docs/GUARDIAN.md).
+
+## Claims and evidence
+
+| Claim | Evidence |
 |---|---|
-| `execute`, NEAR transfer | 6.98 |
-| `execute`, NEP-141 transfer (plus the signed `ft_transfer` gas) | 7.07 |
-| Signature verification alone | 6.47 |
-| Of which ExpandA (8 rows of the matrix) | about 85 % |
+| The token has no access keys and is guarded by the Guardian; the Guardian has no keys; both run reviewed builds | Live: the demo's report. Recorded: `evidence/guardian-testnet.json` (`report`, final block 276774157) |
+| The Guardian was created by exactly CreateAccount, Transfer, DeployContract (pinned code), init (exact config bytes) | `deployments/guardian-testnet.json` → `guardian_creation.audit`, tx `46aD5edUAvAnJECv9oU39AbEcjprZZTv9s4UkWvYHPAi` |
+| Cutover: handover, then the token's only key deleted | handover `XJ8D1jJ3GG2EeT3voxAv3fVouA7sW3aMZwyXp5ctZUH`, delete key `F8CnfBZ2e1GN5KjzhxBd7dPawN7t3sW15UHELJy9D5fu` |
+| A PQ-approved mint and a PQ-approved upgrade V1 → V2 work after cutover; balances, Guardian and replay state are kept | `deployments/guardian-testnet.json` → `operations` (execute `9HTQBM55…`, `2rF1f6FV…`); `evidence/guardian-testnet.json` |
+| The former owner cannot mint; the deleted key cannot deploy | Live: demo buttons. Recorded: `evidence/guardian-testnet.json` → `attacks` |
+| One signer, an outsider key, a tampered field, another network, Guardian, target or config, an expired deadline, a replay: all refused, with no state change | `evidence/guardian-sandbox.json` |
+| Cancel is bound to Guardian, nonce and proposal hash; every terminal path frees the slot | `evidence/guardian-sandbox.json` |
+| Two racing executes dispatch once; an underfunded execute leaves the operation queued | `evidence/guardian-sandbox.json` |
+| A failing migration rolls the whole upgrade back and the Guardian records `failed` | `evidence/guardian-sandbox.json`, `evidence/token-sandbox.json` |
+| A 131,072-byte upgrade can be queued, read back from chain state (paginated `view_state`) and canceled | testnet propose `8oP1EokH…`, cancel `47v9wpUm…` |
+| The release Wasm exports exactly the reviewed entry points | `scripts/check-exports.mjs`, run by `scripts/build.sh` |
 
-At the minimum gas price a payment costs about 0.0007 NEAR. Gas is metered per Wasm instruction, so
-re-measure on the target network after protocol upgrades.
-
-## Relayer
-
-`relayer/` is a small HTTP service that pays the gas for `execute`. It is untrusted transport: the vault
-checks everything again, so a relayer can delay or drop a payment but never change it. Its own checks
-exist so that it does not burn gas on requests the vault would refuse, and so it cannot be made to pay
-twice for one authorization.
-
-- `POST /execute`, raw body of exactly 4,883 bytes: signature (4,627) ‖ message (256). Answers
-  `{"transaction": <hash>}` once RPC has accepted the transaction. That is not delivery. A 504 still
-  carries the hash: the transaction was signed and may be on its way.
-- `GET /outcome/<hash>`: `submitted`, `accepted` (nonce spent), `delivered` (the payment receipt
-  succeeded), `failed` (an accepted `execute`'s payment receipt failed; the nonce is spent), or
-  `unknown`. A refused transaction or refused `execute` is `unknown` with `"attemptRejected": true`:
-  it proves only that this attempt failed (a replay of an authorization accepted elsewhere is refused
-  too), so it is never a reason to sign again. A timeout is `unknown`, never `failed`.
-- `GET /health`: network, factory, relayer account, protocol version, reserved spend, the cap, the
-  reservation for one NEAR transfer, and the account's spendable balance at start with its limit.
-
-Before any gas, in this order: strict parse of the message (`docs/PROTOCOL.md`; a NEAR transfer must
-carry an empty token field and a zero gas byte), vault a direct child of the pinned factory,
-`checkVault` at a final block, nonce equal to the vault's, window containing the final height, the
-ML-DSA-87 signature verified locally with `@noble/post-quantum` against the stored key, and the current
-gas price at most half of `RELAYER_MAX_GAS_PRICE_YOCTO`. Then quotas (per vault and per client
-address, counted only for valid signatures), then the spend cap. After its wait in the serial
-submission queue it reads the final block it signs against and signs nothing if that block's gas price
-is above half the ceiling (503; the reservation and quotas go back). It signs `execute` with 30 Tgas,
-or 30 Tgas plus the signed `ft_transfer` gas, and no deposit, records the hash, the signed bytes and the
-last height at which they may be re-broadcast, and only then broadcasts.
-
-One message per (vault, nonce). The ledger tracks each submission as uncertain (broadcast without a
-definitive answer), submitted, rejected (its `execute` was refused), accepted, delivered or delivery
-failed (accepted moves on to delivered or delivery failed; those never change). A repeat of an
-uncertain one re-broadcasts the same signed transaction, but only while the final height is within the
-signing block's price window (the blocks the price needs to pass the ceiling at the protocol's fastest
-rate, 1 % per block, less 10); after that it is marked stopped, answered 504 and only followed. Only an
-explicit validation refusal from the node frees a slot on the spot. A rejected message is sent again only after
-a fresh chain read shows the vault nonce unchanged and its window still open. Another message takes
-over a slot only once the old message's window has closed at a final height with the vault nonce
-unchanged; the old record stays in the history.
-
-| File | Role |
-|---|---|
-| `server.mjs` | HTTP, body size cap, routes; `node relayer/server.mjs` starts it |
-| `config.mjs` | environment, testnet-only guard |
-| `message.mjs` | strict parsing of the request |
-| `vectors/messages.json` | parser vectors shared with the wallet; `WALLET_PARSER=<path to near-vault.ts> node tests/relayer-vectors.mjs` runs both parsers on them |
-| `chain.mjs` | vault key, `checkVault`, final height, gas price |
-| `signature.mjs` | local ML-DSA-87 verification |
-| `ledger.mjs` | idempotence by message hash, (vault, nonce) slots and their states |
-| `limits.mjs` | quotas, persistent spend cap, bounded queues |
-| `cost.mjs` | protocol fees from `EXPERIMENTAL_protocol_config`, the per-transaction spend estimate, the price window |
-| `account.mjs` | the hard budget: refuses to start when the relayer account could spend too much |
-| `lock.mjs` | one relayer per state directory |
-| `submitter.mjs` | checks the signing block's gas price, signs, broadcasts and re-broadcasts `execute` |
-| `outcome.mjs` | reads and classifies a final outcome; bounded, coalesced `/outcome` reader |
-| `relay.mjs` | the order of the checks |
-
-Environment: `RELAYER_ACCOUNT` and `RELAYER_KEY_FILE` (one line, `ed25519:<base58>`), `HOST` (default
-`127.0.0.1`), `PORT` (8787), `NEAR_RPC`, `RELAYER_SPEND_CAP_YOCTO` (default 0.3 NEAR),
-`RELAYER_MAX_GAS_PRICE_YOCTO` (1e9, the gas price the spend bound assumes),
-`RELAYER_MAX_ACCOUNT_SPENDABLE` (yoctoNEAR, default 0.5 NEAR: the most the relayer account may be able
-to spend, balance minus storage stake, at start), `RELAYER_STATE_DIR` (default `relayer/.state/`, holds
-`spend-<network>-<account>.json` and the `relayer.lock` of the running instance),
-`RELAYER_CLEAR_STALE_LOCK` (`1` clears a lock left by a process that is no longer running),
-`RELAYER_VAULT_PER_HOUR` (10),
-`RELAYER_IP_PER_HOUR` (30), `RELAYER_CONCURRENCY` (4), `RELAYER_QUEUE` (32),
-`RELAYER_OUTCOME_PER_MINUTE` (60 per client), `RELAYER_OUTCOME_GLOBAL_PER_MINUTE` (600),
-`RELAYER_OUTCOME_CONCURRENCY` (4), `RELAYER_OUTCOME_QUEUE` (32). It refuses to start unless the pinned
-deployment is testnet (`RELAYER_ALLOW_NETWORK` must name any other network explicitly), when it cannot
-read the protocol config or the relayer account, when the account could spend more than
-`RELAYER_MAX_ACCOUNT_SPENDABLE`, or when another live process holds the state directory's lock. Fund
-the relayer account minimally and do not top it up automatically: its balance is the budget that holds
-whatever the gas price does. Once the spend file records a reached cap, the relayer stays paused across
-restarts until someone deletes that file or starts it with a higher cap.
-
-## Layout
-
-- `core/`: the ML-DSA-87 verifier, byte-identical to the Solana POC.
-- `contract/vault.c`: the vault. `contract/factory.c`: the factory. Raw NEAR host ABI in C, no Rust.
-- `contract/near.c`: the gas-measurement contract (`verify`, `verify_profile`, `bench`), never a vault.
-- `relayer/`: the gas relayer (see above) and its unit tests.
-- `sdk/vault.mjs`: message encoding, a local OpenSSL test signer, `checkVault`, `auditFactoryCreation`.
-- `tests/`: sandbox suite, testnet runs, a test-only NEP-141 stand-in (`mock_ft.c`).
-- `deployments/testnet.json`: the pinned testnet release (factory id, code hashes, factory creation tx).
+Gas on testnet: propose a mint 13.4 Tgas (two ML-DSA-87 verifications), propose an upgrade 14.6 Tgas,
+execute a mint 6.0 Tgas, execute an upgrade 9.5 Tgas, cancel 15.5 Tgas.
 
 ## Reproduce
 
-Requirements: Homebrew `llvm` and `lld` (Apple clang has no Wasm target), Node 20+, OpenSSL ≥ 3.5.
+Requirements: Node 22+, LLVM clang and lld with wasm32 (Homebrew `llvm` and `lld`), OpenSSL 3.5+ (ML-DSA).
 
-```bash
-npm install
-(cd node_modules/near-sandbox && node install.js)   # official nearcore sandbox binary
-bash scripts/build.sh                               # prints every wasm sha256
-export NEAR_SANDBOX_BIN_PATH=$PWD/node_modules/near-sandbox/bin/near-sandbox
-node tests/vault.sandbox.mjs                        # 45 checks
-node tests/measure.mjs                              # verification gas profile
-node --test relayer/                                # relayer unit tests
+```sh
+npm ci
+bash scripts/build.sh            # builds every contract, prints SHA-256, checks release exports
+node tests/token.sandbox.mjs     # 32 checks, local NEAR sandbox
+node tests/guardian.sandbox.mjs  # 65 checks
 ```
 
-Testnet (needs two funded testnet accounts; the owner key file is created if absent):
+The build is deterministic: the hashes printed for `build/guardian-testnet.wasm`, `build/token-v1.wasm`
+and `build/token-v2.wasm` must equal `guardian_sha256` and `reviewed_target_sha256` in
+`deployments/guardian-testnet.json`, which the report compares with the code deployed on testnet.
 
-```bash
-PARENT_ACCOUNT=<id> PARENT_KEY_FILE=<file> RELAYER_ACCOUNT=<id> RELAYER_KEY_FILE=<file> \
-  OWNER_KEY_FILE=<file.pem> node tests/vault.testnet.mjs
+To run your own testnet ceremony (fresh account ids, used once):
 
-# relayer, end to end against the pinned deployment (the owner's vault must exist and hold NEAR)
-RELAYER_ACCOUNT=<id> RELAYER_KEY_FILE=<file> OWNER_KEY_FILE=<file.pem> node tests/relayer.testnet.mjs
+```sh
+FUNDER_ACCOUNT=<funded testnet account> FUNDER_KEY_FILE=<its key file> SECRETS_DIR=<a folder outside the repo> \
+RELEASE_PARENT=<new-name>.testnet node tests/guardian.testnet.mjs
 ```
 
-## Not done yet
+The demo runs locally with `cd demo && npm ci && npx wrangler dev` and a `demo/.dev.vars` holding
+`SIGNER_A`, `SIGNER_B` (signer seeds), `RELAYER_KEY`, `RETIRED_OWNER_KEY`, `RETIRED_TOKEN_KEY`.
 
-- An audit, and NIST ACVP vectors (the vectors here come from OpenSSL).
-- Signing in the Qlyphs wallet (today a local OpenSSL key signs).
-- Moving NFTs, multi-tokens or calling `ft_transfer_call` from a vault.
-- A mainnet release.
+## Limits
+
+- **Unaudited testnet prototype.** Adversarial design and code reviews shaped it; that is not an audit.
+- **Scope of the claim.** Minting and upgrades of this reviewed token require two ML-DSA-87 approvals and
+  the delay, at the reported block, after the recorded deployment and cutover. NEAR consensus, users'
+  keys, other contracts, and code that a quorum approves later are outside it.
+- **Trust boundary.** A snapshot cannot prove that no earlier incarnation of an account id left a delayed
+  self-addressed receipt. The demo relies on fresh ids used once and a recorded ceremony; unknown
+  provenance shows as unverified.
+- **No recovery path, by design.** Losing two signer keys, or a settlement callback that fails, locks
+  administration of the target for good. The Guardian has no override.
+- **Demo signers.** The demo server holds two of the three signer keys so that visitors can trigger
+  mints. In a real deployment each signer keeps its own key in its own wallet.
+- **Why ML-DSA-87 and not NEAR's native ML-DSA-65?** The Qlyphs wallet already signs with ML-DSA-87
+  (NIST category 5). The contribution here is the governance workflow and its verifiable cutover; the same
+  model can use the native `ml_dsa_verify` host function later.
+
+## Hackathon scope
+
+Built for the NEAR Hackathon (Nov 2026). Every commit in this repository is from 22 Oct 2026 or later.
+The ML-DSA-87 verifier, the vault and its factory (22–27 Oct) are reused; Guardian, the token, the
+SDK additions, the suites, the testnet ceremony and the demo were built from 8 Nov. The Qlyphs wallet,
+an existing product, is not part of this repository.
+
+## Roadmap
+
+- Signers in the Qlyphs wallet, each on its own device.
+- An adapter for real NEAR protocols, starting with their mint, pause and upgrade paths.
+- The same Guardian on EVM chains, using the ML-DSA-87 verifier already measured on Base Sepolia.
+- Longer term: an evacuation path to a fully post-quantum chain for assets whose home chain cannot
+  protect them.
+
+## The vault
+
+This repository started as an ML-DSA-87 vault on NEAR: an account with no keys that moves NEAR or NEP-141
+tokens only after an on-chain ML-DSA-87 signature check. See [docs/VAULT.md](docs/VAULT.md),
+[docs/PROTOCOL.md](docs/PROTOCOL.md) and [SECURITY.md](SECURITY.md).
+
+## License
+
+MIT. Third-party code: [THIRD_PARTY.md](THIRD_PARTY.md).

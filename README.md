@@ -1,10 +1,10 @@
 # Qlyphs Guardian
 
-**Post-quantum admin control for NEAR contracts.** A protocol hands its admin powers (here: mint and code
-upgrade) to a Guardian contract that has no keys at all. The Guardian acts only after **two of three
-ML-DSA-87 signers** approve the exact operation and an **on-chain delay** has passed; two signers can
-cancel it during the delay. The old admin key stops working, and the contract keeps running and can still
-be upgraded.
+**Prove that no classical key can touch your protocol.** A NEAR protocol hands its admin powers (here: mint
+and code upgrade) to a Guardian contract that has no keys at all. The Guardian acts only after **two of three
+ML-DSA-87 signers** approve the exact operation and a **public on-chain delay** has passed; two signers can
+cancel it during the delay. Anyone can then check, at one finalized block, that no classical key and no
+bypass is left in the admin path.
 
 - **Product page:** https://qlyphs-guardian-demo.qlyphs.workers.dev
 - **Live demo (NEAR testnet):** https://qlyphs-guardian-demo.qlyphs.workers.dev/demo
@@ -15,27 +15,31 @@ Unaudited testnet prototype. Read [Limits](#limits) before drawing conclusions.
 ## Why
 
 On the day a classical key can be broken, an attacker does not need to rob users one by one. One admin
-key, the owner of a token, the upgrade authority of a protocol, a bridge's multisig, can mint, upgrade or
-drain a whole protocol. For protocols whose admin paths still rely on classical signatures, that key is the
-weak point. NEAR already supports native ML-DSA-65 access keys;
-what is missing is an admin *workflow* that a protocol can adopt without losing its contract, its
-balances or its ability to upgrade: a quorum, a delay, a cancel path, and a way for anyone to check that no
-classical bypass is left.
+key can mint, upgrade or drain a whole protocol. NEAR already supports native ML-DSA-65 access keys, so a
+council member can switch keys today. What nobody outside can do is **verify** it: an admin path runs
+through DAOs, council members, roles and keys that can change at any time. Guardian makes control
+checkable and fixed:
+
+- **Provable.** One public report reads a finalized block: zero keys on the token and the Guardian,
+  reviewed and reproducible code, the exact signer set and delay, an audited creation and cutover.
+- **Enforced.** Every mint or upgrade waits through a public delay and can be cancelled. The Guardian
+  does nothing else.
+- **Permanent.** The Guardian is immutable and keyless. No member can quietly move it back to a classical key.
 
 ## Try it in two minutes
 
-Open the [demo](https://qlyphs-guardian-demo.qlyphs.workers.dev/demo) and follow its three steps:
+Open the [demo](https://qlyphs-guardian-demo.qlyphs.workers.dev/demo):
 
-1. **Verify control.** The page reads one finalized block and checks: Guardian and token have zero access
-   keys, both run reviewed builds (reproducible hashes), the Guardian's configuration bytes are the expected
-   ones, the token is guarded by this Guardian with no owner. Expect nine green checks.
+1. **Verify control.** Nine checks at one finalized block: Guardian and token have zero access keys, both
+   run reviewed builds (reproducible hashes), the configuration bytes are the expected ones, the token is
+   guarded by this Guardian with no owner.
 2. **Try the old keys.** The former owner's key and the token's deleted deployment key are published on the
-   page. Click both buttons. Expect `only the Guardian can do this` from the token, and
-   `InvalidAccessKeyError: AccessKeyNotFound` from the network.
-3. **Request a mint.** Enter any testnet account id. Two demo signers approve the 320-byte operation with
-   ML-DSA-87, the Guardian queues it, and a 60-second timelock starts. Expect the Execute button to stay
-   disabled until it ends, then click it. Expect `applied` and 100 GDEMO (the token has 18 decimals) on that
-   account. The demo server holds two of the three signer keys; the page says so next to the button.
+   page. Expect `only the Guardian can do this` from the token, and `AccessKeyNotFound` from the network.
+3. **Mint with post-quantum approvals.** Enter a testnet account. Two demo signers approve the 320-byte
+   operation with ML-DSA-87; the page shows both signatures and verifies them again in your browser.
+   Carry it to the chain with your own NEAR wallet (Meteor or MyNearWallet) or let the demo relayer send
+   it. Wait out the 60-second delay, execute, expect `applied` and 100 GDEMO. The demo server holds two of
+   the three signer keys; the page says so.
 
 The page also lists every transaction of the testnet cutover, each linked to the explorer.
 

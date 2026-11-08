@@ -1,5 +1,5 @@
 {
- "route": "Quantus development network ↔ NEAR testnet via the NEAR Intents verifier",
+ "route": "Quantus development network \u2194 NEAR testnet via the NEAR Intents verifier",
  "bridge": "qtc.qlyphs-pqroute-a.testnet",
  "verifier": "intents.qlyphs-pqroute-b.testnet",
  "signers": "three separately keyed signer processes, all operated by the Qlyphs team",
@@ -18,7 +18,7 @@
    "depositor": "qzppsPak2eHzVHMMRGUqHbtvd17Ap9oEW3HaT5YsALeDUQ5rh"
   },
   "mint": {
-   "near_tx": "BCbcSy9BsiYtsF7FLPXodqqFqxr8qVWi7frcaTVtkVSD",
+   "near_tx": "5MWp6BmUzbSw1Ur8MTYDrJLKz7e6gobbdD9FuDCo3Zg8",
    "attesters": [
     1,
     2
@@ -26,8 +26,7 @@
    "intents_balance": "2000000000000"
   },
   "withdraw": {
-   "account_creation_tx": "HrJj7MivbAscxgianMJjcjX5EinGtFmTDi3f4SwMYBQh",
-   "ft_withdraw_tx": "8UCVeWVL5iqFSVrzhQJWjzZhJXkD3fMHf3cbCJfRmdxm",
+   "ft_withdraw_tx": "6vj6hkThZBycgcgbfSZE1xL36kP56tnuEoKfQfFMLsT7",
    "quantus_destination": "qzjdgfzxCKR8tR8iA971aptTKB5Xn3tmKn3C8k34iSekaTgRR"
   },
   "release": {
@@ -58,5 +57,6 @@
   "released_through": 2,
   "signers": "three separately keyed signer processes, all operated by the Qlyphs team"
  },
- "seconds": 205
+ "seconds": 205,
+ "note": "NEAR transaction hashes corrected from the chain (scripts/verify-route.mjs, evidence/route-onchain.json): the first recording took a receipt proof hash."
 }

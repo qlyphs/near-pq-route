@@ -12,8 +12,8 @@
   "planck": "1500000000000",
   "deposit_id": "89a758330371baa0a1b6db6c88bc6a4d0d37eeb76c9975dd36b3e39a943a636f"
  },
- "mint_near_tx": "3HfpaTtJojnUNqCaebhnb4Fx1T7dRK83jDJZXWc49fSn",
- "withdraw_near_tx_signed_ml_dsa_65_in_browser": "5X2RSeXbxAoxmfWFQ6bmAUsigAeKaBc9W1yKZaNPZjzg",
+ "mint_near_tx": "GKW2YiJRo8ttEXTgW9ZUu28iQDWCtLCPyXsGXSAcGcjE",
+ "withdraw_near_tx_signed_ml_dsa_65_in_browser": "CZMLteUJ4PPAMaJQZCtZoxvZjxnKCFkziBtL1t1V1Dcd",
  "release": {
   "request": {
    "destination": "07f81a9542503d26b9f3029f4aabb9b24186be828c91a59f42e231aebf79864a",
@@ -28,5 +28,6 @@
    "approve": "0x0d345aade3c80e1bda24fe35220db3a6d3cc9d50561c390f0f22698e60b57c39",
    "execute": "0x8e827063479e176c6f5dc4317438a0636cc26ec09147e040841d614d1d905758"
   }
- }
+ },
+ "note": "NEAR hashes corrected from the chain (evidence/route-onchain.json)."
 }

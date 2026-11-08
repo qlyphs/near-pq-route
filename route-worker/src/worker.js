@@ -75,7 +75,7 @@ export default {
           actions: [actions.createAccount(), actions.transfer('250000000000000000000000'), actions.addFullAccessKey({ publicKey })] });
         const s = JSON.stringify(r);
         const failure = s.match(/"(AccountAlreadyExists|ExecutionError)":?[^}]*/)?.[0];
-        return json(failure ? 409 : 200, { accountId, tx: s.match(/"hash":"([^"]+)"/)?.[1], failure }, cors);
+        return json(failure ? 409 : 200, { accountId, tx: r?.result?.transaction?.hash, failure }, cors);
       }
       if (url.pathname === '/') return json(200, { service: 'qlyphs-pq-route', network: 'testnet', holds: 'ciphertexts, public claims, a sponsor key that only creates accounts' }, cors);
       return json(404, { error: 'not found' }, cors);

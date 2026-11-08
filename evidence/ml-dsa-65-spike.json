@@ -5,7 +5,7 @@
   "library": "@fastnear/ml-dsa-65@2.5.0, @fastnear/api@2.5.0",
   "account": "pq65-mw8ba4gk.qlyphs-grad-c48a-parent.testnet",
   "create_tx": "34PvNqeCBgA5F6kygJD6z3ndjD6842mxeL91Zt8c59k2",
-  "only_key": "ml-dsa-65-hash:6QKGqgQjw… (FullAccess)",
-  "ml_dsa_65_signed_transfer_tx": "7zTZ774WpncwPn2z2mPe5PEvR2aN7b3EnyzNsDo1hBD6",
+  "only_key": "ml-dsa-65-hash:6QKGqgQjw\u2026 (FullAccess)",
+  "ml_dsa_65_signed_transfer_tx": "2d6rDSZxQTrHnLMGGo6TZYeRKB8haCJiaSAHByNtpyEa",
   "result": "SUCCESS: an account created with only an ML-DSA-65 key signs its own transaction"
 }

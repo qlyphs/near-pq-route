@@ -1,11 +1,11 @@
 {
   "date": "2026-11-08",
-  "wasm_sha256": "62a83d4183271c9ecb1e6ecc0026a62cc88a27be59f5cfea6cc67c68b7679355",
+  "wasm_sha256": "2a7c8b12c4fb0c637024e41565a0a3cd86c9719db4696e93a84ca2c8976562d0",
   "results": [
     {
-      "name": "init only by the bridge account",
+      "name": "init only from the parent account",
       "ok": true,
-      "detail": "only the bridge account"
+      "detail": "init must come from the parent"
     },
     {
       "name": "init refuses duplicate attester keys",
@@ -95,7 +95,7 @@
     {
       "name": "2-of-3 attested deposit mints",
       "ok": true,
-      "detail": "13.980618922317 Tgas"
+      "detail": "13.9820598929 Tgas"
     },
     {
       "name": "deposit recorded as minted",

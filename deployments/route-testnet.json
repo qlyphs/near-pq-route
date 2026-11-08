@@ -4,7 +4,7 @@
     "account": "intents.qlyphs-pqroute-b.testnet",
     "wasm_sha256": "89e83eab7321f448a10f3ba4b0de333339e24caa24027a785b8d9a4437b9ca1e",
     "upstream": "github.com/near/intents@32cd1f97",
-    "creation_tx": "5yehsFtzU5xvqorAVXk1vMo7corSfVYpw7TQ5fUcX9yz"
+    "creation_tx": "2iBeS7DWvjpczchycknGzSAcm9U2oemeedT1u4GhLGdg"
   },
   "bridge": {
     "account": "qtc.qlyphs-pqroute-a.testnet",
@@ -25,12 +25,12 @@
         "key_sha256": "264b58e249b921f487b18a24a2d31bfe48712227da57c2ef22a926da520e57b3"
       }
     ],
-    "creation_tx": "693pKMfAHVDbestWzNC1erJKRzQ69JSeoR9AWdzqyBVY"
+    "creation_tx": "DyGCXBr5NoiFTWcjpcy9r3e8rpjUBUYUtwVxN835ZM5H"
   },
   "relayer": {
     "account": "relay.qlyphs-pqroute-a.testnet",
     "key": "ML-DSA-65 only",
     "public_key_handle": "ml-dsa-65-hash:75v7dVY5fD23U7KsMgHPn1BL7ofub9w3RmrToADcVdUZ",
-    "creation_tx": "6stPkj4fifkyoYdGvSxT8Eb9dCJwsQhJbBXDCiwygmhA"
+    "creation_tx": "HB1Utgc9Mz12DehxmwN9czmiqyL6UrK8UYMQkCsaAyX"
   }
 }

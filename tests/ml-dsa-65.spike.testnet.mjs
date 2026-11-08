@@ -16,5 +16,5 @@ try {
   const keys = await queryAccessKeyList({ accountId: id, blockId: 'final', network: 'testnet' });
   console.log('keys', keys.result.keys.map((k) => k.public_key.slice(0, 24) + '… ' + (typeof k.access_key.permission === 'string' ? k.access_key.permission : 'FunctionCall')));
   const t = await sendTx({ signerId: id, signer: pq, receiverId: parent, network: 'testnet', waitUntil: 'FINAL', actions: [actions.transfer('1000000000000000000000')] });
-  console.log('ml-dsa-65 signed transfer', JSON.stringify(t).match(/"hash":"([^"]+)"/)?.[1], JSON.stringify(t).includes('SuccessValue') ? 'SUCCESS' : JSON.stringify(t).slice(0, 300));
+  console.log('ml-dsa-65 signed transfer', t?.result?.transaction?.hash, JSON.stringify(t).includes('SuccessValue') ? 'SUCCESS' : JSON.stringify(t).slice(0, 300));
 } finally { pq.destroy(); }

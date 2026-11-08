@@ -15,7 +15,7 @@ const NEAR = (x) => (BigInt(Math.round(x * 1000)) * 10n ** 21n).toString();
 const rpc = async (method, params) => (await (await fetch('https://rpc.testnet.near.org', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }) })).json());
 const exists = async (id) => !!(await rpc('query', { request_type: 'view_account', finality: 'final', account_id: id })).result;
 const send = (from, receiverId, acts) => sendTx({ signerId: from.id, signer: from.signer, receiverId, actions: acts, network: 'testnet', waitUntil: 'FINAL' });
-const txHash = (r) => JSON.stringify(r).match(/"hash":"([^"]+)"/)?.[1];
+const txHash = (r) => r?.result?.transaction?.hash;
 // ROUTE_QUANTUS=curve: the bridge bound to the curve test chain (the Qlyphs app's Testnet); default: the devnet.
 const curve = process.env.ROUTE_QUANTUS === 'curve';
 const file = curve ? 'deployments/route-curve-testnet.json' : 'deployments/route-testnet.json';

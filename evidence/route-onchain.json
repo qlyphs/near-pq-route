@@ -1,0 +1,193 @@
+{
+ "date": "2026-11-08T22:14:09.708Z",
+ "rpc": "https://archival-rpc.testnet.fastnear.com",
+ "bridges": [
+  {
+   "bridge": "qtc.qlyphs-pqroute-a.testnet",
+   "quantus_network": "Quantus development network",
+   "mints": [
+    {
+     "tx": "5MWp6BmUzbSw1Ur8MTYDrJLKz7e6gobbdD9FuDCo3Zg8",
+     "deposit_id": "b3e28c28b4c764c8dd6d2b997f01a8749bded0f5326fc4a72f64109ac698a98f",
+     "planck": "2000000000000",
+     "receiver": "re4dde0e176e652c30b10.qlyphs-pqroute-c.testnet",
+     "into_intents": true,
+     "attesters": [
+      1,
+      2
+     ],
+     "signer": "relay.qlyphs-pqroute-a.testnet",
+     "signer_key_scheme": "ml-dsa-65"
+    },
+    {
+     "tx": "3A4nH8hJQVW8sPw5cxS3rJC2WFg4SASAzguH1RhMPJNd",
+     "deposit_id": "d9dbba014f04808159c588d751a6dc23376da9f2f18be46adb0cd47acbbca08f",
+     "planck": "3000000000000",
+     "receiver": "r61b60cb14fb24c7f5b73.qlyphs-pqroute-c.testnet",
+     "into_intents": true,
+     "attesters": [
+      1,
+      2
+     ],
+     "signer": "relay.qlyphs-pqroute-a.testnet",
+     "signer_key_scheme": "ml-dsa-65"
+    }
+   ],
+   "withdrawals": [
+    {
+     "tx": "6vj6hkThZBycgcgbfSZE1xL36kP56tnuEoKfQfFMLsT7",
+     "account": "re4dde0e176e652c30b10.qlyphs-pqroute-c.testnet",
+     "token": "qtc.qlyphs-pqroute-a.testnet",
+     "planck": "2000000000000",
+     "memo": "WITHDRAW_TO:07f81a9542503d26b9f3029f4aabb9b24186be828c91a59f42e231aebf79864a",
+     "signer_key_scheme": "ml-dsa-65"
+    },
+    {
+     "tx": "EDvnAJRB7dZwrqUr9F6yXq2mBRv3n7HKoxtSKkQddDpV",
+     "account": "r61b60cb14fb24c7f5b73.qlyphs-pqroute-c.testnet",
+     "token": "qtc.qlyphs-pqroute-a.testnet",
+     "planck": "3000000000000",
+     "memo": "WITHDRAW_TO:07f81a9542503d26b9f3029f4aabb9b24186be828c91a59f42e231aebf79864a",
+     "signer_key_scheme": "ml-dsa-65"
+    }
+   ]
+  },
+  {
+   "bridge": "pqqtc.qlyphs-pqroute-a.testnet",
+   "quantus_network": "curve test chain (Qlyphs DevNet v3, the Qlyphs app Testnet)",
+   "mints": [
+    {
+     "tx": "GKW2YiJRo8ttEXTgW9ZUu28iQDWCtLCPyXsGXSAcGcjE",
+     "deposit_id": "89a758330371baa0a1b6db6c88bc6a4d0d37eeb76c9975dd36b3e39a943a636f",
+     "planck": "1500000000000",
+     "receiver": "r19f8220e1cde871b3484.qlyphs-pqroute-c.testnet",
+     "into_intents": true,
+     "attesters": [
+      1,
+      2
+     ],
+     "signer": "relay.qlyphs-pqroute-a.testnet",
+     "signer_key_scheme": "ml-dsa-65"
+    },
+    {
+     "tx": "72EyAwztj4gK5i4xqvzbjM8NQGqBmCAUiuKZcwvK1guF",
+     "deposit_id": "8c2cf866beac90710576c85130cd44561bc0b6a64d1412a94f76cb303890e432",
+     "planck": "2000000000000",
+     "receiver": "r165047e7af41be3203ba.qlyphs-pqroute-c.testnet",
+     "into_intents": true,
+     "attesters": [
+      1,
+      2
+     ],
+     "signer": "relay.qlyphs-pqroute-a.testnet",
+     "signer_key_scheme": "ml-dsa-65"
+    }
+   ],
+   "withdrawals": [
+    {
+     "tx": "CZMLteUJ4PPAMaJQZCtZoxvZjxnKCFkziBtL1t1V1Dcd",
+     "account": "r19f8220e1cde871b3484.qlyphs-pqroute-c.testnet",
+     "token": "pqqtc.qlyphs-pqroute-a.testnet",
+     "planck": "1500000000000",
+     "memo": "WITHDRAW_TO:07f81a9542503d26b9f3029f4aabb9b24186be828c91a59f42e231aebf79864a",
+     "signer_key_scheme": "ml-dsa-65"
+    },
+    {
+     "tx": "HQVFcWg6uJofif1uYqjaXn9f8ekGVUz6q8xiwAQH8bz",
+     "account": "r165047e7af41be3203ba.qlyphs-pqroute-c.testnet",
+     "token": "pqqtc.qlyphs-pqroute-a.testnet",
+     "planck": "2000000000000",
+     "memo": "WITHDRAW_TO:07f81a9542503d26b9f3029f4aabb9b24186be828c91a59f42e231aebf79864a",
+     "signer_key_scheme": "ml-dsa-65"
+    }
+   ]
+  }
+ ],
+ "results": [
+  {
+   "name": "verifier intents.qlyphs-pqroute-b.testnet has no access key",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "verifier runs the pinned upstream build",
+   "ok": true,
+   "detail": "sha256 89e83eab7321f448…"
+  },
+  {
+   "name": "relayer relay.qlyphs-pqroute-a.testnet: its only key is ML-DSA-65",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "qtc.qlyphs-pqroute-a.testnet has no access key",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "qtc.qlyphs-pqroute-a.testnet runs build/bridge-testnet.wasm",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "qtc.qlyphs-pqroute-a.testnet names the Quantus genesis and the three attester keys",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "mint 5MWp6BmUzb…: attesters 1 and 2 signed with ML-DSA-87 (verified here)",
+   "ok": true,
+   "detail": "2000000000000 planck to re4dde0e176e652c30b10.qlyphs-pqroute-c.testnet inside Intents"
+  },
+  {
+   "name": "mint 3A4nH8hJQV…: attesters 1 and 2 signed with ML-DSA-87 (verified here)",
+   "ok": true,
+   "detail": "3000000000000 planck to r61b60cb14fb24c7f5b73.qlyphs-pqroute-c.testnet inside Intents"
+  },
+  {
+   "name": "pqqtc.qlyphs-pqroute-a.testnet has no access key",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "pqqtc.qlyphs-pqroute-a.testnet runs build/bridge-testnet.wasm",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "pqqtc.qlyphs-pqroute-a.testnet names the Quantus genesis and the three attester keys",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "mint GKW2YiJRo8…: attesters 1 and 2 signed with ML-DSA-87 (verified here)",
+   "ok": true,
+   "detail": "1500000000000 planck to r19f8220e1cde871b3484.qlyphs-pqroute-c.testnet inside Intents"
+  },
+  {
+   "name": "mint 72EyAwztj4…: attesters 1 and 2 signed with ML-DSA-87 (verified here)",
+   "ok": true,
+   "detail": "2000000000000 planck to r165047e7af41be3203ba.qlyphs-pqroute-c.testnet inside Intents"
+  },
+  {
+   "name": "withdrawal CZMLteUJ4P… by r19f8220e1cde8…: signed ML-DSA-65, account's only key ML-DSA-65",
+   "ok": true,
+   "detail": "1500000000000 to WITHDRAW_TO:07f81a9542503d26b9f3029f4aabb9b24186be828c91a59f42e231aebf79864a"
+  },
+  {
+   "name": "withdrawal HQVFcWg6uJ… by r165047e7af41b…: signed ML-DSA-65, account's only key ML-DSA-65",
+   "ok": true,
+   "detail": "2000000000000 to WITHDRAW_TO:07f81a9542503d26b9f3029f4aabb9b24186be828c91a59f42e231aebf79864a"
+  },
+  {
+   "name": "withdrawal 6vj6hkThZB… by re4dde0e176e65…: signed ML-DSA-65, account's only key ML-DSA-65",
+   "ok": true,
+   "detail": "2000000000000 to WITHDRAW_TO:07f81a9542503d26b9f3029f4aabb9b24186be828c91a59f42e231aebf79864a"
+  },
+  {
+   "name": "withdrawal EDvnAJRB7d… by r61b60cb14fb24…: signed ML-DSA-65, account's only key ML-DSA-65",
+   "ok": true,
+   "detail": "3000000000000 to WITHDRAW_TO:07f81a9542503d26b9f3029f4aabb9b24186be828c91a59f42e231aebf79864a"
+  }
+ ]
+}

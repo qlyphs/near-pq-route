@@ -8,8 +8,11 @@ cd "$(dirname "$0")/.."
 find_tool() { for c in "$@"; do if command -v "$c" >/dev/null 2>&1; then command -v "$c"; return; fi; done; }
 clang=${CLANG:-$(find_tool /opt/homebrew/opt/llvm/bin/clang clang-23 clang-22 clang-21 clang-20 clang-19 clang)}
 [ -n "$clang" ] || { echo "no clang found: install LLVM 19+ or set CLANG" >&2; exit 1; }
-ld_dir=${WASM_LD_DIR:-$(dirname "$(find_tool /opt/homebrew/opt/lld/bin/wasm-ld wasm-ld-23 wasm-ld-22 wasm-ld-21 wasm-ld-20 wasm-ld-19 wasm-ld)" 2>/dev/null || true)}
-[ -n "$ld_dir" ] && [ -x "$ld_dir/wasm-ld" ] || { echo "no wasm-ld found: install lld 19+ or set WASM_LD_DIR" >&2; exit 1; }
+# clang calls "wasm-ld" by that exact name: a versioned binary (wasm-ld-23) is linked under that name in build/.tools.
+if [ -n "${WASM_LD_DIR:-}" ]; then wasm_ld="$WASM_LD_DIR/wasm-ld"; else wasm_ld=$(find_tool /opt/homebrew/opt/lld/bin/wasm-ld wasm-ld wasm-ld-23 wasm-ld-22 wasm-ld-21 wasm-ld-20 wasm-ld-19); fi
+[ -n "$wasm_ld" ] && [ -x "$wasm_ld" ] || { echo "no wasm-ld found: install lld 19+ or set WASM_LD_DIR" >&2; exit 1; }
+mkdir -p build/.tools && ln -sf "$wasm_ld" build/.tools/wasm-ld
+ld_dir=$PWD/build/.tools
 export PATH="$ld_dir:$PATH"
 major=$("$clang" -dumpversion | cut -d. -f1)
 [ "$major" -ge 19 ] || { echo "clang $major is too old: #embed needs 19+" >&2; exit 1; }

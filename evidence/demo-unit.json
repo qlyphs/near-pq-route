@@ -37,22 +37,52 @@
       "detail": ""
     },
     {
-      "name": "mint refused for another reason (out of gas): unverified",
+      "name": "final execution status missing: unverified",
       "ok": true,
       "detail": ""
     },
     {
-      "name": "refusal from another account: unverified",
+      "name": "final execution status null: unverified",
       "ok": true,
       "detail": ""
     },
     {
-      "name": "another call or signer: unverified",
+      "name": "final execution status empty: unverified",
       "ok": true,
       "detail": ""
     },
     {
-      "name": "execution not final: unverified",
+      "name": "final execution status optimistic: unverified",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "evidence for another transaction hash: unverified",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "receipt without id or not linked to the transaction: unverified",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "untyped failure string containing the words: unverified",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "refusal for another reason (out of gas): unverified",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "action receipt run by another account: unverified",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "another signer, method or arguments: unverified",
       "ok": true,
       "detail": ""
     },
@@ -78,6 +108,31 @@
     },
     {
       "name": "timeout or untyped error: unverified",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "A applied, B now active: A reported applied",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "A failed, B now active: A reported failed",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "B applied after A failed: A not reported applied",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "A in neither active nor last: unavailable",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "A still active: followed as active",
       "ok": true,
       "detail": ""
     },

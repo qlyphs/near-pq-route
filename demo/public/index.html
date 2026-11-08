@@ -115,7 +115,8 @@
     Unaudited testnet prototype. The claim covers minting and upgrades of this reviewed token, after the recorded deployment and cutover. It does not make NEAR consensus, users' keys, or code a quorum approves later post-quantum. The demo server holds two of the three signer keys so that visitors can trigger mints; in a real deployment each signer holds its own key in its own wallet.
   </footer>
 </main>
-<script>
+<script type="module">
+import { followed } from './follow.js';
 const tx = (h) => `<a href="https://testnet.nearblocks.io/txns/${h}" target="_blank" rel="noopener">${h.slice(0, 10)}…</a>`;
 const acct = (id) => `<a href="https://testnet.nearblocks.io/address/${id}" target="_blank" rel="noopener">${id}</a>`;
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
@@ -161,41 +162,44 @@ async function attack(kind, out, btn) {
     const r = await api(`/api/attack/${kind}`, {});
     if (r.verdict === 'blocked_as_expected') show($(out), 'ok', `Refused: ${esc(r.reason)}${r.tx ? ` · ${tx(r.tx)}` : ''}`, { verdict: r.verdict });
     else if (r.verdict === 'unexpected_success') show($(out), 'bad', `It went through. That should never happen${r.tx ? `: ${tx(r.tx)}` : ''}`, { verdict: r.verdict });
-    else show($(out), 'unverified', `Not verified right now: ${esc(humanError(r.reason ?? r.failure ?? r.error))}. The recorded refusal is in the timeline below.`, { verdict: 'unverified' });
+      else show($(out), 'unverified', `Not verified right now: ${esc(humanError(r.reason ?? r.failure ?? r.error))}. The recorded refusal is listed under "What happened on testnet".`, { verdict: 'unverified' });
   } catch (e) {
     show($(out), 'unverified', `Not verified right now: ${esc(e.message)}.`, { verdict: 'unverified' });
   } finally { btn.disabled = false; }
 }
 
-// The operation this page is following, refreshed until it settles.
-let current = null, inflight = false, offset = 0n, ticking = null, polling = null;
-function render(a, last) {
+// The operation this page follows: set from this visitor's own mint request (or, on arrival, the operation that is
+// already in the timelock), then fixed until it settles. Results carry its proposal hash.
+let current = null, inflight = false, offset = 0n, ticking = null, polling = null, writableDemo = true;
+function setResult(cls, html, status) { show($('exec-result'), cls, html, { status, proposalHash: current?.proposal_hash ?? '' }); }
+function render(view) {
   $('op').hidden = false;
-  if (a) {
+  if (view.op) {
+    const a = view.op;
     $('op-fields').innerHTML = `<dt>Action</dt><dd>${esc(a.action)} ${a.amount ? units(a.amount) + ' to ' + acct(a.receiver_id) : ''}</dd><dt>Nonce</dt><dd class="mono">${esc(a.nonce)}</dd><dt>Approved by</dt><dd>signers ${[0, 1, 2].filter((i) => a.signers & (1 << i)).join(' and ')} (ML-DSA-87)</dd><dt>Proposal hash</dt><dd class="mono">${esc(a.proposal_hash)}</dd>`;
   }
   clearInterval(ticking);
-  const status = a ? a.status : last?.proposal_hash === current?.proposal_hash ? last.status : null;
-  $('exec-result').dataset.status = status ?? 'unknown';
-  if (status === 'queued') {
-    const queued = BigInt(a.queued_at_ns), eta = BigInt(a.eta_ns), expires = BigInt(a.expires_ns);
+  if (view.status === 'queued') {
+    const a = view.op, queued = BigInt(a.queued_at_ns), eta = BigInt(a.eta_ns), expires = BigInt(a.expires_ns);
     const tick = () => {
       const now = BigInt(Date.now()) * 1000000n - offset, waiting = now < eta, left = waiting ? (eta - now + 999999999n) / 1000000000n : 0n;
       $('op-bar').style.width = `${Math.min(100, Number(((now - queued) * 100n) / (eta - queued)))}%`;
-      $('op-timer').textContent = now >= expires ? 'Dispatch window closed: executing now closes it as expired.' : waiting ? `Timelock: ${left} s left. Nobody can execute it before.` : 'Timelock passed. Anyone can execute it now.';
-      $('execute').disabled = waiting || inflight;
+      $('op-timer').textContent = !writableDemo ? 'Read-only copy: executing is not available here.' : now >= expires ? 'Dispatch window closed: executing now closes it as expired.' : waiting ? `Timelock: ${left} s left. Nobody can execute it before.` : 'Timelock passed. Anyone can execute it now.';
+      $('execute').disabled = waiting || inflight || !writableDemo;
     };
     tick(); ticking = setInterval(tick, 500);
-  } else {
-    $('execute').disabled = true;
-    $('op-bar').style.width = '100%';
-    $('op-timer').textContent = status === 'executing' ? 'Executing: waiting for the token and the Guardian to settle.' : status ? '' : 'This operation is no longer active.';
-    if (status && status !== 'executing') {
-      const ok = status === 'applied';
-      show($('exec-result'), ok ? 'ok' : 'bad', `Guardian status: ${esc(status)}${ok ? ' · the tokens are minted' : ''}${current?.execute_tx ? ` · ${tx(current.execute_tx)}` : ''}`, { status });
-      clearInterval(polling); polling = null;
-    }
+    if ($('exec-result').dataset.status !== 'executing') $('exec-result').dataset.status = 'queued';
+    $('exec-result').dataset.proposalHash = current.proposal_hash;
+    return;
   }
+  $('execute').disabled = true; $('op-bar').style.width = '100%';
+  if (view.status === 'executing') { $('op-timer').textContent = 'Executing: waiting for the token and the Guardian to settle.'; $('exec-result').dataset.status = 'executing'; return; }
+  $('op-timer').textContent = '';
+  if (view.mode === 'terminal') {
+    const ok = view.status === 'applied';
+    setResult(ok ? 'ok' : 'bad', `Guardian status: ${esc(view.status)}${ok ? ' · the tokens are minted' : ''}${current.execute_tx ? ` · ${tx(current.execute_tx)}` : ''}`, view.status);
+  } else setResult('unverified', 'The result of this operation is no longer readable from the Guardian (a later operation replaced its record).', 'unavailable');
+  clearInterval(polling); polling = null;
 }
 async function refresh() {
   try {
@@ -203,10 +207,10 @@ async function refresh() {
     decimals = Number(s.metadata?.decimals ?? 18);
     offset = BigInt(Date.now()) * 1000000n - BigInt(s.now_ns);
     if (s.repo_url) { $('repo').hidden = false; $('repo').innerHTML = `Source, tests and every transaction: <a href="${esc(s.repo_url)}" target="_blank" rel="noopener">${esc(s.repo_url.replace(/^https:\/\//, ''))}</a>`; }
+    writableDemo = s.writable;
     if (!s.writable) { $('request').disabled = true; show($('mint-result'), 'unverified', 'This copy of the demo is read-only. Use the hosted demo to request a mint.'); }
-    const a = s.guardian?.active;
-    if (a && (!current || current.proposal_hash !== a.proposal_hash)) current = { proposal_hash: a.proposal_hash };
-    if (current) render(a && a.proposal_hash === current.proposal_hash ? a : null, s.guardian?.last);
+    if (!current && s.guardian?.active) current = { proposal_hash: s.guardian.active.proposal_hash };
+    if (current) render(followed(current.proposal_hash, s.guardian));
     return s;
   } catch { return null; }
 }
@@ -217,18 +221,19 @@ $('request').onclick = async () => {
   try {
     const r = await api('/api/mint', { receiver_id: $('receiver').value });
     show($('mint-result'), r.ok ? 'ok' : 'bad', r.ok ? `Queued by the Guardian · ${tx(r.tx)}` : esc(r.error ?? humanError(r.failure)));
-    if (r.ok) { current = { proposal_hash: r.proposal_hash }; $('exec-result').textContent = ''; }
-    else if (r.active) current = { proposal_hash: r.active.proposal_hash };
+    if (r.ok) { current = { proposal_hash: r.proposal_hash }; show($('exec-result'), '', '', { status: 'queued', proposalHash: r.proposal_hash }); }
   } catch (e) { show($('mint-result'), 'unverified', `Could not reach the demo: ${esc(e.message)}`); }
-  finally { $('request').disabled = false; await refresh(); follow(); }
+  finally { $('request').disabled = !writableDemo; await refresh(); follow(); }
 };
 $('execute').onclick = async () => {
-  inflight = true; $('execute').disabled = true; show($('exec-result'), '', 'Executing…', { status: 'executing' });
+  const op = current; // fixed before awaiting, so the result attaches to this operation only
+  if (!op) return;
+  inflight = true; $('execute').disabled = true; setResult('', 'Executing…', 'executing');
   try {
-    const r = await api('/api/execute', { proposal_hash: current?.proposal_hash });
-    if (r.tx) current.execute_tx = r.tx;
-    if (!r.ok && r.error) show($('exec-result'), 'unverified', esc(r.error), { status: 'unknown' });
-  } catch (e) { show($('exec-result'), 'unverified', `Could not reach the demo: ${esc(e.message)}`, { status: 'unknown' }); }
+    const r = await api('/api/execute', { proposal_hash: op.proposal_hash });
+    if (r.tx) op.execute_tx = r.tx;
+    if (!r.ok && r.error) setResult('unverified', esc(r.error), 'unknown');
+  } catch (e) { setResult('unverified', `Could not reach the demo: ${esc(e.message)}`, 'unknown'); }
   finally { inflight = false; await refresh(); follow(); }
 };
 $('attack-mint').onclick = () => attack('owner-mint', 'attack-mint-result', $('attack-mint'));
@@ -249,6 +254,7 @@ $('rerun').onclick = runReport;
     `<li><b>Token key deleted</b> after the handover executed: the token account has no keys left · ${tx(c.cutover.delete_keys_tx)}</li>`,
     `<li><b>PQ mint</b> approved by signers 0 and 1, executed after the delay · ${tx(op.mint.execute_tx)}</li>`,
     `<li><b>PQ upgrade V1 → V2</b> approved by signers 1 and 2. Balances, Guardian and replay state kept · ${tx(op.upgrade.execute_tx)}</li>`,
+    c.attacks ? `<li><b>Retired keys refused</b> after the cutover: the former owner's mint failed with "only the Guardian can do this" · ${tx(c.attacks.former_owner_mint_tx)}; the deleted key's deployment was rejected by the network with InvalidAccessKeyError: AccessKeyNotFound (a rejected transaction has no receipt)</li>` : '',
     `<li><b>131,072-byte upgrades</b> on a second token and Guardian: a migration that fails is rolled back and settled failed · ${tx(op.max_failing.execute_tx)}; the same size applies · ${tx(op.max_upgrade.execute_tx)}</li>`,
   ].join('');
 })();

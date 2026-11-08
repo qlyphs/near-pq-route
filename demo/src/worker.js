@@ -3,6 +3,7 @@
 // secrets it runs read-only: the report, state and recorded evidence work, the actions answer 503.
 import { ml_dsa87 } from '@noble/post-quantum/ml-dsa.js';
 import deployment from '../../deployments/guardian-qlyphs-guardian.json';
+import evidence from '../../evidence/guardian-qlyphs-guardian.json';
 import { encodeOperation, envelope, sha256, verifyControl, isAccountId, GUARDIAN_CONTEXT } from '../../sdk/guardian.mjs';
 import { Rpc, edKey, functionCall, deployContract } from './near.js';
 import { ownerMintVerdict, deletedKeyVerdict, UNVERIFIED } from './verdicts.js';
@@ -42,7 +43,7 @@ async function state(rpc, env) {
     rpc.view(accounts.token, 'ft_metadata'), rpc.block({ finality: 'optimistic' }), balance(rpc, env.RELAYER_ID ?? accounts.relayer), balance(rpc, accounts.owner), balance(rpc, accounts.token)]);
   return { guardian, token, metadata, now_ns: block.header.timestamp_nanosec, accounts, writable: writable(env), repo_url: env.REPO_URL || null,
     resources: { relayer, former_owner: owner, token: tokenAccount },
-    ceremony: { parent_tx: deployment.parent_tx, legacy: deployment.legacy, guardian_creation: { tx: deployment.guardian_creation.tx, audit: deployment.guardian_creation.audit }, cutover: deployment.cutover, operations: deployment.operations, max: deployment.max } };
+    ceremony: { parent_tx: deployment.parent_tx, legacy: deployment.legacy, guardian_creation: { tx: deployment.guardian_creation.tx, audit: deployment.guardian_creation.audit }, cutover: deployment.cutover, operations: deployment.operations, max: deployment.max, attacks: evidence.attacks ?? null } };
 }
 
 async function mint(rpc, env, body, ip) {
@@ -59,7 +60,7 @@ async function mint(rpc, env, body, ip) {
     deadlineNs: BigInt(block.header.timestamp_nanosec) + 600n * 10n ** 9n, receiver, amount: MINT_AMOUNT });
   const approvals = [{ index: 0, signature: signer(env.SIGNER_A).sign(op, GUARDIAN_CONTEXT) }, { index: 1, signature: signer(env.SIGNER_B).sign(op, GUARDIAN_CONTEXT) }];
   const r = await rpc.send(env.RELAYER_ID, edKey(env.RELAYER_KEY), accounts.guardian, [functionCall('propose', envelope(op, approvals), 300n * TGAS)]);
-  return json({ ok: r.ok, tx: r.hash, failure: r.failure, proposal_hash: sha256(op).toString('hex'), message_hex: op.toString('hex') }, r.ok ? 200 : 502);
+  return json({ ok: r.ok, tx: r.hash, failure: r.failure, proposal_hash: sha256(op).toString('hex'), message_hex: op.toString('hex'), receiver_id: receiver, amount: MINT_AMOUNT.toString() }, r.ok ? 200 : 502);
 }
 
 // Executes the active operation once its delay has passed; after its dispatch window it is closed with expire().
@@ -80,9 +81,9 @@ async function execute(rpc, env, body) {
 async function attack(rpc, env, kind) {
   if (!env.RETIRED_OWNER_KEY || !env.RETIRED_TOKEN_KEY) return readOnly();
   if (kind === 'owner-mint') {
-    const r = await rpc.send(accounts.owner, edKey(env.RETIRED_OWNER_KEY), accounts.token,
-      [functionCall('mint', JSON.stringify({ receiver_id: accounts.owner, amount: ATTACK_AMOUNT.toString(), op_id: '999999' }), 30n * TGAS)], 'FINAL');
-    return json({ attempted: 'The former owner calls mint with its still-valid account key.', tx: r.hash, failure: r.failure, ...ownerMintVerdict(r, { owner: accounts.owner, token: accounts.token }) });
+    const args = JSON.stringify({ receiver_id: accounts.owner, amount: ATTACK_AMOUNT.toString(), op_id: '999999' });
+    const r = await rpc.send(accounts.owner, edKey(env.RETIRED_OWNER_KEY), accounts.token, [functionCall('mint', args, 30n * TGAS)], 'FINAL');
+    return json({ attempted: 'The former owner calls mint with its still-valid account key.', tx: r.hash, failure: r.failure, ...ownerMintVerdict(r, { owner: accounts.owner, token: accounts.token, args }) });
   }
   if (kind === 'token-deploy') {
     const key = edKey(env.RETIRED_TOKEN_KEY);

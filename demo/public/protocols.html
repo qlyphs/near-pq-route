@@ -180,11 +180,12 @@ const row = (k, v) => `<span class="k">${k.padEnd(12)}</span>${v}`;
 const keysText = (keys) => Object.entries(keys).map(([c, n]) => `${n} ${c}`).join(' + ') || 'none';
 
 function describe(c) {
-  if (c.kind === 'dao') return [`a DAO, ${c.votes} of ${c.member_count} council votes`];
+  if (c.kind === 'dao') return [`a DAO, ${c.votes} of ${c.member_count} votes (default policy)`];
   if (c.kind === 'multisig') return [`a multisig, ${c.votes ?? '?'} of ${c.member_count} confirmations`];
   if (c.kind === 'locked') return ['<span class="good">no keys, no code</span>: closed'];
   if (c.kind === 'contract') return ['a contract, rules not read here'];
   if (c.kind === 'account') return [`an account with ${keysText(c.keys)} full-access key${Object.values(c.keys).reduce((a, b) => a + b, 0) === 1 ? '' : 's'}`];
+  if (c.kind === 'unreadable') return ['<span class="note">could not be read now</span>'];
   return ['account not found'];
 }
 
@@ -195,7 +196,7 @@ function todayView(r) {
   if (r.extra?.accounts?.length) lines.push(row(r.extra.label.split(' ')[0], esc(r.extra.accounts.map((x) => short(x, 18)).join(', '))));
   const t = r.totals;
   if (t.classical) lines.push(row('at the end', `<span class="hot">${plural(t.classical, 'ed25519 key')}</span>${t.unresolved ? ' <span class="note">+ parts not read</span>' : ''}`));
-  else lines.push(row('at the end', t.locked ? '<span class="good">admin path closed</span>' : 'no classical key found'));
+  else lines.push(row('at the end', t.unresolved ? '<span class="note">not fully read</span>' : t.locked ? '<span class="good">admin path closed</span>' : 'no classical key found'));
   return lines.join('\n');
 }
 

@@ -12,7 +12,7 @@ import { ownerMintVerdict, deletedKeyVerdict, UNVERIFIED } from './verdicts.js';
 // Public testnet RPCs, in order; the client moves to the next one on a rate limit or a server error.
 const RPC = ['https://test.rpc.fastnear.com', 'https://rpc.testnet.near.org'];
 // Public mainnet RPCs for the read-only protocol directory.
-const MAINNET_RPC = ['https://rpc.mainnet.fastnear.com', 'https://rpc.mainnet.near.org'];
+const MAINNET_RPC = ['https://rpc.mainnet.fastnear.com', 'https://free.rpc.fastnear.com'];
 const TGAS = 10n ** 12n;
 const NEAR = 10n ** 24n;
 const DECIMALS = 18n; // the reviewed token's ft_metadata

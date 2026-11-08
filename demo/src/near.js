@@ -75,7 +75,7 @@ export class Rpc {
         const msg = JSON.stringify(j.error);
         const transient = /-?429|Rate limit|HTTP 5\d\d|network|TIMEOUT|try again/i.test(msg);
         // A transaction is never resent to another node: its answer, even an error, is final for this attempt.
-        if (transient && method !== 'send_tx' && i < tries) { this.at++; await new Promise((ok) => setTimeout(ok, 300)); continue; }
+        if (transient && method !== 'send_tx' && i < tries) { this.at++; await new Promise((ok) => setTimeout(ok, 300 * (i + 1))); continue; }
         const e = new Error(j.error.data && typeof j.error.data === 'string' ? j.error.data : msg); e.rpc = j.error; throw e;
       }
       return j.result;

@@ -46,22 +46,25 @@ class AtBlock {
 
 // What controls one account: its own keys, a DAO, a multisig, or a contract whose rules are not read here.
 async function controller(at, id, depth = 0) {
-  const [acct, keys] = await Promise.all([at.account(id).catch(() => null), at.keys(id).catch(() => [])]);
-  if (!acct) return { id, kind: 'missing', keys: {} };
+  // A read that fails is never taken for "no keys": it leaves this part of the path unresolved.
+  const [acct, keys] = await Promise.all([at.account(id).catch((e) => ({ error: e })), at.keys(id).catch(() => null)]);
+  if (acct.error || !keys) return { id, kind: /does not exist|UNKNOWN_ACCOUNT/i.test(String(acct.error?.message)) ? 'missing' : 'unreadable', keys: {} };
   const own = curveCounts(keys);
-  if (acct.code_hash === NO_CODE) return { id, kind: Object.keys(own).length ? 'account' : 'locked', keys: own };
+  // An account can run code without its own code hash: a NEAR global contract, by hash or by account.
+  const hasCode = acct.code_hash !== NO_CODE || Boolean(acct.global_contract_hash || acct.global_contract_account_id);
+  if (!hasCode) return { id, kind: Object.keys(own).length ? 'account' : 'locked', keys: own };
   if (depth > 0) return { id, kind: 'contract', keys: own };
   const policy = await at.tryView(id, 'get_policy');
   if (policy?.roles) {
     const members = [...new Set(policy.roles.filter((r) => r.kind?.Group && r.permissions?.some((p) => /VoteApprove|\*:\*/.test(p))).flatMap((r) => r.kind.Group))];
-    const resolved = await Promise.all(members.slice(0, MAX_MEMBERS).map((m) => controller(at, m, depth + 1)));
+    const resolved = []; for (const m of members.slice(0, MAX_MEMBERS)) resolved.push(await controller(at, m, depth + 1));
     return { id, kind: 'dao', keys: own, members: resolved, member_count: members.length, votes: daoVotes(policy.default_vote_policy?.threshold, members.length) };
   }
   const multisig = await at.tryView(id, 'get_members');
   if (Array.isArray(multisig)) {
     const confirmations = await at.tryView(id, 'get_num_confirmations');
     const accounts = multisig.map((m) => m.account_id).filter(Boolean);
-    const resolved = await Promise.all(accounts.slice(0, MAX_MEMBERS).map((m) => controller(at, m, depth + 1)));
+    const resolved = []; for (const m of accounts.slice(0, MAX_MEMBERS)) resolved.push(await controller(at, m, depth + 1));
     const directKeys = multisig.filter((m) => m.public_key).map((m) => ({ public_key: m.public_key, access_key: { permission: 'FullAccess' } }));
     return { id, kind: 'multisig', keys: add(own, curveCounts(directKeys)), members: resolved, member_count: multisig.length, votes: Number(confirmations) || null };
   }
@@ -73,7 +76,7 @@ export function tally(admins) {
   const keys = {}; let unresolved = 0, locked = 0;
   const walk = (c) => {
     add(keys, c.keys);
-    if (c.kind === 'contract') unresolved++;
+    if (c.kind === 'contract' || c.kind === 'unreadable' || c.kind === 'missing') unresolved++;
     if (c.kind === 'locked') locked++;
     for (const m of c.members ?? []) walk(m);
     if ((c.member_count ?? 0) > (c.members?.length ?? 0)) unresolved++;

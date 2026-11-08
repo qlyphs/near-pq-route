@@ -7,7 +7,7 @@ cancel it during the delay. The old admin key stops working, and the contract ke
 be upgraded.
 
 - **Live demo (NEAR testnet):** https://qlyphs-guardian-demo.qlyphs.workers.dev
-- **Video:** `[link added at submission]`
+- **Video (60 s, real testnet session):** [demo/public/guardian-demo.mp4](demo/public/guardian-demo.mp4), also served at https://qlyphs-guardian-demo.qlyphs.workers.dev/guardian-demo.mp4
 - **Spec:** [docs/GUARDIAN.md](docs/GUARDIAN.md)
 
 Unaudited testnet prototype. Read [Limits](#limits) before drawing conclusions.

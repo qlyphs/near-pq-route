@@ -1,0 +1,169 @@
+{
+  "network": "testnet",
+  "steps": [
+    {
+      "name": "PQ mint 5000 to the release parent: already queued, resuming",
+      "ok": true,
+      "detail": "nonce 0"
+    },
+    {
+      "name": "PQ mint 5000 to the release parent: execute before the timelock refused",
+      "ok": true,
+      "tx": "H2jzdELQiRTLa8Ze1KDrzHBcXXVqtUpHFkduuRZJVvtj"
+    },
+    {
+      "name": "PQ mint 5000 to the release parent: executed and settled",
+      "ok": true,
+      "tx": "9HTQBM55S4rHRwBNG7rUsZM2eNr1XQHwLSPRCNAqwAZh",
+      "detail": "6.021275069915 Tgas"
+    },
+    {
+      "name": "PQ upgrade V1 to V2: queued (signers 1 and 2)",
+      "ok": true,
+      "tx": "J3XVJC67WwH96ZeuRTuKtPVkbWSjzyDrp61vxV8QixSu",
+      "detail": "14.648291532459 Tgas, eta 1794139902573795637"
+    },
+    {
+      "name": "PQ upgrade V1 to V2: execute before the timelock refused",
+      "ok": true,
+      "tx": "67Q29rC6DY9vqovUVmsFMWqEopwG4Jyp2L6b4o4bWDKo"
+    },
+    {
+      "name": "PQ upgrade V1 to V2: executed and settled",
+      "ok": true,
+      "tx": "2rF1f6FVgihc1RzAX3UCFE8KJaCQA2xS1K8HRKf3GYAi",
+      "detail": "9.519843159014 Tgas"
+    },
+    {
+      "name": "after the upgrade: V2 live, balances, Guardian and op high-water mark kept",
+      "ok": true,
+      "detail": "{\"version\":2,\"owner\":null,\"guardian\":\"guardian.qlyphs-guardian-r1.testnet\",\"next_op\":2,\"total_supply\":\"1255000\"}"
+    },
+    {
+      "name": "former owner mint refused by the token",
+      "ok": true,
+      "tx": "95ZxLHXwXvAw5xzuMDm4Yh6C1EcsX7o22SpPC3kWmkNF"
+    },
+    {
+      "name": "deleted token key cannot deploy code",
+      "ok": true,
+      "detail": "KeyNotFound"
+    },
+    {
+      "name": "131,072-byte code queued and read back by paginated view_state",
+      "ok": true,
+      "tx": "8oP1EokHq9TGP9KuLdeTgbLW4idA9V5HN9UFyzbcXvmp",
+      "detail": "28.665354992157 Tgas"
+    },
+    {
+      "name": "cancel ends it and deletes the code",
+      "ok": true,
+      "tx": "47v9wpUmuaRXKch9219QadkAkmUmpeQm1sVGbNMqnnWV",
+      "detail": "15.500769987494 Tgas"
+    },
+    {
+      "name": "verify: Guardian has no access keys",
+      "ok": true,
+      "detail": "pass: 0 keys"
+    },
+    {
+      "name": "verify: Target has no access keys",
+      "ok": true,
+      "detail": "pass: 0 keys"
+    },
+    {
+      "name": "verify: Guardian runs the reproducible build",
+      "ok": true,
+      "detail": "pass: 1d21064b72d9a366eb50ed79010410b922e50b52a277c64558c5a84e9ef29ef8"
+    },
+    {
+      "name": "verify: Target runs a reviewed build",
+      "ok": true,
+      "detail": "pass: v2 3f5fb76de7df1efc6dad55d7a3d8b19431c4687227b617aecbe11e59e5ccfd2c"
+    },
+    {
+      "name": "verify: Guardian config bytes match",
+      "ok": true,
+      "detail": "pass: config sha256 8f1c2aa3a5f202999fdb84702811e70e639226f86a305b54fcbbb7c4503774c8"
+    },
+    {
+      "name": "verify: Guardian state agrees",
+      "ok": true,
+      "detail": "pass: 2 of 3 signers, delay 60 s, window 86400 s, next nonce 3, active upgrade #2 queued"
+    },
+    {
+      "name": "verify: Target is guarded by this Guardian, no owner",
+      "ok": true,
+      "detail": "pass: version 2, next op 2, supply 1255000"
+    },
+    {
+      "name": "verify: Recorded creation audit",
+      "ok": true,
+      "detail": "pass: tx 46aD5edUAvAnJECv9oU39AbEcjprZZTv9s4UkWvYHPAi"
+    },
+    {
+      "name": "verify: Recorded cutover",
+      "ok": true,
+      "detail": "pass: handover XJ8D1jJ3GG2EeT3voxAv3fVouA7sW3aMZwyXp5ctZUH, delete keys F8CnfBZ2e1GN5KjzhxBd7dPawN7t3sW15UHELJy9D5fu"
+    }
+  ],
+  "attacks": {
+    "former_owner_mint_tx": "95ZxLHXwXvAw5xzuMDm4Yh6C1EcsX7o22SpPC3kWmkNF",
+    "deleted_key_deploy": "KeyNotFound"
+  },
+  "report": {
+    "block": {
+      "hash": "4d8Wdu4ESRWSXvADS74HtaZzimB4hq1JCqUbcbtsH9kd",
+      "height": 276774157
+    },
+    "ok": true,
+    "checks": [
+      {
+        "name": "Guardian has no access keys",
+        "status": "pass",
+        "detail": "0 keys"
+      },
+      {
+        "name": "Target has no access keys",
+        "status": "pass",
+        "detail": "0 keys"
+      },
+      {
+        "name": "Guardian runs the reproducible build",
+        "status": "pass",
+        "detail": "1d21064b72d9a366eb50ed79010410b922e50b52a277c64558c5a84e9ef29ef8"
+      },
+      {
+        "name": "Target runs a reviewed build",
+        "status": "pass",
+        "detail": "v2 3f5fb76de7df1efc6dad55d7a3d8b19431c4687227b617aecbe11e59e5ccfd2c"
+      },
+      {
+        "name": "Guardian config bytes match",
+        "status": "pass",
+        "detail": "config sha256 8f1c2aa3a5f202999fdb84702811e70e639226f86a305b54fcbbb7c4503774c8"
+      },
+      {
+        "name": "Guardian state agrees",
+        "status": "pass",
+        "detail": "2 of 3 signers, delay 60 s, window 86400 s, next nonce 3, active upgrade #2 queued"
+      },
+      {
+        "name": "Target is guarded by this Guardian, no owner",
+        "status": "pass",
+        "detail": "version 2, next op 2, supply 1255000"
+      },
+      {
+        "name": "Recorded creation audit",
+        "status": "pass",
+        "detail": "tx 46aD5edUAvAnJECv9oU39AbEcjprZZTv9s4UkWvYHPAi"
+      },
+      {
+        "name": "Recorded cutover",
+        "status": "pass",
+        "detail": "handover XJ8D1jJ3GG2EeT3voxAv3fVouA7sW3aMZwyXp5ctZUH, delete keys F8CnfBZ2e1GN5KjzhxBd7dPawN7t3sW15UHELJy9D5fu"
+      }
+    ],
+    "statement": "At finalized block 276774157 these accounts had no access keys and ran these reviewed builds with this configuration, under the recorded deployment and cutover assumptions."
+  }
+}

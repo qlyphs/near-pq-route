@@ -20,8 +20,9 @@ function id(out, at, v, what) {
   out[at] = v.length; out.write(v, at + 1, 'ascii');
 }
 
-/** { chain, bridge, quantusGenesis, depositId, amount (bigint, raw units), receiver, receipt? } */
-export function encodeAttestation({ chain, bridge, quantusGenesis, depositId, amount, receiver, receipt }) {
+/** { chain, bridge, quantusGenesis, depositId, amount (bigint, raw units), receiver, receipt?, intents? }.
+ * intents: true mints into the bridge's configured NEAR Intents verifier for the receiver. */
+export function encodeAttestation({ chain, bridge, quantusGenesis, depositId, amount, receiver, receipt, intents = false }) {
   const m = Buffer.alloc(ATTESTATION_LEN);
   m.write('QLYPBRG1', 0, 'ascii');
   if (!chain || chain.length > 8) throw new Error('chain tag is 1 to 8 characters');
@@ -33,6 +34,7 @@ export function encodeAttestation({ chain, bridge, quantusGenesis, depositId, am
   m.writeBigUInt64LE(amount & ((1n << 64n) - 1n), 145); m.writeBigUInt64LE(amount >> 64n, 153);
   id(m, 161, receiver, 'receiver');
   if (receipt?.length) { if (receipt.length > MAX_RECEIPT) throw new Error('receipt too long'); sha256(receipt).copy(m, 226); }
+  m[258] = intents ? 1 : 0;
   return m;
 }
 
@@ -42,3 +44,10 @@ export function encodeMint(attestation, [a, b], receipt = Buffer.alloc(0)) {
   return Buffer.concat([attestation, Buffer.from([a.index]), Buffer.from(a.signature), Buffer.from([b.index]), Buffer.from(b.signature), len, receipt]);
 }
 export const attest = (key, index, attestation) => ({ index, signature: key.sign(attestation, Buffer.from(BRIDGE_CONTEXT)) });
+
+/** new() input: Quantus genesis | three ML-DSA-87 public keys | verifier id length | verifier id. */
+export function encodeConfig({ quantusGenesis, keys, verifier }) {
+  if (keys.length !== 3 || keys.some((k) => k.length !== 2592)) throw new Error('three ML-DSA-87 public keys');
+  if (!ACCOUNT_ID.test(verifier)) throw new Error('verifier is not a NEAR account id');
+  return Buffer.concat([hex32(quantusGenesis, 'Quantus genesis'), ...keys.map((k) => Buffer.from(k)), Buffer.from([verifier.length]), Buffer.from(verifier, 'ascii')]);
+}

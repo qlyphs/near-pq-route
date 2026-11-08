@@ -46,6 +46,7 @@ IMPORT(sha256) void sha256(uint64_t len, uint64_t ptr, uint64_t reg);
 #define MAX_RECEIPT 2048u
 #define MAX_INPUT (MSG + 2u * SIGNED + 2u + MAX_RECEIPT)
 #define CONFIG (32u + 3u * PQ87_PK)
+#define A_MODE 258u               /* 0: credit the receiver; 1: deposit into the configured Intents verifier for the receiver */
 #define MIN_STORAGE_LO 14068147061460041728ULL   /* 0.00125 NEAR (1.25e21 yocto) to register a holder */
 #define MIN_STORAGE_HI 67ULL
 #define MAX_PAGE 8u
@@ -161,6 +162,16 @@ static void parse_json(const uint8_t *j, size_t n, const char *allowed) {
     i = skip_ws(j, n, ke + 1);
     REQUIRE(i < n && j[i] == ':', "expected ':'");
     i = skip_ws(j, n, i + 1);
+    if (i + 4 <= n && memcmp(j + i, "null", 4) == 0) {
+      /* null means absent: near-sdk sends optional fields (memo) as null. */
+      for (size_t k = 0; k < nfields; k++) REQUIRE(!(fields[k].kl == f.kl && memcmp(fields[k].k, f.k, f.kl) == 0), "duplicate JSON field");
+      i = skip_ws(j, n, i + 4);
+      REQUIRE(i < n, "unterminated JSON object");
+      if (j[i] == ',') { i = skip_ws(j, n, i + 1); continue; }
+      REQUIRE(j[i] == '}', "expected ',' or '}'");
+      i++;
+      break;
+    }
     REQUIRE(i < n && j[i] == '"', "JSON values must be strings");
     size_t ve = str_end(j, n, i + 1, 0);
     f.v = j + i + 1; f.vl = ve - i - 1;
@@ -237,16 +248,43 @@ static void emit(const char *event, const uint8_t *owner, size_t olen, u128 amou
   log_utf8(on, PTR(out));
 }
 
-/* new(genesis 32 | key 1 | key 2 | key 3): once, by the bridge account itself, before its deploy key is deleted. */
+/* new(genesis 32 | key 1 | key 2 | key 3 | verifier id length u8 | verifier id): once, by the bridge account
+ * itself, before its deploy key is deleted. The verifier is the NEAR Intents contract deposits can go into. */
 EXPORT(new) void new_(void) {
   input(0); size_t n = read_reg(0, in, sizeof(in)); load_ids();
   REQUIRE(same(caller, caller_len, self_id, self_len), "only the bridge account can initialize it");
   REQUIRE(storage_read(1, PTR("c"), 0) != 1, "already initialized");
-  REQUIRE(n == CONFIG, "config is genesis and three ML-DSA-87 public keys");
+  REQUIRE(n > CONFIG + 1 && n == CONFIG + 1 + in[CONFIG] && valid_id(in + CONFIG + 1, in[CONFIG]), "config is genesis, three ML-DSA-87 public keys and the Intents verifier id");
+  REQUIRE(!same(in + CONFIG + 1, in[CONFIG], self_id, self_len), "the verifier cannot be the bridge");
+  storage_write(1, PTR("i"), in[CONFIG], PTR(in + CONFIG + 1), 0);
   const uint8_t *k = in + 32;
   REQUIRE(memcmp(k, k + PQ87_PK, PQ87_PK) && memcmp(k, k + 2 * PQ87_PK, PQ87_PK) && memcmp(k + PQ87_PK, k + 2 * PQ87_PK, PQ87_PK), "attester keys must differ");
   storage_write(1, PTR("c"), CONFIG, PTR(in), 0);
   u128 z = { 0, 0 }; set_supply(z);
+}
+
+static size_t read_id_key(const char *k, uint8_t *o) { if (storage_read(1, PTR(k), 0) != 1) return 0; return read_reg(0, o, MAX_ID); }
+
+/* receiver.ft_on_transfer(sender, amount, msg) then self.ft_resolve_transfer(sender, receiver, amount), returned. */
+static void call_on_transfer(const uint8_t *snd, size_t sl, const uint8_t *rcv, size_t rl, u128 amount, const uint8_t *msg, size_t ml) {
+  uint64_t used = used_gas(), pre = prepaid_gas();
+  REQUIRE(pre > used + RESOLVE_GAS + 15 * TGAS, "not enough gas for the receiver call");
+  uint64_t call_gas = pre - used - RESOLVE_GAS - 5 * TGAS;
+  static uint8_t args[2400]; size_t a = 0; char d[40]; size_t k;
+#define ADD(s) do { const char *s_ = (s); while (*s_) args[a++] = (uint8_t)*s_++; } while (0)
+  ADD("{\"sender_id\":\""); memcpy(args + a, snd, sl); a += sl;
+  ADD("\",\"amount\":\""); k = dec128(amount, d); memcpy(args + a, d, k); a += k;
+  ADD("\",\"msg\":\""); memcpy(args + a, msg, ml); a += ml; ADD("\"}");
+  uint8_t zero[16] = { 0 };
+  uint64_t p = promise_create(rl, PTR(rcv), 14, PTR("ft_on_transfer"), a, PTR(args), PTR(zero), call_gas);
+  a = 0;
+  ADD("{\"sender_id\":\""); memcpy(args + a, snd, sl); a += sl;
+  ADD("\",\"receiver_id\":\""); memcpy(args + a, rcv, rl); a += rl;
+  ADD("\",\"amount\":\""); k = dec128(amount, d); memcpy(args + a, d, k); a += k;
+  ADD("\"}");
+#undef ADD
+  uint64_t q = promise_then(p, self_len, PTR(self_id), 19, PTR("ft_resolve_transfer"), a, PTR(args), PTR(zero), RESOLVE_GAS);
+  promise_return(q);
 }
 
 /* mint(attestation 288 | i u8 | sig | j u8 | sig | receipt length u16 | receipt): anyone may submit. Both
@@ -271,7 +309,8 @@ EXPORT(mint) void mint(void) {
   size_t wl = m[A_RECV];
   REQUIRE(wl <= MAX_ID && valid_id(m + A_RECV + 1, wl), "bad receiver");
   for (size_t k = A_RECV + 1 + wl; k < A_RECEIPT; k++) REQUIRE(m[k] == 0, "bad padding");
-  for (size_t k = A_ZERO; k < MSG; k++) REQUIRE(m[k] == 0, "bad padding");
+  REQUIRE(m[A_MODE] <= 1, "unknown mint mode");
+  for (size_t k = A_MODE + 1; k < MSG; k++) REQUIRE(m[k] == 0, "bad padding");
   uint8_t h[32] = { 0 };
   if (rl) { sha256(rl, PTR(receipt), 0); REQUIRE(read_reg(0, h, 32) == 32, "sha256"); }
   REQUIRE(memcmp(m + A_RECEIPT, h, 32) == 0, "receipt does not match the attestation");
@@ -283,15 +322,23 @@ EXPORT(mint) void mint(void) {
   uint8_t one = 1; storage_write(33, PTR(dk), 1, PTR(&one), 0);
   memcpy(who, m + A_RECV + 1, wl);
   set_supply(add128(supply(), amount));
-  set_balance(who, wl, add128(balance(who, wl), amount));
+  uint8_t mode = m[A_MODE];
+  uint8_t ver[MAX_ID]; size_t vl = 0;
+  if (mode == 1) { vl = read_id_key("i", ver); REQUIRE(vl, "no verifier configured"); }
+  if (mode == 1) set_balance(ver, vl, add128(balance(ver, vl), amount));
+  else set_balance(who, wl, add128(balance(who, wl), amount));
   if (rl) {
     uint64_t r = rd_u64_key("n");
     uint8_t rk[9]; rk[0] = 'r'; put64(rk + 1, r);
     storage_write(9, PTR(rk), rl, PTR(receipt), 0);
     wr_u64_key("n", r + 1);
   }
-  emit("ft_mint", who, wl, amount, 0, 0);
   on = 0; PUT("bridge_mint deposit="); put_hex(m + A_DEPOSIT, 32); log_utf8(on, PTR(out));
+  if (mode == 0) { emit("ft_mint", who, wl, amount, 0, 0); return; }
+  /* Mode 1, like a PoA ft_deposit with a message: the tokens go to the verifier, which credits the receiver
+   * (msg = receiver id); if it refuses, ft_resolve_transfer moves them to the receiver instead. */
+  emit("ft_mint", ver, vl, amount, 0, 0);
+  call_on_transfer(who, wl, ver, vl, amount, who, wl);
 }
 
 /* storage_deposit({"account_id"?}): registers a holder (balance 0) for at least 0.00125 NEAR, once. */
@@ -365,24 +412,7 @@ EXPORT(ft_transfer_call) void ft_transfer_call(void) {
   const field *msg = get_field("msg");
   REQUIRE(msg, "msg is required");
   move(who, rl, amount);
-  uint64_t used = used_gas(), pre = prepaid_gas();
-  REQUIRE(pre > used + RESOLVE_GAS + 10 * TGAS, "not enough gas for ft_transfer_call");
-  uint64_t call_gas = pre - used - RESOLVE_GAS - 5 * TGAS;
-  static uint8_t args[2400]; size_t a = 0;
-#define ADD(s) do { const char *s_ = (s); while (*s_) args[a++] = (uint8_t)*s_++; } while (0)
-  ADD("{\"sender_id\":\""); memcpy(args + a, caller, caller_len); a += caller_len;
-  ADD("\",\"amount\":\""); { char d[40]; size_t k = dec128(amount, d); memcpy(args + a, d, k); a += k; }
-  ADD("\",\"msg\":\""); memcpy(args + a, msg->v, msg->vl); a += msg->vl; ADD("\"}");
-  uint8_t zero[16] = { 0 };
-  uint64_t p = promise_create(rl, PTR(who), 14, PTR("ft_on_transfer"), a, PTR(args), PTR(zero), call_gas);
-  a = 0;
-  ADD("{\"sender_id\":\""); memcpy(args + a, caller, caller_len); a += caller_len;
-  ADD("\",\"receiver_id\":\""); memcpy(args + a, who, rl); a += rl;
-  ADD("\",\"amount\":\""); { char d[40]; size_t k = dec128(amount, d); memcpy(args + a, d, k); a += k; }
-  ADD("\"}");
-#undef ADD
-  uint64_t q = promise_then(p, self_len, PTR(self_id), 19, PTR("ft_resolve_transfer"), a, PTR(args), PTR(zero), RESOLVE_GAS);
-  promise_return(q);
+  call_on_transfer(caller, caller_len, who, rl, amount, msg->v, msg->vl);
 }
 
 /* ft_resolve_transfer({"sender_id","receiver_id","amount"}): private callback. The receiver returned the unused

@@ -1,6 +1,6 @@
 {
   "date": "2026-11-08",
-  "wasm_sha256": "166bcb304df51cc68bdc9ed440d557ad1df5bd95a5f6ae5d979089dfb9ea6b32",
+  "wasm_sha256": "62a83d4183271c9ecb1e6ecc0026a62cc88a27be59f5cfea6cc67c68b7679355",
   "results": [
     {
       "name": "init only by the bridge account",
@@ -95,7 +95,7 @@
     {
       "name": "2-of-3 attested deposit mints",
       "ok": true,
-      "detail": "13.978550568173 Tgas"
+      "detail": "13.980618922317 Tgas"
     },
     {
       "name": "deposit recorded as minted",
@@ -144,6 +144,21 @@
     },
     {
       "name": "redeem burns and records the Quantus destination",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "intents-mode mint whose verifier call fails ends with the receiver",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "unknown mint mode",
+      "ok": true,
+      "detail": "unknown mint mode"
+    },
+    {
+      "name": "memo null is accepted as absent",
       "ok": true,
       "detail": ""
     },

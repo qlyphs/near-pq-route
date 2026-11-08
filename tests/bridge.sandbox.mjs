@@ -6,7 +6,7 @@ import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { Key } from '../sdk/vault.mjs';
-import { encodeAttestation, encodeMint, attest, sha256 } from '../sdk/bridge.mjs';
+import { encodeAttestation, encodeMint, encodeConfig, attest, sha256 } from '../sdk/bridge.mjs';
 
 const TGAS = 10n ** 12n, NEAR = 10n ** 24n;
 const results = []; let failures = 0;
@@ -26,7 +26,7 @@ try {
   const keys = [0, 1, 2].map((i) => Key.generate(join(dir, `a${i}.pem`)));
   const outsider = Key.generate(join(dir, 'o.pem'));
   const genesis = randomBytes(32);
-  const config = Buffer.concat([genesis, ...keys.map((k) => k.publicKey)]);
+  const config = encodeConfig({ quantusGenesis: genesis, keys: keys.map((k) => k.publicKey), verifier: 'nocode.test.near' });
   const bridge = await root.createSubAccount('bridge', { initialBalance: 20n * NEAR });
   await bridge.deploy(wasm);
   const alice = await root.createSubAccount('alice', { initialBalance: 5n * NEAR });
@@ -85,12 +85,19 @@ try {
   const rd = await alice.callRaw(bridge, 'redeem', { amount: '2000000000000', quantus_to: qto }, { attachedDeposit: 1n });
   const rec = await bridge.view('redemption', { id: '0' });
   record('redeem burns and records the Quantus destination', rd.succeeded && rec?.amount === '2000000000000' && rec.quantus_to === qto && rec.account === alice.accountId && (await bridge.view('ft_total_supply')) === '3000000000000');
+  // Mode 1 into a verifier without code: the receiver call fails and resolve gives the tokens to the receiver.
+  { const m = att({ intents: true, amount: 77n }); const r = await mint(encodeMint(m, both(m)));
+    record('intents-mode mint whose verifier call fails ends with the receiver', r.succeeded && (await bridge.view('ft_balance_of', { account_id: 'nocode.test.near' })) === '0' && (await bridge.view('ft_balance_of', { account_id: alice.accountId })) === '2000000000077'); }
+  { const m = att(); m[258] = 2; await refused('unknown mint mode', () => mint(encodeMint(m, both(m))), 'unknown mint mode'); }
+  // near-sdk sends optional fields as null.
+  { const r = await bob.callRaw(bridge, 'ft_transfer', new Uint8Array(Buffer.from(JSON.stringify({ receiver_id: alice.accountId, amount: '1', memo: null }))), { attachedDeposit: 1n });
+    record('memo null is accepted as absent', r.succeeded, r.succeeded ? '' : failureText(r).slice(0, 160)); }
   // Intents withdrawal convention: ft_transfer to the bridge itself with memo WITHDRAW_TO:<hex>.
   await refused('transfer to the bridge without WITHDRAW_TO is refused', () => bob.callRaw(bridge, 'ft_transfer', { receiver_id: bridge.accountId, amount: '1' }, { attachedDeposit: 1n }), 'needs memo WITHDRAW_TO');
   const wq = randomBytes(32).toString('hex');
   const w = await bob.callRaw(bridge, 'ft_transfer', { receiver_id: bridge.accountId, amount: '400000000000', memo: `WITHDRAW_TO:${wq}` }, { attachedDeposit: 1n });
   const wrec = await bridge.view('redemption', { id: '1' });
-  record('WITHDRAW_TO transfer burns and records like redeem', w.succeeded && wrec?.quantus_to === wq && wrec.account === bob.accountId && (await bridge.view('ft_balance_of', { account_id: bob.accountId })) === '600000000000');
+  record('WITHDRAW_TO transfer burns and records like redeem', w.succeeded && wrec?.quantus_to === wq && wrec.account === bob.accountId && (await bridge.view('ft_balance_of', { account_id: bob.accountId })) === '599999999999');
   writeFileSync('evidence/bridge-sandbox.json', JSON.stringify({ date: new Date().toISOString().slice(0, 10), wasm_sha256: sha256(wasm).toString('hex'), results }, null, 2) + '\n');
 } finally {
   await worker.tearDown();

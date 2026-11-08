@@ -1,0 +1,20 @@
+{
+ "date": "2026-11-09",
+ "what": "The app flow at /bridge/quantum on the corrected deployment (local build of feat/pq-route with testnet settings): request made in the browser, its account opened by the ML-DSA-65 sponsor before the link existed, paid with the wallet's message format (pinned recipient card, receiver checked before locking, site session over the route), minted into Intents, found again in the browser, withdrawn with an ML-DSA-65 signature made in the browser, released 2-of-3 on Quantus.",
+ "payer_side_note": "The payer's two wallet approvals (sendQtc to the lock, signSessionChallenge) were produced by scripts/near-pay.ts with the same bytes, because they need a person's wallet.",
+ "bridge": "qtcpq.qlyphs-pqroute-a.testnet",
+ "quantus_network": "curve test chain (genesis 0x06fb13f7\u2026)",
+ "request_id": "ebcf44074a43917b00544ee0002a5dc2",
+ "fresh_account": "rca24613b3ee0b9573517.qlyphs-pqroute-c.testnet",
+ "lock": {
+  "quantus_tx": "0x7bd0700366c8df44a405ff7fedc067e590a8a03cee19b68012d9822fe405b415",
+  "block": 120755,
+  "extrinsic": 1,
+  "planck": "1200000000000",
+  "deposit_id": "edc9ab3fbaa232c5c14d9847f7a29f62d08f451cd4cb2d34a787de56ed7cb79c"
+ },
+ "mint_near_tx": "DJYPtW5VJ6gwkfYoETkwx665wuZ4HUNdD34koVkon5ry",
+ "delivered": "inside NEAR Intents",
+ "release_quantus_execute": "0x7cf32dcb2763dec275e6263318ee53d50ce1ef8589e0bfd6c07f1be4028d87ee",
+ "withdraw_near_tx_signed_ml_dsa_65_in_browser": "C4hVQpmR9TNEDrkmkUp8gWZw3tvmry4jqAZD1RXWZPA1"
+}

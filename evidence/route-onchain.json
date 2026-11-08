@@ -1,16 +1,17 @@
 {
- "date": "2026-11-08T22:14:09.708Z",
+ "date": "2026-11-08T23:36:26.087Z",
  "rpc": "https://archival-rpc.testnet.fastnear.com",
  "bridges": [
   {
-   "bridge": "qtc.qlyphs-pqroute-a.testnet",
-   "quantus_network": "Quantus development network",
+   "bridge": "qtcpq.qlyphs-pqroute-a.testnet",
+   "current": true,
+   "quantus_network": "curve test chain (Qlyphs DevNet v3, the Qlyphs app Testnet)",
    "mints": [
     {
-     "tx": "5MWp6BmUzbSw1Ur8MTYDrJLKz7e6gobbdD9FuDCo3Zg8",
-     "deposit_id": "b3e28c28b4c764c8dd6d2b997f01a8749bded0f5326fc4a72f64109ac698a98f",
-     "planck": "2000000000000",
-     "receiver": "re4dde0e176e652c30b10.qlyphs-pqroute-c.testnet",
+     "tx": "DJYPtW5VJ6gwkfYoETkwx665wuZ4HUNdD34koVkon5ry",
+     "deposit_id": "edc9ab3fbaa232c5c14d9847f7a29f62d08f451cd4cb2d34a787de56ed7cb79c",
+     "planck": "1200000000000",
+     "receiver": "rca24613b3ee0b9573517.qlyphs-pqroute-c.testnet",
      "into_intents": true,
      "attesters": [
       1,
@@ -20,10 +21,10 @@
      "signer_key_scheme": "ml-dsa-65"
     },
     {
-     "tx": "3A4nH8hJQVW8sPw5cxS3rJC2WFg4SASAzguH1RhMPJNd",
-     "deposit_id": "d9dbba014f04808159c588d751a6dc23376da9f2f18be46adb0cd47acbbca08f",
-     "planck": "3000000000000",
-     "receiver": "r61b60cb14fb24c7f5b73.qlyphs-pqroute-c.testnet",
+     "tx": "G7Z6MCa2tBFAzhhpZJH6ybxdXp6rS1QCUz7toYCx5sGk",
+     "deposit_id": "9191c21ceafa4ecfc00a9e90dae4f941cad46e4d3e953a4d30e561069d64606f",
+     "planck": "2000000000000",
+     "receiver": "r34be050b50ff3f2d17d9.qlyphs-pqroute-c.testnet",
      "into_intents": true,
      "attesters": [
       1,
@@ -35,25 +36,27 @@
    ],
    "withdrawals": [
     {
-     "tx": "6vj6hkThZBycgcgbfSZE1xL36kP56tnuEoKfQfFMLsT7",
-     "account": "re4dde0e176e652c30b10.qlyphs-pqroute-c.testnet",
-     "token": "qtc.qlyphs-pqroute-a.testnet",
-     "planck": "2000000000000",
+     "tx": "C4hVQpmR9TNEDrkmkUp8gWZw3tvmry4jqAZD1RXWZPA1",
+     "account": "rca24613b3ee0b9573517.qlyphs-pqroute-c.testnet",
+     "token": "qtcpq.qlyphs-pqroute-a.testnet",
+     "planck": "1200000000000",
      "memo": "WITHDRAW_TO:07f81a9542503d26b9f3029f4aabb9b24186be828c91a59f42e231aebf79864a",
      "signer_key_scheme": "ml-dsa-65"
     },
     {
-     "tx": "EDvnAJRB7dZwrqUr9F6yXq2mBRv3n7HKoxtSKkQddDpV",
-     "account": "r61b60cb14fb24c7f5b73.qlyphs-pqroute-c.testnet",
-     "token": "qtc.qlyphs-pqroute-a.testnet",
-     "planck": "3000000000000",
+     "tx": "9SuKNZhu7ULPqD6Kz939hohgs5gua2hHo1fHQmqZj4z5",
+     "account": "r34be050b50ff3f2d17d9.qlyphs-pqroute-c.testnet",
+     "token": "qtcpq.qlyphs-pqroute-a.testnet",
+     "planck": "2000000000000",
      "memo": "WITHDRAW_TO:07f81a9542503d26b9f3029f4aabb9b24186be828c91a59f42e231aebf79864a",
      "signer_key_scheme": "ml-dsa-65"
     }
-   ]
+   ],
+   "refused_attempts": []
   },
   {
    "bridge": "pqqtc.qlyphs-pqroute-a.testnet",
+   "current": false,
    "quantus_network": "curve test chain (Qlyphs DevNet v3, the Qlyphs app Testnet)",
    "mints": [
     {
@@ -100,7 +103,161 @@
      "memo": "WITHDRAW_TO:07f81a9542503d26b9f3029f4aabb9b24186be828c91a59f42e231aebf79864a",
      "signer_key_scheme": "ml-dsa-65"
     }
+   ],
+   "refused_attempts": [
+    {
+     "tx": "2NEnhyTFmYDvRrtmtiACYcYy2DC8gQGMZ6ZSwbByGuwE",
+     "refused_with": "two different attesters are required"
+    },
+    {
+     "tx": "9Zo54pfNQMbEkqXzaCwgWtB1fDabS9EVPGok6qX5x7uF",
+     "refused_with": "invalid attestation signature"
+    },
+    {
+     "tx": "4AiGcJ3J85SsBAzkWDoYbzjopx5EmN2YBmoLev5D6oFi",
+     "refused_with": "invalid attestation signature"
+    },
+    {
+     "tx": "4ci7fxYbTazzwKdYS1S5WMmrexqnsRUEZY9PkQNmSJ3Q",
+     "refused_with": "invalid attestation signature"
+    },
+    {
+     "tx": "9tr4EJouFY8H3wGEPRuuCYMr9UzSRNcxU2sqwG3YiEqu",
+     "refused_with": "invalid attestation signature"
+    },
+    {
+     "tx": "Gen8eVQNMJFthBr97h41XqDU1y2T6ndqiJqCXuqAVugE",
+     "refused_with": "deposit already minted"
+    },
+    {
+     "tx": "DYtQLU9dWdmDfw1fKzAGztr31FvJdv8EHssDsyxPH2wB",
+     "refused_with": "deposit already minted"
+    },
+    {
+     "tx": "BR6MriG9uT28bQjzq4xBc329pWqMe3Bt3sFhqozt7kuJ",
+     "refused_with": "two different attesters are required"
+    },
+    {
+     "tx": "6qfFrijJSu6mfGz2evvpZ28WzHgEthebNr2w37phzAwh",
+     "refused_with": "invalid attestation signature"
+    },
+    {
+     "tx": "E5eFfL575pajunngmsyXF2CP84ZpUU6JccAU98iGys5V",
+     "refused_with": "invalid attestation signature"
+    },
+    {
+     "tx": "GovXvCLV63FsH7nSKZjBss1NeRxcG9gMR1oD2EPTEzzW",
+     "refused_with": "invalid attestation signature"
+    },
+    {
+     "tx": "DYy896gaHpij6wsULgvLdkXHfC1uAoK9SR8q31ntrAvx",
+     "refused_with": "invalid attestation signature"
+    },
+    {
+     "tx": "FJeFDHcKThBnerPWdk2K7bY62deq1MVsA179UNT3SH1S",
+     "refused_with": "deposit already minted"
+    },
+    {
+     "tx": "9fLc86AtqdN3d26oVpANzVgZ9rGtYd7cBbR4MSYfJTBJ",
+     "refused_with": "deposit already minted"
+    },
+    {
+     "tx": "9g58cB17y4jMXYeKkaAtY2wpoCdeRXDX6thvcL3NhR5n",
+     "refused_with": "two different attesters are required"
+    },
+    {
+     "tx": "FGgBBAvcRGY3b7dwJyrz62YbAFvMWzdkfLF9KAv9KD5F",
+     "refused_with": "invalid attestation signature"
+    },
+    {
+     "tx": "27GanXyR3WuALsyXDsCkaQ6mJN35ubt5ZVfdgbHkUoLG",
+     "refused_with": "invalid attestation signature"
+    },
+    {
+     "tx": "4kWe5C5zEfpgX1WQQBk5x1S3xgCp7oSFJyYondFnXS15",
+     "refused_with": "invalid attestation signature"
+    },
+    {
+     "tx": "8PFBMiu4fo2KWELBVvQutLRzSpSXYtvdrmxEsJSAoRqz",
+     "refused_with": "invalid attestation signature"
+    },
+    {
+     "tx": "7sajDeYScYV3nv5z1NRTWtXhbNYzjoxVL3oTUjxoBjpQ",
+     "refused_with": "deposit already minted"
+    },
+    {
+     "tx": "AEUfJJDJgGaktPPLHLnsh5paD66sRJmxnqg3rBj4N1C9",
+     "refused_with": "deposit already minted"
+    },
+    {
+     "tx": "3U7NKXgJPanLoHwE998T4rBfUtnfnmythoUxDHqKEXdG",
+     "refused_with": "two different attesters are required"
+    },
+    {
+     "tx": "B1bAZXKKbWzU26Xv9XeBMcAQQwDWj4w8reFCkkqM2Hf4",
+     "refused_with": "deposit already minted"
+    },
+    {
+     "tx": "9VAVHLNc3NjjgtuYytJyDUbrYdf9vb3q8Cm53veC7n2x",
+     "refused_with": "deposit already minted"
+    },
+    {
+     "tx": "4tqHVsLZAPsFSA2yrSN2SNNuVDwzbLmSomRNpXLRmjUF",
+     "refused_with": "deposit already minted"
+    }
    ]
+  },
+  {
+   "bridge": "qtc.qlyphs-pqroute-a.testnet",
+   "current": false,
+   "quantus_network": "Quantus development network",
+   "mints": [
+    {
+     "tx": "5MWp6BmUzbSw1Ur8MTYDrJLKz7e6gobbdD9FuDCo3Zg8",
+     "deposit_id": "b3e28c28b4c764c8dd6d2b997f01a8749bded0f5326fc4a72f64109ac698a98f",
+     "planck": "2000000000000",
+     "receiver": "re4dde0e176e652c30b10.qlyphs-pqroute-c.testnet",
+     "into_intents": true,
+     "attesters": [
+      1,
+      2
+     ],
+     "signer": "relay.qlyphs-pqroute-a.testnet",
+     "signer_key_scheme": "ml-dsa-65"
+    },
+    {
+     "tx": "3A4nH8hJQVW8sPw5cxS3rJC2WFg4SASAzguH1RhMPJNd",
+     "deposit_id": "d9dbba014f04808159c588d751a6dc23376da9f2f18be46adb0cd47acbbca08f",
+     "planck": "3000000000000",
+     "receiver": "r61b60cb14fb24c7f5b73.qlyphs-pqroute-c.testnet",
+     "into_intents": true,
+     "attesters": [
+      1,
+      2
+     ],
+     "signer": "relay.qlyphs-pqroute-a.testnet",
+     "signer_key_scheme": "ml-dsa-65"
+    }
+   ],
+   "withdrawals": [
+    {
+     "tx": "6vj6hkThZBycgcgbfSZE1xL36kP56tnuEoKfQfFMLsT7",
+     "account": "re4dde0e176e652c30b10.qlyphs-pqroute-c.testnet",
+     "token": "qtc.qlyphs-pqroute-a.testnet",
+     "planck": "2000000000000",
+     "memo": "WITHDRAW_TO:07f81a9542503d26b9f3029f4aabb9b24186be828c91a59f42e231aebf79864a",
+     "signer_key_scheme": "ml-dsa-65"
+    },
+    {
+     "tx": "EDvnAJRB7dZwrqUr9F6yXq2mBRv3n7HKoxtSKkQddDpV",
+     "account": "r61b60cb14fb24c7f5b73.qlyphs-pqroute-c.testnet",
+     "token": "qtc.qlyphs-pqroute-a.testnet",
+     "planck": "3000000000000",
+     "memo": "WITHDRAW_TO:07f81a9542503d26b9f3029f4aabb9b24186be828c91a59f42e231aebf79864a",
+     "signer_key_scheme": "ml-dsa-65"
+    }
+   ],
+   "refused_attempts": []
   }
  ],
  "results": [
@@ -120,29 +277,34 @@
    "detail": ""
   },
   {
-   "name": "qtc.qlyphs-pqroute-a.testnet has no access key",
+   "name": "sponsor qlyphs-pqroute-c.testnet (opens recipient accounts): its only key is ML-DSA-65",
    "ok": true,
    "detail": ""
   },
   {
-   "name": "qtc.qlyphs-pqroute-a.testnet runs build/bridge-testnet.wasm",
+   "name": "qtcpq.qlyphs-pqroute-a.testnet has no access key",
    "ok": true,
    "detail": ""
   },
   {
-   "name": "qtc.qlyphs-pqroute-a.testnet names the Quantus genesis and the three attester keys",
+   "name": "qtcpq.qlyphs-pqroute-a.testnet runs the code it was deployed with (= build/bridge-testnet.wasm)",
    "ok": true,
    "detail": ""
   },
   {
-   "name": "mint 5MWp6BmUzb…: attesters 1 and 2 signed with ML-DSA-87 (verified here)",
+   "name": "qtcpq.qlyphs-pqroute-a.testnet names the Quantus genesis and the three attester keys",
    "ok": true,
-   "detail": "2000000000000 planck to re4dde0e176e652c30b10.qlyphs-pqroute-c.testnet inside Intents"
+   "detail": ""
   },
   {
-   "name": "mint 3A4nH8hJQV…: attesters 1 and 2 signed with ML-DSA-87 (verified here)",
+   "name": "mint DJYPtW5VJ6…: attesters 1 and 2 signed with ML-DSA-87 (verified here)",
    "ok": true,
-   "detail": "3000000000000 planck to r61b60cb14fb24c7f5b73.qlyphs-pqroute-c.testnet inside Intents"
+   "detail": "1200000000000 planck to rca24613b3ee0b9573517.qlyphs-pqroute-c.testnet inside Intents"
+  },
+  {
+   "name": "mint G7Z6MCa2tB…: attesters 1 and 2 signed with ML-DSA-87 (verified here)",
+   "ok": true,
+   "detail": "2000000000000 planck to r34be050b50ff3f2d17d9.qlyphs-pqroute-c.testnet inside Intents"
   },
   {
    "name": "pqqtc.qlyphs-pqroute-a.testnet has no access key",
@@ -150,7 +312,7 @@
    "detail": ""
   },
   {
-   "name": "pqqtc.qlyphs-pqroute-a.testnet runs build/bridge-testnet.wasm",
+   "name": "pqqtc.qlyphs-pqroute-a.testnet runs the code it was deployed with (earlier version)",
    "ok": true,
    "detail": ""
   },
@@ -168,6 +330,36 @@
    "name": "mint 72EyAwztj4…: attesters 1 and 2 signed with ML-DSA-87 (verified here)",
    "ok": true,
    "detail": "2000000000000 planck to r165047e7af41be3203ba.qlyphs-pqroute-c.testnet inside Intents"
+  },
+  {
+   "name": "pqqtc.qlyphs-pqroute-a.testnet: 25 forged or replayed mint attempts, all refused by the contract",
+   "ok": true,
+   "detail": "two different attesters are required; invalid attestation signature; deposit already minted"
+  },
+  {
+   "name": "qtc.qlyphs-pqroute-a.testnet has no access key",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "qtc.qlyphs-pqroute-a.testnet runs the code it was deployed with (earlier version)",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "qtc.qlyphs-pqroute-a.testnet names the Quantus genesis and the three attester keys",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "mint 5MWp6BmUzb…: attesters 1 and 2 signed with ML-DSA-87 (verified here)",
+   "ok": true,
+   "detail": "2000000000000 planck to re4dde0e176e652c30b10.qlyphs-pqroute-c.testnet inside Intents"
+  },
+  {
+   "name": "mint 3A4nH8hJQV…: attesters 1 and 2 signed with ML-DSA-87 (verified here)",
+   "ok": true,
+   "detail": "3000000000000 planck to r61b60cb14fb24c7f5b73.qlyphs-pqroute-c.testnet inside Intents"
   },
   {
    "name": "withdrawal CZMLteUJ4P… by r19f8220e1cde8…: signed ML-DSA-65, account's only key ML-DSA-65",
@@ -188,6 +380,16 @@
    "name": "withdrawal EDvnAJRB7d… by r61b60cb14fb24…: signed ML-DSA-65, account's only key ML-DSA-65",
    "ok": true,
    "detail": "3000000000000 to WITHDRAW_TO:07f81a9542503d26b9f3029f4aabb9b24186be828c91a59f42e231aebf79864a"
+  },
+  {
+   "name": "withdrawal C4hVQpmR9T… by rca24613b3ee0b…: signed ML-DSA-65, account's only key ML-DSA-65",
+   "ok": true,
+   "detail": "1200000000000 to WITHDRAW_TO:07f81a9542503d26b9f3029f4aabb9b24186be828c91a59f42e231aebf79864a"
+  },
+  {
+   "name": "withdrawal 9SuKNZhu7U… by r34be050b50ff3…: signed ML-DSA-65, account's only key ML-DSA-65",
+   "ok": true,
+   "detail": "2000000000000 to WITHDRAW_TO:07f81a9542503d26b9f3029f4aabb9b24186be828c91a59f42e231aebf79864a"
   }
  ]
 }

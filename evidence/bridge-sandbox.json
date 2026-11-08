@@ -1,6 +1,6 @@
 {
   "date": "2026-11-08",
-  "wasm_sha256": "2a7c8b12c4fb0c637024e41565a0a3cd86c9719db4696e93a84ca2c8976562d0",
+  "wasm_sha256": "052fc371e4dffd3ad8dcab7014b48616fa18e91f3ecf156013885858ecf8fb9d",
   "results": [
     {
       "name": "init only from the parent account",
@@ -95,7 +95,7 @@
     {
       "name": "2-of-3 attested deposit mints",
       "ok": true,
-      "detail": "13.9820598929 Tgas"
+      "detail": "13.982749571884 Tgas"
     },
     {
       "name": "deposit recorded as minted",
@@ -159,6 +159,46 @@
     },
     {
       "name": "memo null is accepted as absent",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "redeem below 0.01 QTC is refused",
+      "ok": true,
+      "detail": "below the minimum withdrawal"
+    },
+    {
+      "name": "WITHDRAW_TO below 0.01 QTC is refused",
+      "ok": true,
+      "detail": "below the minimum withdrawal"
+    },
+    {
+      "name": "refused small withdrawals change nothing",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "exactly 0.01 QTC redeems",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "storage_balance_of is null before registration",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "storage_deposit registers, returns the balance and refunds the excess",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "storage_deposit on a registered account refunds everything",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "storage_balance_bounds is fixed",
       "ok": true,
       "detail": ""
     },

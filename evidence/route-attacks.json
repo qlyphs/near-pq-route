@@ -1,48 +1,48 @@
 {
  "date": "2026-11-09",
  "network": "NEAR testnet",
- "bridge": "pqqtc.qlyphs-pqroute-a.testnet",
+ "bridge": "qtcpq.qlyphs-pqroute-a.testnet",
  "contract_attacks": [
   {
    "attack": "replay of a real mint",
    "refused_with": "deposit already minted",
-   "tx": "DYtQLU9dWdmDfw1fKzAGztr31FvJdv8EHssDsyxPH2wB",
+   "tx": "5SJsP1Q16VNg7VCb32t9TjPu1p3zwRA92YoutYaaNFtA",
    "ok": true
   },
   {
    "attack": "replay with the amount changed",
    "refused_with": "deposit already minted",
-   "tx": "Gen8eVQNMJFthBr97h41XqDU1y2T6ndqiJqCXuqAVugE",
+   "tx": "DVL29eSW4eFEfBahbWcsWopvrr1vVd2yr4HDkJb8BBUD",
    "ok": true
   },
   {
    "attack": "real signatures on another deposit id",
    "refused_with": "invalid attestation signature",
-   "tx": "9tr4EJouFY8H3wGEPRuuCYMr9UzSRNcxU2sqwG3YiEqu",
+   "tx": "8UBqjnWimEdeYoBgM8J6YEThuGNinz2qTJvDHzVMK8P4",
    "ok": true
   },
   {
    "attack": "another deposit id and the amount doubled",
    "refused_with": "invalid attestation signature",
-   "tx": "4ci7fxYbTazzwKdYS1S5WMmrexqnsRUEZY9PkQNmSJ3Q",
+   "tx": "5sdtJJk7BPwF552kpM95DpkCQ5D4aHiouPKTrGJbpWtq",
    "ok": true
   },
   {
    "attack": "another deposit id and another receiver",
    "refused_with": "invalid attestation signature",
-   "tx": "4AiGcJ3J85SsBAzkWDoYbzjopx5EmN2YBmoLev5D6oFi",
+   "tx": "9kwnswyT5YWzy346pqKzjngY7uWowMod9zSEdAVvym7f",
    "ok": true
   },
   {
    "attack": "another deposit id, credited directly instead of into Intents",
    "refused_with": "invalid attestation signature",
-   "tx": "9Zo54pfNQMbEkqXzaCwgWtB1fDabS9EVPGok6qX5x7uF",
+   "tx": "D9anRRiCG9g3hNu1HgQTNZgf6yis983hPdx794eaM7Pn",
    "ok": true
   },
   {
    "attack": "one attester twice",
    "refused_with": "two different attesters are required",
-   "tx": "2NEnhyTFmYDvRrtmtiACYcYy2DC8gQGMZ6ZSwbByGuwE",
+   "tx": "4xL359kbpyAfXxguHb9jzYccG53B19mZgtLEZnx6MVS9",
    "ok": true
   }
  ],

@@ -1,6 +1,6 @@
 # Qlyphs: a post-quantum route for NEAR Intents
 
-**0 classical keys in the authorization path · 17/17 on-chain checks you can rerun · 7/7 live attacks refused.**
+**0 classical keys in the authorization path · 26/26 on-chain checks you can rerun · 7/7 live attacks refused.**
 
 **QTC enters and leaves NEAR Intents with no classical key in the authorization path.** QTC is the coin of
 Quantus, a chain that signs every transaction with ML-DSA. Today the route that brings it to NEAR mints on the
@@ -26,9 +26,10 @@ npm ci
 node scripts/verify-route.mjs
 ```
 
-It reads NEAR testnet and checks 17 things. Among them:
+It reads NEAR testnet and checks 26 things. Among them:
 - the bridge and the Intents verifier have **no access key** and run the published code;
-- the relayer's only key is ML-DSA-65;
+- the relayer's and the sponsor's only key is ML-DSA-65;
+- every forged or replayed mint ever sent to a bridge was refused;
 - for **every mint**, it fetches the transaction, decodes the attestation and **verifies both ML-DSA-87
   signatures on your machine** against the attester keys in `deployments/route-attesters.json`;
 - every withdrawal from Intents was signed with ML-DSA-65 by an account whose only key is ML-DSA-65.
@@ -80,7 +81,7 @@ crash after a proposal or an approval reached the chain still pays exactly once.
 | Bridge token for the Quantus development network, no key | [`qtc.qlyphs-pqroute-a.testnet`](https://testnet.nearblocks.io/address/qtc.qlyphs-pqroute-a.testnet) |
 | Relayer, ML-DSA-65 key only (pays gas, no authority) | [`relay.qlyphs-pqroute-a.testnet`](https://testnet.nearblocks.io/address/relay.qlyphs-pqroute-a.testnet) |
 | Sponsor that opens recipients' accounts, ML-DSA-65 key only | [`qlyphs-pqroute-c.testnet`](https://testnet.nearblocks.io/address/qlyphs-pqroute-c.testnet) |
-| A full round trip from the app (request, pay, mint into Intents, ML-DSA-65 withdrawal, 2-of-3 release) | `evidence/route-app-run-1.json` |
+| A full round trip from the app (request, pay, mint into Intents, ML-DSA-65 withdrawal, 2-of-3 release) | `evidence/route-app-run.json` |
 | Full round trips from the command line, on both Quantus test chains | `evidence/route-cycle-curve.json`, `evidence/route-cycle-devnet.json` |
 | The existing route's minting key, at a pinned mainnet block | `evidence/bridge-mng-snapshot.json` |
 

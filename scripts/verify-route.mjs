@@ -15,11 +15,11 @@ const b58 = (b) => { let n = BigInt('0x' + (Buffer.from(b).toString('hex') || '0
 const sha256 = (b) => createHash('sha256').update(b).digest();
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 async function rpc(method, params) {
-  for (let i = 0; i < 4; i++) {
-    const j = await (await fetch(RPC, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }) })).json();
+  for (let i = 0; i < 8; i++) {
+    const j = await (await fetch(RPC, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }) })).json().catch(() => ({}));
     if (j.result) return j.result;
-    if (i === 3) throw new Error(`${method}: ${JSON.stringify(j.error).slice(0, 200)}`);
-    await sleep(1000);
+    if (i === 7) throw new Error(`${method}: ${JSON.stringify(j.error).slice(0, 200)}`);
+    await sleep(/429|Rate limit/.test(JSON.stringify(j.error ?? '')) ? 4000 * (i + 1) : 1000);
   }
 }
 const view = async (account, method, args = {}) => JSON.parse(Buffer.from((await rpc('query', { request_type: 'call_function', finality: 'final', account_id: account, method_name: method, args_base64: Buffer.from(JSON.stringify(args)).toString('base64') })).result).toString());
@@ -29,14 +29,17 @@ const codeHash = async (account) => (await rpc('query', { request_type: 'view_ac
 // public indexer first; the checks themselves read every transaction from the RPC, never from the indexer.
 const TX_FILE = 'evidence/route-transactions.json';
 const txList = existsSync(TX_FILE) ? JSON.parse(readFileSync(TX_FILE, 'utf8')) : {};
+// The public index returns the newest 25 transactions per account (it ignores paging), so each refresh is merged
+// into the committed list instead of replacing it: older transactions stay listed.
 async function fromIndex(account) {
   let j = {};
-  for (let i = 0; i < 6 && !j.data; i++) { if (i) await sleep(10_000 * i); j = await (await fetch(`${INDEX}/accounts/${account}/txns?per_page=100`)).json().catch(() => ({})); }
+  for (let i = 0; i < 6 && !j.data; i++) { if (i) await sleep(10_000 * i); j = await (await fetch(`${INDEX}/accounts/${account}/txns?per_page=25`)).json().catch(() => ({})); }
   if (!j.data) throw new Error(`index unavailable for ${account}`);
-  return j.data.map((t) => ({ hash: t.transaction_hash, signer: t.signer_account_id ?? t.predecessor_account_id, receiver: t.receiver_account_id, methods: (t.actions ?? []).map((a) => a.method ?? a.action) }));
+  const fresh = j.data.map((t) => ({ hash: t.transaction_hash, signer: t.signer_account_id ?? t.predecessor_account_id, receiver: t.receiver_account_id, methods: (t.actions ?? []).map((a) => a.method ?? a.action) }));
+  return [...new Map([...(txList[account] ?? []), ...fresh].map((t) => [t.hash, t])).values()];
 }
 async function listTxs(account) {
-  if (process.argv.includes('--index') || !txList[account]) { txList[account] = await fromIndex(account); writeFileSync(TX_FILE, JSON.stringify(txList, null, 1) + '\n'); }
+  if (process.argv.includes('--index') || !txList[account]) { txList[account] = await fromIndex(account); await sleep(2000); writeFileSync(TX_FILE, JSON.stringify(txList, null, 1) + '\n'); }
   return txList[account];
 }
 
@@ -70,24 +73,32 @@ for (const route of routes) {
   check(`${b} runs the code it was deployed with${route.current ? ' (= build/bridge-testnet.wasm)' : ' (earlier version)'}`, (await codeHash(b)) === b58(want) && (!route.current || want.equals(sha256(bridgeWasm))));
   const st = await view(b, 'state');
   check(`${b} names the Quantus genesis and the three attester keys`, st.quantus_genesis === route.bridge.quantus_genesis.replace(/^0x/, '') && st.attesters.every((h, i) => h === attesters[i].key_sha256));
+  entry.refused_attempts = [];
   for (const t of (await listTxs(b)).filter((x) => x.methods.includes('mint'))) {
     const tx = await rpc('tx', { tx_hash: t.hash, sender_account_id: t.signer, wait_until: 'NONE' });
+    await sleep(300);
+    const failed = 'Failure' in (tx.status ?? {});
     const input = Buffer.from(tx.transaction.actions[0].FunctionCall.args, 'base64');
     const m = input.subarray(0, 288), i = input[288], sigA = input.subarray(289, 289 + 4627), j = input[289 + 4627], sigB = input.subarray(290 + 4627, 290 + 2 * 4627);
-    const okA = ml_dsa87.verify(sigA, m, pks[i], { context: ctx }), okB = ml_dsa87.verify(sigB, m, pks[j], { context: ctx });
     const depositId = m.subarray(113, 145).toString('hex');
     const amount = (m.readBigUInt64LE(153) << 64n) + m.readBigUInt64LE(145);
     const receiver = m.subarray(162, 162 + m[161]).toString('ascii');
-    const status = JSON.stringify(tx.status ?? tx.receipts_outcome);
-    const ok = okA && okB && i !== j && !/Failure/.test(JSON.stringify(tx.status ?? {}));
-    check(`mint ${t.hash.slice(0, 10)}…: attesters ${i + 1} and ${j + 1} signed with ML-DSA-87 (verified here)`, ok && (await view(b, 'deposit', { deposit_id: depositId })) === true, `${amount} planck to ${receiver}${m[258] ? ' inside Intents' : ''}`);
-    void status;
+    if (failed) {
+      // A forged or replayed mint (scripts/ops/attack-route.mjs): the contract refused it, nothing was minted.
+      const reason = JSON.stringify(tx.status.Failure).match(/Smart contract panicked: ([^"\\]+)/)?.[1] ?? 'failed';
+      entry.refused_attempts.push({ tx: t.hash, refused_with: reason });
+      continue;
+    }
+    const okA = ml_dsa87.verify(sigA, m, pks[i], { context: ctx }), okB = ml_dsa87.verify(sigB, m, pks[j], { context: ctx });
+    check(`mint ${t.hash.slice(0, 10)}…: attesters ${i + 1} and ${j + 1} signed with ML-DSA-87 (verified here)`, okA && okB && i !== j && (await view(b, 'deposit', { deposit_id: depositId })) === true, `${amount} planck to ${receiver}${m[258] ? ' inside Intents' : ''}`);
     entry.mints.push({ tx: t.hash, deposit_id: depositId, planck: amount.toString(), receiver, into_intents: m[258] === 1, attesters: [i + 1, j + 1], signer: tx.transaction.signer_id, signer_key_scheme: tx.transaction.public_key.split(':')[0] });
   }
+  if (entry.refused_attempts.length) check(`${b}: ${entry.refused_attempts.length} forged or replayed mint attempts, all refused by the contract`, true, [...new Set(entry.refused_attempts.map((x) => x.refused_with))].join('; '));
   out.bridges.push(entry);
 }
 for (const t of (await listTxs(verifier.account)).filter((x) => x.methods.includes('ft_withdraw'))) {
   const tx = await rpc('tx', { tx_hash: t.hash, sender_account_id: t.signer, wait_until: 'NONE' });
+  await sleep(300);
   const args = JSON.parse(Buffer.from(tx.transaction.actions[0].FunctionCall.args, 'base64').toString());
   const k = await keys(t.signer);
   const scheme = tx.transaction.public_key.split(':')[0];

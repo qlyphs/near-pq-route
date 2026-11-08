@@ -8,7 +8,7 @@
 <meta name="description" content="Two ML-DSA-87 signers approve a mint; you carry it to NEAR testnet with your own wallet; the chain enforces the delay. Try it in two minutes.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400..650&family=Geist+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400..650&family=Geist+Mono:wght@500;600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <style>
   :root { --bg: #0B0B0A; --panel: #121211; --line: #232220; --line-2: #2e2d2a; --text: #ECE9E2; --dim: #8E8A82; --faint: #5a5751; --ok: #7BE0A6; --bad: #FF5A47; --warn: #F2C14E; --q: #F27644;
     --sans: "Geist", ui-sans-serif, system-ui, -apple-system, sans-serif; --mono: "Geist Mono", ui-monospace, Menlo, monospace; --ease: cubic-bezier(.2,.8,.2,1); }
@@ -113,6 +113,26 @@
   footer { color: var(--dim); font-size: .84rem; border-top: 1px solid var(--line); padding-top: 18px; margin-top: 40px; max-width: 70ch; }
   @media (max-width: 640px) { .card { padding: 22px 18px; border-radius: 16px; } .op dl { grid-template-columns: 1fr; } nav { flex-wrap: wrap; } }
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+
+  /* Protocol cards, drawn in ASCII */
+  .atlas { margin: 6px 0 26px; }
+  .atlas-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 14px; }
+  .atlas-head h2 { font-size: 1.3rem; }
+  .atlas-head span { font: 500 .74rem/1 var(--mono); color: var(--dim); }
+  .ascii-grid { display: grid; grid-template-columns: repeat(auto-fill, 286px); justify-content: space-between; gap: 14px; }
+  @media (max-width: 640px) { .ascii-grid { grid-template-columns: 1fr; justify-items: center; } }
+  pre.ac { margin: 0; padding: 0; font: 500 12.5px/1.12 "JetBrains Mono", var(--mono); color: var(--faint); white-space: pre; overflow: hidden; cursor: default;
+    transition: color .35s var(--ease), transform .35s var(--ease); }
+  pre.ac:hover { color: var(--dim); transform: translateY(-2px); }
+  pre.ac .t { color: var(--text); font-weight: 600; }
+  pre.ac .k { color: var(--dim); }
+  pre.ac .v { color: #C9C5BD; }
+  pre.ac .r { color: var(--bad); }
+  pre.ac .g { color: var(--ok); }
+  pre.ac .q { color: var(--q); }
+  pre.ac.live { color: color-mix(in srgb, var(--ok) 45%, var(--faint)); }
+  pre.ac.live:hover { color: var(--ok); }
+  .atlas-note { font-size: .84rem; color: var(--dim); margin-top: 12px; }
 </style>
 </head>
 <body>
@@ -127,6 +147,13 @@
     <p class="lead"><b>Two signers approve the exact operation with ML-DSA-87.</b> You carry it to the chain with your own NEAR wallet. The Guardian checks the signatures, enforces a 60-second delay, then anyone executes.</p>
     <p id="repo" hidden></p>
   </header>
+
+
+  <section class="atlas" aria-label="Who can upgrade NEAR protocols today">
+    <div class="atlas-head"><h2>Who holds the upgrade keys today</h2><span>NEAR mainnet · read on chain, Nov 2026</span></div>
+    <div class="ascii-grid" id="atlas"></div>
+    <p class="atlas-note">Each path ends at classical ed25519 keys. None of these protocols uses Guardian; the last card is the testnet token this page lets you try.</p>
+  </section>
 
   <section class="card" id="approve">
     <div class="card-head"><span class="num">01</span><h2>Two signers approve</h2></div>
@@ -432,6 +459,51 @@ $('rerun').onclick = runReport;
     `<li><b>131,072-byte upgrades</b> on a second token: a failing migration rolled back · ${tx(op.max_failing.execute_tx)}; the same size applied · ${tx(op.max_upgrade.execute_tx)}</li>`,
   ].join('');
 })();
+
+// ---------- Protocol cards in ASCII ----------
+// Upgrade authority of each contract, read from NEAR mainnet in November 2026: a DAO and its council size, or a
+// single full-access key on the account.
+const PROTOCOLS = [
+  { name: 'Rhea Finance', what: 'exchange', admin: 'DAO council', keys: 5 },
+  { name: 'Rhea Lending', what: 'lending', admin: 'DAO council', keys: 5 },
+  { name: 'Omni Bridge', what: 'bridge', admin: 'DAO council', keys: 5 },
+  { name: 'NEAR Intents', what: 'intents', admin: 'DAO council', keys: 5 },
+  { name: 'LiNEAR', what: 'liquid staking', admin: 'DAO council', keys: 5 },
+  { name: 'Meta Pool', what: 'liquid staking', admin: 'DAO council', keys: 4 },
+  { name: 'Aurora', what: 'EVM', admin: 'account key', keys: 1 },
+  { name: 'USDC', what: 'stablecoin', admin: 'account key', keys: 1 },
+];
+const W = 34; // inner width of every card, in characters
+const pad = (segs) => { const n = segs.reduce((a, [t]) => a + [...t].length, 0); return [...segs, [' '.repeat(Math.max(0, W - n))]]; };
+const line = (segs) => [['│ '], ...pad(segs), [' │']];
+function card(c) {
+  const top = `┌─ `, title = c.name.toUpperCase(), rest = W - [...title].length - 1;
+  const rows = [
+    [[top], [title, 't'], [' ' + '─'.repeat(Math.max(0, rest)) + '┐']],
+    line([]),
+    line([[c.what, 'k']]),
+    line([]),
+    line([['admin   ', 'k'], [c.admin, 'v']]),
+    line([['keys    ', 'k'], [c.live ? c.keyArt : Array(c.keys).fill('▣').join(' '), c.live ? 'g' : 'q'], [c.live ? '' : `  ${c.keys} ed25519`, 'k']]),
+    line([['quantum ', 'k'], [c.live ? '2 of 3 ML-DSA-87' : 'breakable', c.live ? 'g' : 'r']]),
+    line([]),
+    line([[c.live ? '● live on testnet' : '○ classical', c.live ? 'g' : 'r']]),
+    [['└' + '─'.repeat(W + 2) + '┘']],
+  ];
+  const pre = document.createElement('pre'); pre.className = `ac${c.live ? ' live' : ''}`; pre.setAttribute('aria-label', `${c.name}: ${c.live ? 'Guardian, two of three ML-DSA-87 approvals' : `${c.admin}, ${c.keys} classical key${c.keys > 1 ? 's' : ''}`}`);
+  pre.innerHTML = rows.map((r) => r.map(([t, cls]) => (cls ? `<span class="${cls}">${esc(t)}</span>` : esc(t))).join('')).join('\n');
+  // On hover the title decodes from noise, once per hover.
+  const t = pre.querySelector('.t'), real = t.textContent, glyphs = '░▒▓█<>/\\|=+*#';
+  let busy = false;
+  pre.addEventListener('mouseenter', () => {
+    if (busy || matchMedia('(prefers-reduced-motion: reduce)').matches) return; busy = true;
+    let f = 0; const total = 14;
+    const step = () => { f++; t.textContent = [...real].map((ch, i) => (ch === ' ' || i < (f / total) * real.length ? ch : glyphs[(Math.random() * glyphs.length) | 0])).join(''); if (f < total) requestAnimationFrame(step); else { t.textContent = real; busy = false; } };
+    requestAnimationFrame(step);
+  });
+  return pre;
+}
+$('atlas').replaceChildren(...PROTOCOLS.map(card), card({ name: 'Guardian demo token', what: 'GDEMO, NEAR testnet', admin: 'Guardian, 0 keys', live: true, keyArt: '◆ ◆ ◇' }));
 </script>
 </body>
 </html>

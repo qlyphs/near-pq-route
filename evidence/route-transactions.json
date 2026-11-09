@@ -529,6 +529,14 @@
    "methods": [
     "ft_withdraw"
    ]
+  },
+  {
+   "hash": "ATpqNE4cRFddmco6fv4dW1XqJhuRMZpWFo2u8LZngUHT",
+   "signer": "rf91e64aa1a901019c89b.qlyphs-pqroute-c.testnet",
+   "receiver": "intents.qlyphs-pqroute-b.testnet",
+   "methods": [
+    "ft_withdraw"
+   ]
   }
  ],
  "qtc-pq.qlyphs-pqroute-a.testnet": [
@@ -931,6 +939,16 @@
    "hash": "GKtdWwLz8afRD1K2ATf9pnuwsA35ctjf77NGF88tWm1T",
    "signer": "qlyphs-pqroute-c.testnet",
    "receiver": "r56a3d10e7106734b1b03.qlyphs-pqroute-c.testnet",
+   "methods": [
+    "CREATE_ACCOUNT",
+    "TRANSFER",
+    "ADD_KEY"
+   ]
+  },
+  {
+   "hash": "8EHD4iNZnj2uhKhi22Nfkrm1MCsWeCdmbtp3X9h9mcGZ",
+   "signer": "qlyphs-pqroute-c.testnet",
+   "receiver": "rf91e64aa1a901019c89b.qlyphs-pqroute-c.testnet",
    "methods": [
     "CREATE_ACCOUNT",
     "TRANSFER",

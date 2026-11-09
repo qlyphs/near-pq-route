@@ -1,5 +1,5 @@
 {
- "date": "2026-11-09T07:28:27.225Z",
+ "date": "2026-11-09T08:24:52.769Z",
  "rpc": "https://archival-rpc.testnet.fastnear.com",
  "bridges": [
   {
@@ -146,6 +146,20 @@
      "signer": "relay.qlyphs-pqroute-a.testnet",
      "signer_key_scheme": "ml-dsa-65",
      "account_creation_tx": "GKtdWwLz8afRD1K2ATf9pnuwsA35ctjf77NGF88tWm1T"
+    },
+    {
+     "tx": "8EfxFCZEMoGMocnujdPijkhobTircRxhFTTNEwAmTSNg",
+     "deposit_id": "feecf0d736f66e1d80635f7831faffd1d1d91302482cddab4789077dcb514885",
+     "planck": "1000000000000",
+     "receiver": "rf91e64aa1a901019c89b.qlyphs-pqroute-c.testnet",
+     "into_intents": true,
+     "attesters": [
+      1,
+      2
+     ],
+     "signer": "relay.qlyphs-pqroute-a.testnet",
+     "signer_key_scheme": "ml-dsa-65",
+     "account_creation_tx": "8EHD4iNZnj2uhKhi22Nfkrm1MCsWeCdmbtp3X9h9mcGZ"
     }
    ],
    "withdrawals": [
@@ -216,6 +230,14 @@
     {
      "tx": "HaKTTPqY1TFBAJYysSzpJc5rikVfpdzQ885aGKVGyAw4",
      "account": "rbc0d9682d6e829a1e31b.qlyphs-pqroute-c.testnet",
+     "token": "qtc-pq.qlyphs-pqroute-a.testnet",
+     "planck": "1000000000000",
+     "memo": "WITHDRAW_TO:a1417c334104e2a42d0a4d498cad19758dd53ae128569a9bfa723ee763578392",
+     "signer_key_scheme": "ml-dsa-65"
+    },
+    {
+     "tx": "ATpqNE4cRFddmco6fv4dW1XqJhuRMZpWFo2u8LZngUHT",
+     "account": "rf91e64aa1a901019c89b.qlyphs-pqroute-c.testnet",
      "token": "qtc-pq.qlyphs-pqroute-a.testnet",
      "planck": "1000000000000",
      "memo": "WITHDRAW_TO:a1417c334104e2a42d0a4d498cad19758dd53ae128569a9bfa723ee763578392",
@@ -655,6 +677,11 @@
    "detail": "1000000000000 planck to r56a3d10e7106734b1b03.qlyphs-pqroute-c.testnet inside Intents"
   },
   {
+   "name": "mint 8EfxFCZEMo…: attesters 1 and 2 signed with ML-DSA-87 (verified here)",
+   "ok": true,
+   "detail": "1000000000000 planck to rf91e64aa1a901019c89b.qlyphs-pqroute-c.testnet inside Intents"
+  },
+  {
    "name": "qtc-pq.qlyphs-pqroute-a.testnet: 7 forged or replayed mint attempts, all refused by the contract",
    "ok": true,
    "detail": "two different attesters are required; invalid attestation signature; deposit already minted"
@@ -820,6 +847,11 @@
    "detail": "1000000000000 to WITHDRAW_TO:a1417c334104e2a42d0a4d498cad19758dd53ae128569a9bfa723ee763578392"
   },
   {
+   "name": "withdrawal ATpqNE4cRF… by rf91e64aa1a901…: signed ML-DSA-65, account's only key ML-DSA-65",
+   "ok": true,
+   "detail": "1000000000000 to WITHDRAW_TO:a1417c334104e2a42d0a4d498cad19758dd53ae128569a9bfa723ee763578392"
+  },
+  {
    "name": "rec761444a3770… opened by the ML-DSA-65 sponsor (create, fund, one ML-DSA-65 key) at block 276846007, before its mint at 276846204",
    "ok": true,
    "detail": "8tsJ5esFMv…"
@@ -868,6 +900,11 @@
    "name": "r56a3d10e71067… opened by the ML-DSA-65 sponsor (create, fund, one ML-DSA-65 key) at block 276863049, before its mint at 276863292",
    "ok": true,
    "detail": "GKtdWwLz8a…"
+  },
+  {
+   "name": "rf91e64aa1a901… opened by the ML-DSA-65 sponsor (create, fund, one ML-DSA-65 key) at block 276889857, before its mint at 276890121",
+   "ok": true,
+   "detail": "8EHD4iNZnj…"
   }
  ]
 }

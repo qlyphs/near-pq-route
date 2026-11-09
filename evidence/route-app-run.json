@@ -99,5 +99,26 @@
    "execute": "0x6afa6e1ac66761dccdb975c10db7942f8d94e0744657e3b364548c27c73612ac",
    "destination": "qzo6foG1F5X1f7Bd1kq7pivCgFoVeCSft3fbNT9bKa8LaeBri"
   }
+ },
+ "app_testnet_new_page_own_test_wallet": {
+  "app": "https://app-testnet.qlyphs.com/bridge/quantum (staging, redesigned page, PR #354 merged 2026-11-09)",
+  "payer": "qzo6foG1F5X1f7Bd1kq7pivCgFoVeCSft3fbNT9bKa8LaeBri (the team's own test wallet, testnet only)",
+  "wallet_prompts": [
+   "Send 1 QTC to the lock",
+   "Authorize a route for QTC you sent?"
+  ],
+  "request_id": "c4941361bd4e48a0a5572e862d237579",
+  "lock_quantus_tx": "0x4ab776968aebaeb73ffe891330216ddcfb2955bb2042b67a973e38632f4b9ad3",
+  "deposit_id": "c4dd8ab4c28daee55f437de96a0fa8d8fc9093c6afa5dd839876cd797d611c94",
+  "mint_near_tx": "4Wx2AfNhdnPQ2njxSsbdBNPfc6D38VormvHyAUpt1cmj",
+  "delivered": "intents",
+  "withdraw_near_tx_signed_ml_dsa_65_in_browser": "8pLB4SoX6MchsgysrCfZEA89xE9VX4cEFAXtCNZk46wK",
+  "release": {
+   "id": "near:qtc-pq.qlyphs-pqroute-a.testnet:10",
+   "propose": "0xcc2ec70213e1e299a179f901038907a4c2a8f1af180329b0f1cd9c052d65bd14",
+   "approve": "0xde1b6c0dddb1e75f712ca756085d64a3b231c82880a5d2d708d116c0d9a5a4a3",
+   "execute": "0xf18ac7cad474e178e024debe38eb8b55da3ee4a91f466cb8dfc217aeb312dfa3",
+   "destination": "qzo6foG1F5X1f7Bd1kq7pivCgFoVeCSft3fbNT9bKa8LaeBri"
+  }
  }
 }

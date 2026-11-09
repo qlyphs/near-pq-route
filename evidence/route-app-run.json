@@ -50,5 +50,14 @@
   "release_quantus_execute": "0xa5f349db4d42758487cafccb54aea6e6d414ccf5ba086ea813389f25ac7d8808",
   "withdraw_near_tx_signed_ml_dsa_65_in_browser": "FK1CD58JfFPxpAAhsArYJvToMAtRxyJu7YnQdncqjPdv",
   "account_creation_tx": "PXYrUh4dk85QTaQo2AEf4izB84Brv63rJYhGoRDooEo"
+ },
+ "second_payment_final_code": {
+  "request_id": "febfef26bb669bd969468bb01db65c9b",
+  "lock_quantus_tx": "0xf2cc6c0436e6a44eae6209f035b909144f602a299e1da66954c0e82e4511b9fd",
+  "deposit_id": "21c4769a4c75d7fca3b97b98cb7825ed9803db4aae19d0fbb46992fcc18ca263",
+  "mint_near_tx": "GGL9NkDZEFVmVmmVq6Wr2UpXB7w3HhWMk8tZtgfG4PC",
+  "delivered": "intents",
+  "wallet_review": "Authorize a route for QTC you sent? (route authorization wording, feat/pq-route 2860d741)",
+  "found": "the page stopped at minted when the mint pointer appeared a moment late; delivery now polls (a71799a5); the same payment then settled without another transfer"
  }
 }

@@ -513,6 +513,14 @@
    "methods": [
     "ft_withdraw"
    ]
+  },
+  {
+   "hash": "BioeBxYuE9FfaRnEVzkf3A3ZPmnPP43LbAB5qeSxTm72",
+   "signer": "rd3cc0815987a7f8d6713.qlyphs-pqroute-c.testnet",
+   "receiver": "intents.qlyphs-pqroute-b.testnet",
+   "methods": [
+    "ft_withdraw"
+   ]
   }
  ],
  "qtc-pq.qlyphs-pqroute-a.testnet": [
@@ -633,6 +641,14 @@
   },
   {
    "hash": "6qYqnDtSQkeizepfY2wf2CQua7TqgS6bGY9uuKdYDkZ8",
+   "signer": "relay.qlyphs-pqroute-a.testnet",
+   "receiver": "qtc-pq.qlyphs-pqroute-a.testnet",
+   "methods": [
+    "mint"
+   ]
+  },
+  {
+   "hash": "Dvr73b9Uw37XHNq8FxBiwTz1rgdPPe41D1EdFc2NzfiL",
    "signer": "relay.qlyphs-pqroute-a.testnet",
    "receiver": "qtc-pq.qlyphs-pqroute-a.testnet",
    "methods": [
@@ -847,6 +863,26 @@
    "receiver": "qlyphs-pqroute-c.testnet",
    "methods": [
     "TRANSFER"
+   ]
+  },
+  {
+   "hash": "3sb7nwwZ5zphuD7vdUpwwfMvRCMJGtZ9t7NzfMT4eX7y",
+   "signer": "qlyphs-pqroute-c.testnet",
+   "receiver": "rd3cc0815987a7f8d6713.qlyphs-pqroute-c.testnet",
+   "methods": [
+    "CREATE_ACCOUNT",
+    "TRANSFER",
+    "ADD_KEY"
+   ]
+  },
+  {
+   "hash": "DhEZbhbU72cUQjNP9uqTe5GGpKG4rVzgAGVb4mDow3z3",
+   "signer": "qlyphs-pqroute-c.testnet",
+   "receiver": "rdf0ad72c75cf4cd86fbb.qlyphs-pqroute-c.testnet",
+   "methods": [
+    "CREATE_ACCOUNT",
+    "TRANSFER",
+    "ADD_KEY"
    ]
   }
  ]

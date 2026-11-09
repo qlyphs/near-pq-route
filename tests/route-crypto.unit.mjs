@@ -47,6 +47,11 @@ test('opening without a pinned recipient card, network or sponsor is refused', (
   assert.throws(() => openRequest(bob, sealed, { sponsor: 'other.testnet' }), /does not match its key and sponsor/);
 });
 
+test('an oversized request is refused before decrypting, and restore needs the sponsor', () => {
+  assert.throws(() => openRequest(bob, new Uint8Array(40 * 1024)), /too large/);
+  assert.throws(() => findPayments(alice, 'testnet', []), /sponsor/);
+});
+
 test('a request without an expiry is refused', () => {
   const { sealed } = createRequest(alice, card(bob), { ...opts, expiresAt: undefined });
   assert.throws(() => openRequest(bob, sealed), /expired or has no expiry/);

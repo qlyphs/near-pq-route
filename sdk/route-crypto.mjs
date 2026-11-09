@@ -97,6 +97,8 @@ export function createRequest(w, payerCard, { network, sponsor, amountPlanck, me
 }
 
 const U128_MAX = (1n << 128n) - 1n;
+/** The largest sealed request anyone needs (a request is about 18 KB); larger ones are refused before decrypting. */
+export const MAX_REQUEST = 32 * 1024;
 /**
  * The payer opens a request with its own wallet. `recipient` is the recipient's whole card, obtained by the payer
  * on its own (never taken from the request): the signature is checked against that pinned card. `network` and
@@ -106,6 +108,7 @@ export function openRequest(payer, sealed, { recipient, network, sponsor, now = 
   if (!recipient?.kem || !recipient?.id) throw new Error('pin the recipient\'s card before opening a request');
   if (!network || !sponsor) throw new Error('give the expected network and sponsor');
   const magic = te('QLYPREQ1');
+  if (sealed.length > MAX_REQUEST) throw new Error('payment request too large');
   if (sealed.length < 8 + 1568 + 12 + 16 || dec.decode(sealed.subarray(0, 8)) !== 'QLYPREQ1') throw new Error('not a payment request');
   const ct = sealed.subarray(8, 8 + 1568), nonce = sealed.subarray(8 + 1568, 8 + 1568 + 12);
   const key = kdf(ml_kem1024.decapsulate(ct, payer.kem.secretKey), 'request-key');
@@ -130,16 +133,15 @@ export function openRequest(payer, sealed, { recipient, network, sponsor, now = 
  * its account is derived again and must match the receipt.
  */
 export function findPayments(w, network, receipts, sponsor) {
+  if (!sponsor) throw new Error('give the sponsor the accounts were opened under');
   const out = [], seen = new Set();
   for (const r of receipts) {
     const hit = openReceipt(w, network, r);
     if (!hit) continue;
     const id = hex(hit.rid);
     if (seen.has(id)) continue;
-    if (sponsor) {
-      const { signer } = paymentKeys(w, network, hit.rid);
-      try { if (accountFor(signer.publicKey, sponsor) !== hit.body.account) continue; } finally { signer.destroy(); }
-    }
+    const { signer } = paymentKeys(w, network, hit.rid);
+    try { if (accountFor(signer.publicKey, sponsor) !== hit.body.account) continue; } finally { signer.destroy(); }
     seen.add(id);
     out.push({ ...hit, receipt: r });
   }

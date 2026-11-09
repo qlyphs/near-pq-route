@@ -5,7 +5,7 @@ compatibility_flags = ["nodejs_compat"]
 
 [vars]
 SPONSOR_ID = "qlyphs-pqroute-c.testnet"
-ALLOWED_ORIGINS = "https://app-testnet.qlyphs.com,http://127.0.0.1:4403,http://localhost:4403"
+ALLOWED_ORIGINS = "https://app-testnet.qlyphs.com,https://qlyphs-pqroute-app.qlyphs.workers.dev,http://127.0.0.1:4403,http://localhost:4403"
 
 [[kv_namespaces]]
 binding = "ROUTE"

@@ -521,6 +521,14 @@
    "methods": [
     "ft_withdraw"
    ]
+  },
+  {
+   "hash": "HaKTTPqY1TFBAJYysSzpJc5rikVfpdzQ885aGKVGyAw4",
+   "signer": "rbc0d9682d6e829a1e31b.qlyphs-pqroute-c.testnet",
+   "receiver": "intents.qlyphs-pqroute-b.testnet",
+   "methods": [
+    "ft_withdraw"
+   ]
   }
  ],
  "qtc-pq.qlyphs-pqroute-a.testnet": [
@@ -649,6 +657,22 @@
   },
   {
    "hash": "Dvr73b9Uw37XHNq8FxBiwTz1rgdPPe41D1EdFc2NzfiL",
+   "signer": "relay.qlyphs-pqroute-a.testnet",
+   "receiver": "qtc-pq.qlyphs-pqroute-a.testnet",
+   "methods": [
+    "mint"
+   ]
+  },
+  {
+   "hash": "7J5AAPJ4C8CYuJhYoFE4KNZo51vwTtGLT2vGWGnjpghz",
+   "signer": "relay.qlyphs-pqroute-a.testnet",
+   "receiver": "qtc-pq.qlyphs-pqroute-a.testnet",
+   "methods": [
+    "mint"
+   ]
+  },
+  {
+   "hash": "GGL9NkDZEFVmVmmVq6Wr2UpXB7w3HhWMk8tZtgfG4PC",
    "signer": "relay.qlyphs-pqroute-a.testnet",
    "receiver": "qtc-pq.qlyphs-pqroute-a.testnet",
    "methods": [
@@ -879,6 +903,26 @@
    "hash": "DhEZbhbU72cUQjNP9uqTe5GGpKG4rVzgAGVb4mDow3z3",
    "signer": "qlyphs-pqroute-c.testnet",
    "receiver": "rdf0ad72c75cf4cd86fbb.qlyphs-pqroute-c.testnet",
+   "methods": [
+    "CREATE_ACCOUNT",
+    "TRANSFER",
+    "ADD_KEY"
+   ]
+  },
+  {
+   "hash": "5o94J6n3bdy4nRdwUHzJYP394hpnPrkgU3bc69W461Do",
+   "signer": "qlyphs-pqroute-c.testnet",
+   "receiver": "rbc0d9682d6e829a1e31b.qlyphs-pqroute-c.testnet",
+   "methods": [
+    "CREATE_ACCOUNT",
+    "TRANSFER",
+    "ADD_KEY"
+   ]
+  },
+  {
+   "hash": "GKtdWwLz8afRD1K2ATf9pnuwsA35ctjf77NGF88tWm1T",
+   "signer": "qlyphs-pqroute-c.testnet",
+   "receiver": "r56a3d10e7106734b1b03.qlyphs-pqroute-c.testnet",
    "methods": [
     "CREATE_ACCOUNT",
     "TRANSFER",

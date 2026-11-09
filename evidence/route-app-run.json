@@ -59,5 +59,23 @@
   "delivered": "intents",
   "wallet_review": "Authorize a route for QTC you sent? (route authorization wording, feat/pq-route 2860d741)",
   "found": "the page stopped at minted when the mint pointer appeared a moment late; delivery now polls (a71799a5); the same payment then settled without another transfer"
+ },
+ "own_test_wallet_round_trip": {
+  "what": "the person's own Qlyphs test wallet (recovery words supplied by them for this test; testnet only, no mainnet account) imported into the testnet build of the extension; every payer step approved in the extension's own windows (connect, send 1 QTC, route authorization with the final wording); withdrawal signed with ML-DSA-65 in the recipient's browser to the payer's address; released 2-of-3",
+  "payer": "qzo6foG1F5X1f7Bd1kq7pivCgFoVeCSft3fbNT9bKa8LaeBri",
+  "request_id": "b1aa655f5a122d3009c0460ef0aaefc8",
+  "fresh_account": "rbc0d9682d6e829a1e31b.qlyphs-pqroute-c.testnet",
+  "lock_quantus_tx": "0xf6c6e3d7b1dfd14e3ad44425925b065c4927f98d2bd6b4e53a75e11f61dbf64f",
+  "deposit_id": "2245841d9c53dc65490157ccf2105af09dc39832df5ee0a6ea678540b210732a",
+  "mint_near_tx": "7J5AAPJ4C8CYuJhYoFE4KNZo51vwTtGLT2vGWGnjpghz",
+  "delivered": "intents",
+  "withdraw_near_tx_signed_ml_dsa_65_in_browser": "HaKTTPqY1TFBAJYysSzpJc5rikVfpdzQ885aGKVGyAw4",
+  "release": {
+   "id": "near:qtc-pq.qlyphs-pqroute-a.testnet:8",
+   "propose": "0xfc886bb1ea5c243cc40650fe3472e16f4f3ae5b4d75a0bc30b935aaf3832a879",
+   "approve": "0x51aa6bc58d6b955afd9d1a02bfdd2ebf5be2ddfc0febac957ccc986d35625e5c",
+   "execute": "0x865084028818b70b2154a72563fa2cd6fd3c4d3b4474f8454adf251241dc9028",
+   "destination": "qzo6foG1F5X1f7Bd1kq7pivCgFoVeCSft3fbNT9bKa8LaeBri"
+  }
  }
 }

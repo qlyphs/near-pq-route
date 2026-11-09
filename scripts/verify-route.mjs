@@ -16,7 +16,9 @@ const sha256 = (b) => createHash('sha256').update(b).digest();
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 async function rpc(method, params) {
   for (let i = 0; i < 8; i++) {
-    const j = await (await fetch(RPC, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }) })).json().catch(() => ({}));
+    // A dropped connection or a timeout is retried like an RPC error; only eight failures in a row stop the run.
+    const j = await fetch(RPC, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }) })
+      .then((r) => r.json()).catch((e) => ({ error: { network: String(e?.cause?.code ?? e?.message ?? e) } }));
     if (j.result) return j.result;
     if (i === 7) throw new Error(`${method}: ${JSON.stringify(j.error).slice(0, 200)}`);
     await sleep(/429|Rate limit/.test(JSON.stringify(j.error ?? '')) ? 4000 * (i + 1) : 1000);
@@ -33,7 +35,7 @@ const txList = existsSync(TX_FILE) ? JSON.parse(readFileSync(TX_FILE, 'utf8')) :
 // into the committed list instead of replacing it: older transactions stay listed.
 async function fromIndex(account) {
   let j = {};
-  for (let i = 0; i < 6 && !j.data; i++) { if (i) await sleep(10_000 * i); j = await (await fetch(`${INDEX}/accounts/${account}/txns?per_page=25`)).json().catch(() => ({})); }
+  for (let i = 0; i < 6 && !j.data; i++) { if (i) await sleep(10_000 * i); j = await fetch(`${INDEX}/accounts/${account}/txns?per_page=25`).then((r) => r.json()).catch(() => ({})); }
   if (!j.data) throw new Error(`index unavailable for ${account}`);
   const fresh = j.data.map((t) => ({ hash: t.transaction_hash, signer: t.signer_account_id ?? t.predecessor_account_id, receiver: t.receiver_account_id, methods: (t.actions ?? []).map((a) => a.method ?? a.action) }));
   return [...new Map([...(txList[account] ?? []), ...fresh].map((t) => [t.hash, t])).values()];

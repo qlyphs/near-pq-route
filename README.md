@@ -38,8 +38,9 @@ Its output is `evidence/route-onchain.json`.
 
 ## Try it in the app
 
-`/bridge/quantum` in the Qlyphs app (test network build, pull request #353 of the app; the hosted address is in
-`docs/hackathon/SUBMISSION.md`):
+`/bridge/quantum` in the Qlyphs app, test network build: **https://qlyphs-pqroute-app.qlyphs.workers.dev/bridge/quantum**
+(Request and My payments work there in any browser; the payer's Qlyphs wallet connects only on the app's own test
+address, app-testnet.qlyphs.com, once this page ships there):
 
 1. **Request.** Paste the payer's route card and an amount. Your browser derives a fresh ML-DSA-65 key, has the
    sponsor open its NEAR account with only that key, signs the request with ML-DSA-87 and seals it to the payer

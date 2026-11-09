@@ -33,6 +33,8 @@ export const card = (w) => ({ v: VERSION, kem: hex(w.kem.publicKey), id: hex(w.i
 /** A short label for showing a card to a person. Never an identity check: compare whole cards with sameCard. */
 export const cardFingerprint = (c) => hex(sha256(cat(unhex(c.kem), unhex(c.id)))).slice(0, 16);
 export const sameCard = (a, b) => !!a && !!b && a.v === b.v && a.kem === b.kem && a.id === b.id;
+/** A card's full SHA-256 (64 hex): what a payment link carries so the payer can pin the recipient without pasting the card. */
+export const cardPin = (c) => hex(sha256(cat(te(`qlyphs/route/card/v${c.v}`), unhex(c.kem), unhex(c.id))));
 
 /** Per request: the receipt key only, from (network, rid). Scanning uses this and never touches spending keys. */
 export function receiptKeyFor(w, network, rid) {
@@ -104,9 +106,8 @@ export const MAX_REQUEST = 32 * 1024;
  * on its own (never taken from the request): the signature is checked against that pinned card. `network` and
  * `sponsor` are what the payer expects. Throws on anything wrong.
  */
-export function openRequest(payer, sealed, { recipient, network, sponsor, now = Date.now() } = {}) {
-  if (!recipient?.kem || !recipient?.id) throw new Error('pin the recipient\'s card before opening a request');
-  if (!network || !sponsor) throw new Error('give the expected network and sponsor');
+/** Decrypts a sealed request for this payer; nothing in it is trusted until openRequest has checked it. */
+function unseal(payer, sealed) {
   const magic = te('QLYPREQ1');
   if (sealed.length > MAX_REQUEST) throw new Error('payment request too large');
   if (sealed.length < 8 + 1568 + 12 + 16 || dec.decode(sealed.subarray(0, 8)) !== 'QLYPREQ1') throw new Error('not a payment request');
@@ -114,8 +115,30 @@ export function openRequest(payer, sealed, { recipient, network, sponsor, now = 
   const key = kdf(ml_kem1024.decapsulate(ct, payer.kem.secretKey), 'request-key');
   const plain = gcm(key, nonce, cat(magic, sha256(payer.kem.publicKey))).decrypt(sealed.subarray(8 + 1568 + 12));
   const n = new DataView(plain.buffer, plain.byteOffset).getUint32(0, true);
+  if (n > plain.length - 4) throw new Error('not a payment request');
   const body = plain.subarray(4, 4 + n), sig = plain.subarray(4 + n);
-  const request = JSON.parse(dec.decode(body));
+  return { body, sig, request: JSON.parse(dec.decode(body)) };
+}
+
+/**
+ * Opens a request whose recipient is pinned by the card's full hash (cardPin), as carried by the payment link,
+ * instead of by a pasted card. The card named inside the request must hash to the pin; then every check of
+ * openRequest applies, the recipient's ML-DSA-87 signature included. The request service cannot substitute
+ * a request from another recipient, because it never sees the pin (it travels in the link's fragment).
+ */
+export function openRequestPinned(payer, sealed, { pin, network, sponsor, now = Date.now() } = {}) {
+  if (!/^[0-9a-f]{64}$/.test(pin ?? '')) throw new Error('the link carries no recipient pin');
+  const { request } = unseal(payer, sealed);
+  const c = request?.recipient;
+  if (!c || typeof c.kem !== 'string' || typeof c.id !== 'string' || !/^[0-9a-f]+$/.test(c.kem + c.id)) throw new Error('the request names no recipient card');
+  if (cardPin(c) !== pin) throw new Error('the request is from someone else');
+  return openRequest(payer, sealed, { recipient: { v: c.v, kem: c.kem, id: c.id }, network, sponsor, now });
+}
+
+export function openRequest(payer, sealed, { recipient, network, sponsor, now = Date.now() } = {}) {
+  if (!recipient?.kem || !recipient?.id) throw new Error('pin the recipient\'s card before opening a request');
+  if (!network || !sponsor) throw new Error('give the expected network and sponsor');
+  const { body, sig, request } = unseal(payer, sealed);
   if (!sameCard(request.recipient, recipient)) throw new Error('the request is from someone else');
   if (!ml_dsa87.verify(sig, body, unhex(recipient.id), { context: te('qlyphs/route/request') })) throw new Error('the recipient signature does not verify');
   if (request.v !== VERSION || request.network !== network) throw new Error('the request is for another network or version');

@@ -2,7 +2,7 @@
 // fixed-size receipts, restore from the seed alone, and that the payer cannot derive the spending key.
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { wallet, card, createRequest, openRequest as open0, findPayments, paymentKeys, accountFor, unhex, RECEIPT_LEN } from '../sdk/route-crypto.mjs';
+import { wallet, card, cardPin, cardFingerprint, createRequest, openRequest as open0, openRequestPinned, findPayments, paymentKeys, accountFor, unhex, RECEIPT_LEN } from '../sdk/route-crypto.mjs';
 
 const seed = (b) => new Uint8Array(32).fill(b);
 const alice = wallet(seed(1)), bob = wallet(seed(2)), eve = wallet(seed(3));
@@ -97,4 +97,33 @@ test('another network derives other accounts', () => {
   const rid = new Uint8Array(32).fill(9);
   const a = paymentKeys(alice, 'testnet', rid).signer, b = paymentKeys(alice, 'mainnet', rid).signer;
   assert.notEqual(a.publicKey, b.publicKey); a.destroy(); b.destroy();
+});
+
+test('a payment link pins the recipient by the full hash of its card', () => {
+  const { sealed, account } = createRequest(alice, card(bob), opts);
+  const r = openRequestPinned(bob, sealed, { pin: cardPin(card(alice)), network: 'testnet', sponsor: SPONSOR });
+  assert.equal(r.account, account);
+  assert.equal(cardPin(card(alice)).length, 64);
+  assert.notEqual(cardPin(card(alice)), cardPin(card(eve)));
+  assert.ok(cardPin(card(alice)).length > cardFingerprint(card(alice)).length, 'the pin is the full hash, not the display label');
+});
+
+test('a request service that swaps in another recipient\'s request for the same payer is refused by the pin', () => {
+  // Eve makes a valid request to Bob; the service hands it out under a link that pins Alice.
+  const { sealed } = createRequest(eve, card(bob), opts);
+  assert.throws(() => openRequestPinned(bob, sealed, { pin: cardPin(card(alice)), network: 'testnet', sponsor: SPONSOR }), /someone else/);
+});
+
+test('a link without a well-formed pin opens nothing', () => {
+  const { sealed } = createRequest(alice, card(bob), opts);
+  for (const pin of [undefined, '', cardFingerprint(card(alice)), 'zz'.repeat(32)]) {
+    assert.throws(() => openRequestPinned(bob, sealed, { pin, network: 'testnet', sponsor: SPONSOR }), /pin/);
+  }
+});
+
+test('the pinned open keeps every other check: expiry, network and signature', () => {
+  const old = createRequest(alice, card(bob), { ...opts, expiresAt: Date.now() - 1 });
+  assert.throws(() => openRequestPinned(bob, old.sealed, { pin: cardPin(card(alice)), network: 'testnet', sponsor: SPONSOR }), /expired/);
+  const { sealed } = createRequest(alice, card(bob), opts);
+  assert.throws(() => openRequestPinned(bob, sealed, { pin: cardPin(card(alice)), network: 'mainnet', sponsor: SPONSOR }), /network/);
 });

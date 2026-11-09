@@ -81,7 +81,20 @@ proposes and attester 2 approves, and a release begun by one proposer is never b
 of signers cannot create a second proposal. Liquidity is checked only before a new transfer. Crash drills on the
 live test chain (SIGKILL after the proposal, and after the approval, reached the chain) each paid exactly once
 (`evidence/route-crash-drills.json`). The attesters sign a deposit at 8 confirmations under the demo policy, which
-is not Quantus's default finality (100 blocks). Withdrawals under 0.01 QTC are refused by the token itself before
+is not Quantus's default finality (100 blocks).
+
+What the release journal records, precisely: `sent` means the extrinsic was durably prepared and possibly
+broadcast (it is written before the RPC call); `done` means it was found included on the canonical chain with a
+successful outcome. A release is recorded at inclusion, not at finality. After a crash, a `sent` step is concluded
+`done` if the extrinsic is found, and `aborted` only with proof of absence: every canonical block of its mortal era
+read, the era ended at least 20 blocks below the head, and the range unchanged while reading. Otherwise it stays
+`sent` and blocks that release until the chain can answer. Intent-only records and expired proposals also fail
+closed and wait for a person (`npm run near:release -- --resume <id>`, same proposer, same journal key).
+
+On the payer's side, a payment is saved per request and payer as it advances (sending, sent with its transaction
+hash, located, route signed, claim submitted, settled). A retry or a page reload resumes the same transfer; a new
+transfer is sent only when the wallet said nothing was submitted, or when the person confirms it, or pastes the hash
+to continue. Withdrawals under 0.01 QTC are refused by the token itself before
 anything changes (direct redeem and WITHDRAW_TO alike; through Intents the verifier keeps the balance); a release that keeps failing is set aside
 after five attempts with its error, for a person to look at.
 

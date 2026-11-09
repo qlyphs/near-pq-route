@@ -1,5 +1,5 @@
 {
- "date": "2026-11-09T00:18:20.034Z",
+ "date": "2026-11-09T00:53:38.756Z",
  "rpc": "https://archival-rpc.testnet.fastnear.com",
  "bridges": [
   {
@@ -48,6 +48,48 @@
      "signer": "relay.qlyphs-pqroute-a.testnet",
      "signer_key_scheme": "ml-dsa-65",
      "account_creation_tx": "PXYrUh4dk85QTaQo2AEf4izB84Brv63rJYhGoRDooEo"
+    },
+    {
+     "tx": "6A8sTaNKSWYiU8zwwn8S7QhPhwsMThkXZEpZk86Y9aJ1",
+     "deposit_id": "6e0f5612eb3d64bd0e53e6e994b7ca0d856b5350ad1e38f9c5b6c73c6cffbe54",
+     "planck": "1100000000009",
+     "receiver": "rf9acf49600cd1f6d5b64.qlyphs-pqroute-c.testnet",
+     "into_intents": true,
+     "attesters": [
+      1,
+      2
+     ],
+     "signer": "relay.qlyphs-pqroute-a.testnet",
+     "signer_key_scheme": "ml-dsa-65",
+     "account_creation_tx": "4vMH75AFhc1oxaSPekDuZtEPmvXWnNz2qwekabxNL3fs"
+    },
+    {
+     "tx": "A4LG9SxiccgPZRekEKjomb8p8LtZquLgrqX9NAxDEKjy",
+     "deposit_id": "acb4569a950e8cccd2c9eb5665bd795f0ddbbe68790f6ad92fb82293333d54e9",
+     "planck": "1100000000009",
+     "receiver": "r8501d736db8f9172a3be.qlyphs-pqroute-c.testnet",
+     "into_intents": true,
+     "attesters": [
+      1,
+      2
+     ],
+     "signer": "relay.qlyphs-pqroute-a.testnet",
+     "signer_key_scheme": "ml-dsa-65",
+     "account_creation_tx": "BXe2rvoziQyrENyMDWqpj6oqDsavosu34VQhEhSvJp6Z"
+    },
+    {
+     "tx": "Ajs2tsy1JdhgYYdQSCiDQPhvWRtrf32eA5tBZrFaL1Ln",
+     "deposit_id": "83c3f4e4cac0d68542d3c1355525079d9d2c91b1aec6fcbdafa036980ddd6610",
+     "planck": "1750000000003",
+     "receiver": "rac808edfb5b4d1b4e332.qlyphs-pqroute-c.testnet",
+     "into_intents": true,
+     "attesters": [
+      1,
+      2
+     ],
+     "signer": "relay.qlyphs-pqroute-a.testnet",
+     "signer_key_scheme": "ml-dsa-65",
+     "account_creation_tx": "AMKLBmDGhrxPUiZtkdpsQX1GSiPg2uPE3UtnDSJVZnjh"
     }
    ],
    "withdrawals": [
@@ -72,6 +114,30 @@
      "account": "r8e5855d13b35e42631cc.qlyphs-pqroute-c.testnet",
      "token": "qtc-pq.qlyphs-pqroute-a.testnet",
      "planck": "1250000000000",
+     "memo": "WITHDRAW_TO:07f81a9542503d26b9f3029f4aabb9b24186be828c91a59f42e231aebf79864a",
+     "signer_key_scheme": "ml-dsa-65"
+    },
+    {
+     "tx": "FQkT9CTVY7PexQ8KewiESdUVjLvugzzcD3BkNxpQxSfJ",
+     "account": "rf9acf49600cd1f6d5b64.qlyphs-pqroute-c.testnet",
+     "token": "qtc-pq.qlyphs-pqroute-a.testnet",
+     "planck": "1100000000009",
+     "memo": "WITHDRAW_TO:07f81a9542503d26b9f3029f4aabb9b24186be828c91a59f42e231aebf79864a",
+     "signer_key_scheme": "ml-dsa-65"
+    },
+    {
+     "tx": "BoHVG21r2RZ7VJj25sjaQUdwjkqDFxewxdAkHsxJ15DH",
+     "account": "r8501d736db8f9172a3be.qlyphs-pqroute-c.testnet",
+     "token": "qtc-pq.qlyphs-pqroute-a.testnet",
+     "planck": "1100000000009",
+     "memo": "WITHDRAW_TO:07f81a9542503d26b9f3029f4aabb9b24186be828c91a59f42e231aebf79864a",
+     "signer_key_scheme": "ml-dsa-65"
+    },
+    {
+     "tx": "25yJZWYYHBqDDBsbM5XKChfQHhLZJNsMFkN8fyANNU3V",
+     "account": "rac808edfb5b4d1b4e332.qlyphs-pqroute-c.testnet",
+     "token": "qtc-pq.qlyphs-pqroute-a.testnet",
+     "planck": "1750000000003",
      "memo": "WITHDRAW_TO:07f81a9542503d26b9f3029f4aabb9b24186be828c91a59f42e231aebf79864a",
      "signer_key_scheme": "ml-dsa-65"
     }
@@ -474,6 +540,21 @@
    "detail": "1250000000000 planck to r8e5855d13b35e42631cc.qlyphs-pqroute-c.testnet inside Intents"
   },
   {
+   "name": "mint 6A8sTaNKSW…: attesters 1 and 2 signed with ML-DSA-87 (verified here)",
+   "ok": true,
+   "detail": "1100000000009 planck to rf9acf49600cd1f6d5b64.qlyphs-pqroute-c.testnet inside Intents"
+  },
+  {
+   "name": "mint A4LG9Sxicc…: attesters 1 and 2 signed with ML-DSA-87 (verified here)",
+   "ok": true,
+   "detail": "1100000000009 planck to r8501d736db8f9172a3be.qlyphs-pqroute-c.testnet inside Intents"
+  },
+  {
+   "name": "mint Ajs2tsy1Jd…: attesters 1 and 2 signed with ML-DSA-87 (verified here)",
+   "ok": true,
+   "detail": "1750000000003 planck to rac808edfb5b4d1b4e332.qlyphs-pqroute-c.testnet inside Intents"
+  },
+  {
    "name": "qtc-pq.qlyphs-pqroute-a.testnet: 7 forged or replayed mint attempts, all refused by the contract",
    "ok": true,
    "detail": "two different attesters are required; invalid attestation signature; deposit already minted"
@@ -609,6 +690,21 @@
    "detail": "1250000000000 to WITHDRAW_TO:07f81a9542503d26b9f3029f4aabb9b24186be828c91a59f42e231aebf79864a"
   },
   {
+   "name": "withdrawal FQkT9CTVY7… by rf9acf49600cd1…: signed ML-DSA-65, account's only key ML-DSA-65",
+   "ok": true,
+   "detail": "1100000000009 to WITHDRAW_TO:07f81a9542503d26b9f3029f4aabb9b24186be828c91a59f42e231aebf79864a"
+  },
+  {
+   "name": "withdrawal BoHVG21r2R… by r8501d736db8f9…: signed ML-DSA-65, account's only key ML-DSA-65",
+   "ok": true,
+   "detail": "1100000000009 to WITHDRAW_TO:07f81a9542503d26b9f3029f4aabb9b24186be828c91a59f42e231aebf79864a"
+  },
+  {
+   "name": "withdrawal 25yJZWYYHB… by rac808edfb5b4d…: signed ML-DSA-65, account's only key ML-DSA-65",
+   "ok": true,
+   "detail": "1750000000003 to WITHDRAW_TO:07f81a9542503d26b9f3029f4aabb9b24186be828c91a59f42e231aebf79864a"
+  },
+  {
    "name": "rec761444a3770… opened by the ML-DSA-65 sponsor (create, fund, one ML-DSA-65 key) at block 276846007, before its mint at 276846204",
    "ok": true,
    "detail": "8tsJ5esFMv…"
@@ -622,6 +718,21 @@
    "name": "r8e5855d13b35e… opened by the ML-DSA-65 sponsor (create, fund, one ML-DSA-65 key) at block 276846689, before its mint at 276847028",
    "ok": true,
    "detail": "PXYrUh4dk8…"
+  },
+  {
+   "name": "rf9acf49600cd1… opened by the ML-DSA-65 sponsor (create, fund, one ML-DSA-65 key) at block 276850249, before its mint at 276850576",
+   "ok": true,
+   "detail": "4vMH75AFhc…"
+  },
+  {
+   "name": "r8501d736db8f9… opened by the ML-DSA-65 sponsor (create, fund, one ML-DSA-65 key) at block 276849748, before its mint at 276850012",
+   "ok": true,
+   "detail": "BXe2rvoziQ…"
+  },
+  {
+   "name": "rac808edfb5b4d… opened by the ML-DSA-65 sponsor (create, fund, one ML-DSA-65 key) at block 276849338, before its mint at 276849566",
+   "ok": true,
+   "detail": "AMKLBmDGhr…"
   }
  ]
 }

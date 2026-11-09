@@ -1,6 +1,6 @@
 # Qlyphs: a post-quantum route for NEAR Intents
 
-**0 classical keys in the authorization path · 40/40 on-chain checks you can rerun · 7/7 live attacks refused.**
+**0 classical keys in the authorization path · 49/49 on-chain checks you can rerun · 7/7 live attacks refused.**
 
 **QTC enters and leaves NEAR Intents with no classical key in the authorization path.** QTC is the coin of
 Quantus, a chain that signs every transaction with ML-DSA. Today the route that brings it to NEAR mints on the
@@ -26,7 +26,7 @@ npm ci
 node scripts/verify-route.mjs
 ```
 
-It reads NEAR testnet and checks 40 things. Among them:
+It reads NEAR testnet and checks 49 things. Among them:
 - the bridge and the Intents verifier have **no access key** and run the published code;
 - the relayer's and the sponsor's only key is ML-DSA-65;
 - every forged or replayed mint ever sent to a bridge was refused;
@@ -84,7 +84,7 @@ crash after a proposal or an approval reached the chain still pays exactly once.
 | Relayer, ML-DSA-65 key only (pays gas, no authority) | [`relay.qlyphs-pqroute-a.testnet`](https://testnet.nearblocks.io/address/relay.qlyphs-pqroute-a.testnet) |
 | Sponsor that opens recipients' accounts, ML-DSA-65 key only | [`qlyphs-pqroute-c.testnet`](https://testnet.nearblocks.io/address/qlyphs-pqroute-c.testnet) |
 | A round trip through the app: request, receive, restore and ML-DSA-65 withdrawal in the browser; the payment made with the wallet's exact bytes from the command line (the person's own wallet approval needs app-testnet) | `evidence/route-app-run.json` |
-| Releases killed with SIGKILL after the proposal, and after the approval, reached the chain: each paid exactly once after restart | `evidence/route-crash-drills.json` |
+| Releases killed with SIGKILL after the proposal, the approval, and the payment-bearing execution were sent: each paid exactly once after restart | `evidence/route-crash-drills.json` |
 | Full round trips from the command line (earlier deployments, on both Quantus test chains) | `evidence/superseded-route-cycle-curve-r2.json`, `evidence/route-cycle-devnet.json` |
 | The existing route's minting key, at a pinned mainnet block | `evidence/bridge-mng-snapshot.json` |
 

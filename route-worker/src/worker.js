@@ -66,11 +66,25 @@ export default {
         for (const k of keys) claims.push({ key: k, ...(JSON.parse((await env.ROUTE.get(k)) ?? '{}')) });
         return json(200, { claims }, cors);
       }
+      // Mint records: the route service says which NEAR transaction minted a deposit. Only a pointer: the page reads
+      // that transaction from NEAR itself to tell delivery into Intents from a refund to the account.
+      if (req.method === 'POST' && url.pathname === '/mints') {
+        if (req.headers.get('authorization') !== `Bearer ${env.SERVICE_TOKEN}`) return json(401, { error: 'not the route service' }, cors);
+        const { depositId, tx, signer } = await req.json();
+        if (!/^[0-9a-f]{64}$/.test(depositId ?? '') || !/^[1-9A-HJ-NP-Za-km-z]{43,44}$/.test(tx ?? '') || typeof signer !== 'string') return json(400, { error: 'malformed mint record' }, cors);
+        await env.ROUTE.put(`mint:${depositId}`, JSON.stringify({ tx, signer }), { expirationTtl: 60 * DAY });
+        return json(200, { ok: true }, cors);
+      }
+      m = url.pathname.match(/^\/mints\/([0-9a-f]{64})$/);
+      if (req.method === 'GET' && m) {
+        const v = await env.ROUTE.get(`mint:${m[1]}`);
+        return v ? json(200, JSON.parse(v), cors) : json(404, { error: 'no mint recorded for this deposit yet' }, cors);
+      }
       // Sponsor: a fresh account with only the given ML-DSA-65 key and a little NEAR for gas.
       if (req.method === 'POST' && url.pathname === '/accounts') {
         const { publicKey } = await req.json();
         if (typeof publicKey !== 'string' || !/^ml-dsa-65:[1-9A-HJ-NP-Za-km-z]{2600,2700}$/.test(publicKey)) return json(400, { error: 'expects an ml-dsa-65: public key' }, cors);
-        if (!(await rateLimit(env, `acct:${ip}`, 5, 3600)) || !(await rateLimit(env, 'acct:all', 200, DAY))) return json(429, { error: 'account limit reached, try again later' }, cors);
+        if (!(await rateLimit(env, `acct:${ip}`, 12, 3600)) || !(await rateLimit(env, 'acct:all', 200, DAY))) return json(429, { error: 'account limit reached, try again later' }, cors);
         const accountId = await accountFor(publicKey, env.SPONSOR_ID);
         const sponsor = signerFromSeed(Uint8Array.from(env.SPONSOR_SEED.match(/../g).map((h) => parseInt(h, 16))));
         const r = await sendTx({ signerId: env.SPONSOR_ID, signer: sponsor, receiverId: accountId, network: 'testnet', waitUntil: 'FINAL',

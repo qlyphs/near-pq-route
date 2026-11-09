@@ -91,10 +91,15 @@ read, the era ended at least 20 blocks below the head, and the range unchanged w
 `sent` and blocks that release until the chain can answer. Intent-only records and expired proposals also fail
 closed and wait for a person (`npm run near:release -- --resume <id>`, same proposer, same journal key).
 
-On the payer's side, a payment is saved per request and payer as it advances (sending, sent with its transaction
+On the payer's side, a payment saves its complete authenticated terms (the request as verified, the pinned
+recipient card, the deployment it names) before the wallet is asked for anything, and is saved per request and payer
+as it advances (sending, sent with its transaction
 hash, located, route signed, claim submitted, settled). A retry or a page reload resumes the same transfer; a new
 transfer is sent only when the wallet said nothing was submitted, or when the person confirms it, or pastes the hash
-to continue. Withdrawals under 0.01 QTC are refused by the token itself before
+to continue. A payment already under way finishes from those saved terms even after the request expired or its
+service went away. "Inside NEAR Intents" is shown only when the mint transaction, read from NEAR by the page,
+shows the verifier's ft_on_transfer returning 0 unused and the bridge keeping the whole amount; a refusal shows the
+QTC on the recipient's account instead; anything else is reported as pending. Withdrawals under 0.01 QTC are refused by the token itself before
 anything changes (direct redeem and WITHDRAW_TO alike; through Intents the verifier keeps the balance); a release that keeps failing is set aside
 after five attempts with its error, for a person to look at.
 

@@ -2,9 +2,10 @@
 
 **0 classical keys in the authorization path · 60/60 on-chain checks you can rerun · 7/7 live attacks refused.**
 
-**QTC enters and leaves NEAR Intents with no classical key in the authorization path.** QTC is the coin of
-Quantus, a chain that signs every transaction with ML-DSA. Today the route that brings it to NEAR mints on the
-word of one ed25519 key. On this route, every authorization is post-quantum:
+**A post-quantum chain's coin enters and leaves NEAR Intents with no classical key in the authorization path.**
+The route is built for any chain whose accounts sign with ML-DSA and support a native ML-DSA multisig; this
+repository runs it with QTC, the coin of Quantus. Today the route that brings QTC to NEAR mints on the word of
+one ed25519 key. On this route, every authorization is post-quantum:
 
 | Step | Who authorizes | Scheme |
 |---|---|---|

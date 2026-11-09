@@ -1,20 +1,22 @@
 {
  "date": "2026-11-09",
- "what": "The app flow at /bridge/quantum on the corrected deployment (local build of feat/pq-route with testnet settings): request made in the browser, its account opened by the ML-DSA-65 sponsor before the link existed, paid with the wallet's message format (pinned recipient card, receiver checked before locking, site session over the route), minted into Intents, found again in the browser, withdrawn with an ML-DSA-65 signature made in the browser, released 2-of-3 on Quantus.",
- "payer_side_note": "The payer's two wallet approvals (sendQtc to the lock, signSessionChallenge) were produced by scripts/near-pay.ts with the same bytes, because they need a person's wallet.",
- "bridge": "qtcpq.qlyphs-pqroute-a.testnet",
- "quantus_network": "curve test chain (genesis 0x06fb13f7\u2026)",
- "request_id": "ebcf44074a43917b00544ee0002a5dc2",
- "fresh_account": "rca24613b3ee0b9573517.qlyphs-pqroute-c.testnet",
+ "label": "browser request, receive, restore and withdraw; CLI-assisted payment",
+ "what": "/bridge/quantum (local build of feat/pq-route, testnet settings) on bridge qtc-pq: request and fresh account made in the browser (account opened by the ML-DSA-65 sponsor before the link existed), payment by scripts/near-pay.ts producing the wallet's exact bytes (pinned recipient card, receiver checked at one block before locking, sendQtc-equivalent transferKeepAlive to the lock, site session over the route with the curve genesis), minted into Intents, found again in the browser, withdrawn with an ML-DSA-65 signature made in the browser, released 2-of-3.",
+ "not_yet_shown": "the same payer steps approved in the person's own Qlyphs wallet (needs app-testnet, PR #353).",
+ "bridge": "qtc-pq.qlyphs-pqroute-a.testnet",
+ "quantus_genesis": "0x06fb13f7086158562fac1b684da75feb627261a277b63e44043f2997d0b24693",
+ "request_id": "ccf6f25d51d19d555eb5e1f3e30b4a39",
+ "fresh_account": "r8e5855d13b35e42631cc.qlyphs-pqroute-c.testnet",
  "lock": {
-  "quantus_tx": "0x7bd0700366c8df44a405ff7fedc067e590a8a03cee19b68012d9822fe405b415",
-  "block": 120755,
+  "quantus_tx": "0x78977915490caa5b6e304d9315277e4a1cc49fabc32bcd9adf6211b55bd1995f",
+  "block": 121022,
   "extrinsic": 1,
-  "planck": "1200000000000",
-  "deposit_id": "edc9ab3fbaa232c5c14d9847f7a29f62d08f451cd4cb2d34a787de56ed7cb79c"
+  "planck": "1250000000000",
+  "deposit_id": "7bc5a967701769b92dfb9df67103d056774fc7a6da6dfb79fb701bf493b6eb33"
  },
- "mint_near_tx": "DJYPtW5VJ6gwkfYoETkwx665wuZ4HUNdD34koVkon5ry",
- "delivered": "inside NEAR Intents",
- "release_quantus_execute": "0x7cf32dcb2763dec275e6263318ee53d50ce1ef8589e0bfd6c07f1be4028d87ee",
- "withdraw_near_tx_signed_ml_dsa_65_in_browser": "C4hVQpmR9TNEDrkmkUp8gWZw3tvmry4jqAZD1RXWZPA1"
+ "mint_near_tx": "8ct7bqnAhKYSmHwv5DXq2tUoHRr7BXQLnSJ1tcq7btGr",
+ "delivered": "intents (ft_on_transfer returned 0 unused; resolve kept the whole amount)",
+ "release_quantus_execute": "0xa5f349db4d42758487cafccb54aea6e6d414ccf5ba086ea813389f25ac7d8808",
+ "withdraw_near_tx_signed_ml_dsa_65_in_browser": "FK1CD58JfFPxpAAhsArYJvToMAtRxyJu7YnQdncqjPdv",
+ "account_creation_tx": "PXYrUh4dk85QTaQo2AEf4izB84Brv63rJYhGoRDooEo"
 }

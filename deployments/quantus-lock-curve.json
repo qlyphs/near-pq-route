@@ -1,7 +1,7 @@
 {
   "schema": "qlyphs-wqtc-lock-v1",
   "network": "quantus-development",
-  "genesis": "0xca0a88635de136b803302f00defdc1f559e5b2a6cf34e817ce0030ba4377e7a3",
+  "genesis": "0x06fb13f7086158562fac1b684da75feb627261a277b63e44043f2997d0b24693",
   "address": "qzpPEKhGncdyaUgZSxY1zMq3VvB5ng5LmZBP4arD83PFp46jE",
   "accountId": "da1f22169753932899a40df86f038aa32410cdb6e80ea8393813a5ba39308bf2",
   "signers": [

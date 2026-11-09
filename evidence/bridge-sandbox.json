@@ -1,6 +1,6 @@
 {
   "date": "2026-11-08",
-  "wasm_sha256": "052fc371e4dffd3ad8dcab7014b48616fa18e91f3ecf156013885858ecf8fb9d",
+  "wasm_sha256": "e8760fa21f926d633cfea002c0af040b5436c5053e0f7a828207ee879ae7f3a5",
   "results": [
     {
       "name": "init only from the parent account",
@@ -11,6 +11,11 @@
       "name": "init refuses duplicate attester keys",
       "ok": true,
       "detail": "must differ"
+    },
+    {
+      "name": "init from a grandparent is refused",
+      "ok": true,
+      "detail": "direct parent"
     },
     {
       "name": "init with genesis and three keys",
@@ -95,7 +100,7 @@
     {
       "name": "2-of-3 attested deposit mints",
       "ok": true,
-      "detail": "13.982749571884 Tgas"
+      "detail": "13.978982179208 Tgas"
     },
     {
       "name": "deposit recorded as minted",
@@ -199,6 +204,21 @@
     },
     {
       "name": "storage_balance_bounds is fixed",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "a null field twice is refused",
+      "ok": true,
+      "detail": "duplicate JSON field"
+    },
+    {
+      "name": "an unknown field is refused even when null",
+      "ok": true,
+      "detail": "unexpected JSON field"
+    },
+    {
+      "name": "storage_deposit accepts registration_only: true",
       "ok": true,
       "detail": ""
     },

@@ -1,0 +1,147 @@
+{
+ "date": "2026-11-09",
+ "bridge": "qtc-pq.qlyphs-pqroute-a.testnet",
+ "quantus": "curve test chain",
+ "how": "scripts/crash-drill.sh <propose|approve> <state dir>: kill -9 the production release the moment its journal records the step as sent, run it again to completion, then once more; compare the destination balance with the amount",
+ "balances": {
+  "destination": "qzjdgfzxCKR8tR8iA971aptTKB5Xn3tmKn3C8k34iSekaTgRR",
+  "drill_1": {
+   "before": "6700000000000",
+   "after": "8700000000001"
+  },
+  "drill_2": {
+   "before": "8700000000001",
+   "after": "10200000000008"
+  }
+ },
+ "drills": [
+  {
+   "redemption": "near:qtc-pq.qlyphs-pqroute-a.testnet:0",
+   "killed_after": "the propose was sent (SIGKILL, real process, live chain)",
+   "planck": "2000000000001",
+   "release": {
+    "id": "near:qtc-pq.qlyphs-pqroute-a.testnet:0",
+    "destination": "qzjdgfzxCKR8tR8iA971aptTKB5Xn3tmKn3C8k34iSekaTgRR",
+    "planck": "2000000000001",
+    "proposalId": 4,
+    "propose": "0xccee6b645a34d366106d993d683b42bd80c3cf0d41ef56b686580de6b9744453",
+    "approve": "0x91c8eec1ffbc5c0460e5243bd28fcdbcf5a880dd78ba92c379224c8d5571f3dc",
+    "execute": "0x370045ac323da7446a889e42c45ae483b6b88b7b8b847a171f429cd8f953d860"
+   },
+   "attester_1_journal": [
+    {
+     "kind": "propose",
+     "phase": "intent",
+     "tx": null
+    },
+    {
+     "kind": "propose",
+     "phase": "sent",
+     "tx": "0xccee6b645a34d366106d993d683b42bd80c3cf0d41ef56b686580de6b9744453"
+    },
+    {
+     "kind": "propose",
+     "phase": "done",
+     "tx": "0xccee6b645a34d366106d993d683b42bd80c3cf0d41ef56b686580de6b9744453"
+    }
+   ],
+   "attester_2_journal": [
+    {
+     "kind": "approve",
+     "phase": "intent",
+     "tx": null
+    },
+    {
+     "kind": "approve",
+     "phase": "sent",
+     "tx": "0x91c8eec1ffbc5c0460e5243bd28fcdbcf5a880dd78ba92c379224c8d5571f3dc"
+    },
+    {
+     "kind": "approve",
+     "phase": "done",
+     "tx": "0x91c8eec1ffbc5c0460e5243bd28fcdbcf5a880dd78ba92c379224c8d5571f3dc"
+    },
+    {
+     "kind": "execute",
+     "phase": "intent",
+     "tx": null
+    },
+    {
+     "kind": "execute",
+     "phase": "sent",
+     "tx": "0x370045ac323da7446a889e42c45ae483b6b88b7b8b847a171f429cd8f953d860"
+    },
+    {
+     "kind": "execute",
+     "phase": "done",
+     "tx": "0x370045ac323da7446a889e42c45ae483b6b88b7b8b847a171f429cd8f953d860"
+    }
+   ],
+   "destination_delta_equals_amount": true
+  },
+  {
+   "redemption": "near:qtc-pq.qlyphs-pqroute-a.testnet:1",
+   "killed_after": "the approve was sent (SIGKILL, real process, live chain)",
+   "planck": "1500000000007",
+   "release": {
+    "id": "near:qtc-pq.qlyphs-pqroute-a.testnet:1",
+    "destination": "qzjdgfzxCKR8tR8iA971aptTKB5Xn3tmKn3C8k34iSekaTgRR",
+    "planck": "1500000000007",
+    "proposalId": 5,
+    "propose": "0xf49f2ff3d3ba4a16d53b14d0eaa6e54ac1f4f38ebe002d9f5ecc3c9ca50941bd",
+    "approve": "0x7a11865a432f12069c603fb2ccf46152a1761bb6ea005ada21646c5a9d7ee31e",
+    "execute": "0xabd2419c9ecf37fd15c3aeff784de046782f953b356e3173ea60269fde0848ef"
+   },
+   "attester_1_journal": [
+    {
+     "kind": "propose",
+     "phase": "intent",
+     "tx": null
+    },
+    {
+     "kind": "propose",
+     "phase": "sent",
+     "tx": "0xf49f2ff3d3ba4a16d53b14d0eaa6e54ac1f4f38ebe002d9f5ecc3c9ca50941bd"
+    },
+    {
+     "kind": "propose",
+     "phase": "done",
+     "tx": "0xf49f2ff3d3ba4a16d53b14d0eaa6e54ac1f4f38ebe002d9f5ecc3c9ca50941bd"
+    }
+   ],
+   "attester_2_journal": [
+    {
+     "kind": "approve",
+     "phase": "intent",
+     "tx": null
+    },
+    {
+     "kind": "approve",
+     "phase": "sent",
+     "tx": "0x7a11865a432f12069c603fb2ccf46152a1761bb6ea005ada21646c5a9d7ee31e"
+    },
+    {
+     "kind": "approve",
+     "phase": "done",
+     "tx": "0x7a11865a432f12069c603fb2ccf46152a1761bb6ea005ada21646c5a9d7ee31e"
+    },
+    {
+     "kind": "execute",
+     "phase": "intent",
+     "tx": null
+    },
+    {
+     "kind": "execute",
+     "phase": "sent",
+     "tx": "0xabd2419c9ecf37fd15c3aeff784de046782f953b356e3173ea60269fde0848ef"
+    },
+    {
+     "kind": "execute",
+     "phase": "done",
+     "tx": "0xabd2419c9ecf37fd15c3aeff784de046782f953b356e3173ea60269fde0848ef"
+    }
+   ],
+   "destination_delta_equals_amount": true
+  }
+ ]
+}

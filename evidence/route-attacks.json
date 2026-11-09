@@ -1,48 +1,48 @@
 {
  "date": "2026-11-09",
  "network": "NEAR testnet",
- "bridge": "qtcpq.qlyphs-pqroute-a.testnet",
+ "bridge": "qtc-pq.qlyphs-pqroute-a.testnet",
  "contract_attacks": [
   {
    "attack": "replay of a real mint",
    "refused_with": "deposit already minted",
-   "tx": "5SJsP1Q16VNg7VCb32t9TjPu1p3zwRA92YoutYaaNFtA",
+   "tx": "4d5PogPyk5GXufn5V7gxZWAPhdfZZVRi6whspy4DgKY7",
    "ok": true
   },
   {
    "attack": "replay with the amount changed",
    "refused_with": "deposit already minted",
-   "tx": "DVL29eSW4eFEfBahbWcsWopvrr1vVd2yr4HDkJb8BBUD",
+   "tx": "8wV5YPGMP21FfJS1Bxu4o52BuPGX6P8i4G3jr14yYVyD",
    "ok": true
   },
   {
-   "attack": "real signatures on another deposit id",
+   "attack": "real signatures moved to a fresh deposit id (one field changed)",
    "refused_with": "invalid attestation signature",
-   "tx": "8UBqjnWimEdeYoBgM8J6YEThuGNinz2qTJvDHzVMK8P4",
+   "tx": "4eSTwqypJ352iXX4vs3ZZDx7FkGgPhAMZwNj7sW3pBos",
    "ok": true
   },
   {
-   "attack": "another deposit id and the amount doubled",
+   "attack": "a fresh deposit id plus the amount doubled",
    "refused_with": "invalid attestation signature",
-   "tx": "5sdtJJk7BPwF552kpM95DpkCQ5D4aHiouPKTrGJbpWtq",
+   "tx": "ArUZbx4mvbQYAjyrwDyLjTT2RGb59PqmSHRcVFuJEhir",
    "ok": true
   },
   {
-   "attack": "another deposit id and another receiver",
+   "attack": "a fresh deposit id plus another receiver",
    "refused_with": "invalid attestation signature",
-   "tx": "9kwnswyT5YWzy346pqKzjngY7uWowMod9zSEdAVvym7f",
+   "tx": "65bttNMQrXi2C3w3NPSvdfR5BdQhUGTv7gcoPfMzJVxE",
    "ok": true
   },
   {
-   "attack": "another deposit id, credited directly instead of into Intents",
+   "attack": "a fresh deposit id, credited directly instead of into Intents",
    "refused_with": "invalid attestation signature",
-   "tx": "D9anRRiCG9g3hNu1HgQTNZgf6yis983hPdx794eaM7Pn",
+   "tx": "C47ZDDLqs7vFJ3TSLzzKWe71cggvLWZoWgBJbfZQqJ9o",
    "ok": true
   },
   {
    "attack": "one attester twice",
    "refused_with": "two different attesters are required",
-   "tx": "4xL359kbpyAfXxguHb9jzYccG53B19mZgtLEZnx6MVS9",
+   "tx": "D7zRvMr4s3agyRZ5LbWQy9ddc4iKXitf67iLwmedHESd",
    "ok": true
   }
  ],
@@ -56,5 +56,6 @@
    "refused_with": "state-curve is in use by process <pid>"
   }
  ],
- "how_to_rerun": "node scripts/ops/attack-route.mjs (needs the relayer seed; any NEAR account can send the same inputs)"
+ "how_to_rerun": "node scripts/ops/attack-route.mjs (needs the relayer seed; any NEAR account can send the same inputs)",
+ "note": "Live attacks change the deposit id (to reach the signature check instead of the replay check) and at most one other field; single-field isolation on an unused attestation is in tests/bridge.sandbox.mjs."
 }

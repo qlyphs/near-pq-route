@@ -55,7 +55,7 @@ const bridgeWasm = readFileSync('build/bridge-testnet.wasm');
 const out = { date: new Date().toISOString(), rpc: RPC, bridges: [] };
 
 // The current bridge (curve test chain) must equal the local build; earlier ones must equal the hash they were deployed with.
-const routes = ['deployments/route-curve-testnet.json', 'deployments/superseded-route-curve-r1.json', 'deployments/route-testnet.json']
+const routes = ['deployments/route-curve-testnet.json', 'deployments/superseded-route-curve-r2.json', 'deployments/superseded-route-curve-r1.json', 'deployments/route-testnet.json']
   .map((f, i) => ({ ...JSON.parse(readFileSync(f, 'utf8')), current: i === 0 }));
 const { verifier, relayer } = routes[0];
 check(`verifier ${verifier.account} has no access key`, (await keys(verifier.account)).length === 0);
@@ -105,6 +105,27 @@ for (const t of (await listTxs(verifier.account)).filter((x) => x.methods.includ
   check(`withdrawal ${t.hash.slice(0, 10)}… by ${t.signer.slice(0, 14)}…: signed ML-DSA-65, account's only key ML-DSA-65`, scheme === 'ml-dsa-65' && k.length === 1 && k[0] === 'ml-dsa-65-hash', `${args.amount} to ${args.memo}`);
   const route = routes.find((r) => r.bridge.account === args.token);
   out.bridges.find((x) => x.bridge === route?.bridge.account)?.withdrawals.push({ tx: t.hash, account: t.signer, token: args.token, planck: args.amount, memo: args.memo, signer_key_scheme: scheme });
+}
+// Current bridge: every recipient account was opened by the ML-DSA-65 sponsor with exactly one action set (create,
+// fund, add one ML-DSA-65 key) before its mint, so nobody held it in between.
+{
+  const cur = out.bridges.find((x) => x.current);
+  const sponsorTxs = await listTxs('qlyphs-pqroute-c.testnet');
+  const height = async (hash) => (await rpc('block', { block_id: hash })).header.height;
+  for (const m of cur?.mints ?? []) {
+    const c = sponsorTxs.find((t) => t.receiver === m.receiver);
+    if (!c) { check(`${m.receiver.slice(0, 14)}… creation transaction found`, false, 'not in the sponsor list'); continue; }
+    const tx = await rpc('tx', { tx_hash: c.hash, sender_account_id: 'qlyphs-pqroute-c.testnet', wait_until: 'NONE' });
+    const acts = tx.transaction.actions.map((a) => (typeof a === 'string' ? a : Object.keys(a)[0]));
+    const addKey = tx.transaction.actions.find((a) => a.AddKey)?.AddKey;
+    const mintTx = await rpc('tx', { tx_hash: m.tx, sender_account_id: m.signer, wait_until: 'NONE' });
+    const [hc, hm] = [await height(tx.transaction_outcome.block_hash), await height(mintTx.transaction_outcome.block_hash)];
+    const ok = JSON.stringify(acts) === JSON.stringify(['CreateAccount', 'Transfer', 'AddKey']) && addKey?.public_key?.startsWith('ml-dsa-65:') && addKey?.access_key?.permission === 'FullAccess'
+      && tx.transaction.public_key.startsWith('ml-dsa-65') && hc < hm;
+    check(`${m.receiver.slice(0, 14)}… opened by the ML-DSA-65 sponsor (create, fund, one ML-DSA-65 key) at block ${hc}, before its mint at ${hm}`, ok, c.hash.slice(0, 10) + '…');
+    m.account_creation_tx = c.hash;
+    await sleep(300);
+  }
 }
 out.results = results;
 writeFileSync('evidence/route-onchain.json', JSON.stringify(out, null, 1) + '\n');

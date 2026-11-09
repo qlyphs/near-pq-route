@@ -13,10 +13,10 @@
     "creation_tx": "HB1Utgc9Mz12DehxmwN9czmiqyL6UrK8UYMQkCsaAyX"
   },
   "bridge": {
-    "account": "qtcpq.qlyphs-pqroute-a.testnet",
+    "account": "qtc-pq.qlyphs-pqroute-a.testnet",
     "quantus_network": "curve test chain (Qlyphs DevNet v3, the Qlyphs app Testnet)",
-    "wasm_sha256": "6d1e64b64a76eb71198070642cb09e9be970f6949544ebde254ddedea01b4671",
-    "quantus_genesis": "0xca0a88635de136b803302f00defdc1f559e5b2a6cf34e817ce0030ba4377e7a3",
+    "wasm_sha256": "6c375c5b79e9d987c941df26bbdb5f4c685854c28896d1ad790450badf6f9811",
+    "quantus_genesis": "0x06fb13f7086158562fac1b684da75feb627261a277b63e44043f2997d0b24693",
     "quantus_lock": "qzpPEKhGncdyaUgZSxY1zMq3VvB5ng5LmZBP4arD83PFp46jE",
     "attesters": [
       {
@@ -32,6 +32,6 @@
         "key_sha256": "264b58e249b921f487b18a24a2d31bfe48712227da57c2ef22a926da520e57b3"
       }
     ],
-    "creation_tx": "9NDVwhzA87wQex9cYn7SBdgzDEnJFgTM5fFDGo3oXU2"
+    "creation_tx": "3ciFNuoeFNPAn5aoUoauiNGvAmoTx9WZPyaYBGAcjJgD"
   }
 }

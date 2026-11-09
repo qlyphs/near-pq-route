@@ -1,10 +1,115 @@
 {
- "date": "2026-11-08T23:36:26.087Z",
+ "date": "2026-11-09T00:18:20.034Z",
  "rpc": "https://archival-rpc.testnet.fastnear.com",
  "bridges": [
   {
-   "bridge": "qtcpq.qlyphs-pqroute-a.testnet",
+   "bridge": "qtc-pq.qlyphs-pqroute-a.testnet",
    "current": true,
+   "quantus_network": "curve test chain (Qlyphs DevNet v3, the Qlyphs app Testnet)",
+   "mints": [
+    {
+     "tx": "2dKio9M96JUgmoLwRvAf1Uu779YqMAsSjLg2GQ3ibaWo",
+     "deposit_id": "47618b16a2ab8a38d94e28f06c38097bf099be11aea7d85295186226a32e5225",
+     "planck": "1500000000007",
+     "receiver": "rec761444a377022b07e8.qlyphs-pqroute-c.testnet",
+     "into_intents": true,
+     "attesters": [
+      1,
+      2
+     ],
+     "signer": "relay.qlyphs-pqroute-a.testnet",
+     "signer_key_scheme": "ml-dsa-65",
+     "account_creation_tx": "8tsJ5esFMvuFi7Hvvw5L8JQEUN8T98moZDXSsTtM5oEK"
+    },
+    {
+     "tx": "F2G7gtcRxueac6s22KaCQ8WPKxAFjkAZuwob6hiSDqqc",
+     "deposit_id": "d39c711aed576dd4ee4f9a534b71764598cea89f4120cd375991fc8cc66ec282",
+     "planck": "2000000000001",
+     "receiver": "rc0e461f216dc94f2d5c5.qlyphs-pqroute-c.testnet",
+     "into_intents": true,
+     "attesters": [
+      1,
+      2
+     ],
+     "signer": "relay.qlyphs-pqroute-a.testnet",
+     "signer_key_scheme": "ml-dsa-65",
+     "account_creation_tx": "C9WpGtxbQQobZrQqzUmvCZjWjF2NvuEyywidT5pbuZ67"
+    },
+    {
+     "tx": "8ct7bqnAhKYSmHwv5DXq2tUoHRr7BXQLnSJ1tcq7btGr",
+     "deposit_id": "7bc5a967701769b92dfb9df67103d056774fc7a6da6dfb79fb701bf493b6eb33",
+     "planck": "1250000000000",
+     "receiver": "r8e5855d13b35e42631cc.qlyphs-pqroute-c.testnet",
+     "into_intents": true,
+     "attesters": [
+      1,
+      2
+     ],
+     "signer": "relay.qlyphs-pqroute-a.testnet",
+     "signer_key_scheme": "ml-dsa-65",
+     "account_creation_tx": "PXYrUh4dk85QTaQo2AEf4izB84Brv63rJYhGoRDooEo"
+    }
+   ],
+   "withdrawals": [
+    {
+     "tx": "J6eCtBswd6ZEsqU9Ck7yzcRzxJPfCKTb9npeqz9zFU8q",
+     "account": "rec761444a377022b07e8.qlyphs-pqroute-c.testnet",
+     "token": "qtc-pq.qlyphs-pqroute-a.testnet",
+     "planck": "1500000000007",
+     "memo": "WITHDRAW_TO:07f81a9542503d26b9f3029f4aabb9b24186be828c91a59f42e231aebf79864a",
+     "signer_key_scheme": "ml-dsa-65"
+    },
+    {
+     "tx": "Gj2qESr6aKiVD4GTqHzDApXFrzazNnc3DpvCbprnjkso",
+     "account": "rc0e461f216dc94f2d5c5.qlyphs-pqroute-c.testnet",
+     "token": "qtc-pq.qlyphs-pqroute-a.testnet",
+     "planck": "2000000000001",
+     "memo": "WITHDRAW_TO:07f81a9542503d26b9f3029f4aabb9b24186be828c91a59f42e231aebf79864a",
+     "signer_key_scheme": "ml-dsa-65"
+    },
+    {
+     "tx": "FK1CD58JfFPxpAAhsArYJvToMAtRxyJu7YnQdncqjPdv",
+     "account": "r8e5855d13b35e42631cc.qlyphs-pqroute-c.testnet",
+     "token": "qtc-pq.qlyphs-pqroute-a.testnet",
+     "planck": "1250000000000",
+     "memo": "WITHDRAW_TO:07f81a9542503d26b9f3029f4aabb9b24186be828c91a59f42e231aebf79864a",
+     "signer_key_scheme": "ml-dsa-65"
+    }
+   ],
+   "refused_attempts": [
+    {
+     "tx": "D7zRvMr4s3agyRZ5LbWQy9ddc4iKXitf67iLwmedHESd",
+     "refused_with": "two different attesters are required"
+    },
+    {
+     "tx": "C47ZDDLqs7vFJ3TSLzzKWe71cggvLWZoWgBJbfZQqJ9o",
+     "refused_with": "invalid attestation signature"
+    },
+    {
+     "tx": "65bttNMQrXi2C3w3NPSvdfR5BdQhUGTv7gcoPfMzJVxE",
+     "refused_with": "invalid attestation signature"
+    },
+    {
+     "tx": "ArUZbx4mvbQYAjyrwDyLjTT2RGb59PqmSHRcVFuJEhir",
+     "refused_with": "invalid attestation signature"
+    },
+    {
+     "tx": "4eSTwqypJ352iXX4vs3ZZDx7FkGgPhAMZwNj7sW3pBos",
+     "refused_with": "invalid attestation signature"
+    },
+    {
+     "tx": "8wV5YPGMP21FfJS1Bxu4o52BuPGX6P8i4G3jr14yYVyD",
+     "refused_with": "deposit already minted"
+    },
+    {
+     "tx": "4d5PogPyk5GXufn5V7gxZWAPhdfZZVRi6whspy4DgKY7",
+     "refused_with": "deposit already minted"
+    }
+   ]
+  },
+  {
+   "bridge": "qtcpq.qlyphs-pqroute-a.testnet",
+   "current": false,
    "quantus_network": "curve test chain (Qlyphs DevNet v3, the Qlyphs app Testnet)",
    "mints": [
     {
@@ -52,7 +157,64 @@
      "signer_key_scheme": "ml-dsa-65"
     }
    ],
-   "refused_attempts": []
+   "refused_attempts": [
+    {
+     "tx": "4xL359kbpyAfXxguHb9jzYccG53B19mZgtLEZnx6MVS9",
+     "refused_with": "two different attesters are required"
+    },
+    {
+     "tx": "D9anRRiCG9g3hNu1HgQTNZgf6yis983hPdx794eaM7Pn",
+     "refused_with": "invalid attestation signature"
+    },
+    {
+     "tx": "9kwnswyT5YWzy346pqKzjngY7uWowMod9zSEdAVvym7f",
+     "refused_with": "invalid attestation signature"
+    },
+    {
+     "tx": "5sdtJJk7BPwF552kpM95DpkCQ5D4aHiouPKTrGJbpWtq",
+     "refused_with": "invalid attestation signature"
+    },
+    {
+     "tx": "8UBqjnWimEdeYoBgM8J6YEThuGNinz2qTJvDHzVMK8P4",
+     "refused_with": "invalid attestation signature"
+    },
+    {
+     "tx": "DVL29eSW4eFEfBahbWcsWopvrr1vVd2yr4HDkJb8BBUD",
+     "refused_with": "deposit already minted"
+    },
+    {
+     "tx": "5SJsP1Q16VNg7VCb32t9TjPu1p3zwRA92YoutYaaNFtA",
+     "refused_with": "deposit already minted"
+    },
+    {
+     "tx": "Bzgi3meFZ5VGfXTYoCaF7RC6c96JVmk6d9EFcrRKLLan",
+     "refused_with": "two different attesters are required"
+    },
+    {
+     "tx": "DMxzWg4L3QfsVvUFPKvV8TvWJiJ3HEiFL5d9vsFRhM5c",
+     "refused_with": "invalid attestation signature"
+    },
+    {
+     "tx": "HedGZqxJKS4A1SFpvnAY3zcrPmri6jhswGiqCS51CETF",
+     "refused_with": "invalid attestation signature"
+    },
+    {
+     "tx": "jQncNEn1PJhnsrkSCpEBKy3Aza1u7wbehoxU1xCNs3F",
+     "refused_with": "invalid attestation signature"
+    },
+    {
+     "tx": "7yFXBfPtUsfZXSmTuEgMRxgwsbTB2m58fA2HsUdsb5Hm",
+     "refused_with": "invalid attestation signature"
+    },
+    {
+     "tx": "9YVn2WwwdNH8FUQhzGG82fi28UeR49D5BdseT33xt16g",
+     "refused_with": "deposit already minted"
+    },
+    {
+     "tx": "9XoQZZZutCo1g2BwpKbrfpnGjMoNgHcBn3r9TgEPxArX",
+     "refused_with": "deposit already minted"
+    }
+   ]
   },
   {
    "bridge": "pqqtc.qlyphs-pqroute-a.testnet",
@@ -282,12 +444,47 @@
    "detail": ""
   },
   {
+   "name": "qtc-pq.qlyphs-pqroute-a.testnet has no access key",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "qtc-pq.qlyphs-pqroute-a.testnet runs the code it was deployed with (= build/bridge-testnet.wasm)",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "qtc-pq.qlyphs-pqroute-a.testnet names the Quantus genesis and the three attester keys",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "mint 2dKio9M96J…: attesters 1 and 2 signed with ML-DSA-87 (verified here)",
+   "ok": true,
+   "detail": "1500000000007 planck to rec761444a377022b07e8.qlyphs-pqroute-c.testnet inside Intents"
+  },
+  {
+   "name": "mint F2G7gtcRxu…: attesters 1 and 2 signed with ML-DSA-87 (verified here)",
+   "ok": true,
+   "detail": "2000000000001 planck to rc0e461f216dc94f2d5c5.qlyphs-pqroute-c.testnet inside Intents"
+  },
+  {
+   "name": "mint 8ct7bqnAhK…: attesters 1 and 2 signed with ML-DSA-87 (verified here)",
+   "ok": true,
+   "detail": "1250000000000 planck to r8e5855d13b35e42631cc.qlyphs-pqroute-c.testnet inside Intents"
+  },
+  {
+   "name": "qtc-pq.qlyphs-pqroute-a.testnet: 7 forged or replayed mint attempts, all refused by the contract",
+   "ok": true,
+   "detail": "two different attesters are required; invalid attestation signature; deposit already minted"
+  },
+  {
    "name": "qtcpq.qlyphs-pqroute-a.testnet has no access key",
    "ok": true,
    "detail": ""
   },
   {
-   "name": "qtcpq.qlyphs-pqroute-a.testnet runs the code it was deployed with (= build/bridge-testnet.wasm)",
+   "name": "qtcpq.qlyphs-pqroute-a.testnet runs the code it was deployed with (earlier version)",
    "ok": true,
    "detail": ""
   },
@@ -305,6 +502,11 @@
    "name": "mint G7Z6MCa2tB…: attesters 1 and 2 signed with ML-DSA-87 (verified here)",
    "ok": true,
    "detail": "2000000000000 planck to r34be050b50ff3f2d17d9.qlyphs-pqroute-c.testnet inside Intents"
+  },
+  {
+   "name": "qtcpq.qlyphs-pqroute-a.testnet: 14 forged or replayed mint attempts, all refused by the contract",
+   "ok": true,
+   "detail": "two different attesters are required; invalid attestation signature; deposit already minted"
   },
   {
    "name": "pqqtc.qlyphs-pqroute-a.testnet has no access key",
@@ -390,6 +592,36 @@
    "name": "withdrawal 9SuKNZhu7U… by r34be050b50ff3…: signed ML-DSA-65, account's only key ML-DSA-65",
    "ok": true,
    "detail": "2000000000000 to WITHDRAW_TO:07f81a9542503d26b9f3029f4aabb9b24186be828c91a59f42e231aebf79864a"
+  },
+  {
+   "name": "withdrawal J6eCtBswd6… by rec761444a3770…: signed ML-DSA-65, account's only key ML-DSA-65",
+   "ok": true,
+   "detail": "1500000000007 to WITHDRAW_TO:07f81a9542503d26b9f3029f4aabb9b24186be828c91a59f42e231aebf79864a"
+  },
+  {
+   "name": "withdrawal Gj2qESr6aK… by rc0e461f216dc9…: signed ML-DSA-65, account's only key ML-DSA-65",
+   "ok": true,
+   "detail": "2000000000001 to WITHDRAW_TO:07f81a9542503d26b9f3029f4aabb9b24186be828c91a59f42e231aebf79864a"
+  },
+  {
+   "name": "withdrawal FK1CD58JfF… by r8e5855d13b35e…: signed ML-DSA-65, account's only key ML-DSA-65",
+   "ok": true,
+   "detail": "1250000000000 to WITHDRAW_TO:07f81a9542503d26b9f3029f4aabb9b24186be828c91a59f42e231aebf79864a"
+  },
+  {
+   "name": "rec761444a3770… opened by the ML-DSA-65 sponsor (create, fund, one ML-DSA-65 key) at block 276846007, before its mint at 276846204",
+   "ok": true,
+   "detail": "8tsJ5esFMv…"
+  },
+  {
+   "name": "rc0e461f216dc9… opened by the ML-DSA-65 sponsor (create, fund, one ML-DSA-65 key) at block 276845668, before its mint at 276845799",
+   "ok": true,
+   "detail": "C9WpGtxbQQ…"
+  },
+  {
+   "name": "r8e5855d13b35e… opened by the ML-DSA-65 sponsor (create, fund, one ML-DSA-65 key) at block 276846689, before its mint at 276847028",
+   "ok": true,
+   "detail": "PXYrUh4dk8…"
   }
  ]
 }

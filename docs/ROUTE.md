@@ -46,7 +46,8 @@ mint unbacked tokens or release the reserve. NEAR validator signatures and conse
 signature over it (context `qlyphs/near-route/v1`, command line), or, from the Qlyphs wallet, a site session
 challenge whose nonce is SHA-256 of these bytes, whose service is the lock and whose account is the depositor.
 
-**Receiver readiness**, checked by the payer before locking and by every attester before signing: the receiver
+**Receiver readiness**, read at one finalized block (all conditions hold together), checked by the payer before
+locking and by every attester before signing: the receiver
 exists; its only access key is a FullAccess key whose handle is exactly the route's; it has no contract, local or
 global; NEAR Intents holds no signing key for it (`public_keys_of` is empty) and authenticates it by its own
 account (`is_auth_by_predecessor_id_enabled`). So nobody, the sponsor included, can hold the account before the
@@ -75,7 +76,12 @@ minted; it records the deposit id before crediting.
 memo: "WITHDRAW_TO:<64 hex Quantus account id>"})`. The verifier calls the bridge's `ft_transfer` to itself,
 which burns and records `{amount, quantus_to, block, account}` under a sequential redemption id. The attesters
 read redemptions at the final block and release each one once, journaled per redemption id: a restart
-replays the journal and never pays twice. Withdrawals under 0.01 QTC are refused by the token itself before
+replays the journal and never pays twice. A release is one operation for the whole committee: attester 1
+proposes and attester 2 approves, and a release begun by one proposer is never begun again by another, so a change
+of signers cannot create a second proposal. Liquidity is checked only before a new transfer. Crash drills on the
+live test chain (SIGKILL after the proposal, and after the approval, reached the chain) each paid exactly once
+(`evidence/route-crash-drills.json`). The attesters sign a deposit at 8 confirmations under the demo policy, which
+is not Quantus's default finality (100 blocks). Withdrawals under 0.01 QTC are refused by the token itself before
 anything changes (direct redeem and WITHDRAW_TO alike; through Intents the verifier keeps the balance); a release that keeps failing is set aside
 after five attempts with its error, for a person to look at.
 

@@ -1,6 +1,6 @@
 # Qlyphs: a post-quantum route for NEAR Intents
 
-**0 classical keys in the authorization path · 49/49 on-chain checks you can rerun · 7/7 live attacks refused.**
+**0 classical keys in the authorization path · 52/52 on-chain checks you can rerun · 7/7 live attacks refused.**
 
 **QTC enters and leaves NEAR Intents with no classical key in the authorization path.** QTC is the coin of
 Quantus, a chain that signs every transaction with ML-DSA. Today the route that brings it to NEAR mints on the
@@ -26,7 +26,7 @@ npm ci
 node scripts/verify-route.mjs
 ```
 
-It reads NEAR testnet and checks 49 things. Among them:
+It reads NEAR testnet and checks 52 things. Among them:
 - the bridge and the Intents verifier have **no access key** and run the published code;
 - the relayer's and the sponsor's only key is ML-DSA-65;
 - every forged or replayed mint ever sent to a bridge was refused;

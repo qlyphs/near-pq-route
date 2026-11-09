@@ -99,7 +99,15 @@ transfer is sent only when the wallet said nothing was submitted, or when the pe
 to continue. A payment already under way finishes from those saved terms even after the request expired or its
 service went away. "Inside NEAR Intents" is shown only when the mint transaction, read from NEAR by the page,
 shows the verifier's ft_on_transfer returning 0 unused and the bridge keeping the whole amount; a refusal shows the
-QTC on the recipient's account instead; anything else is reported as pending. Withdrawals under 0.01 QTC are refused by the token itself before
+QTC on the recipient's account instead; anything else is reported as pending. The page accepts a mint only if it
+is the transaction the route Worker's pointer names, a `mint` on the saved bridge whose attestation names this
+payment's deposit, recipient, amount, network, genesis, mode and receipt, and reads delivery from that mint's own
+child receipts.
+
+Operator task: if a mint's NEAR response is lost before the service saved its hash, the deposit shows consumed and
+the payer's page stays "checking where the QTC was delivered" (nothing is reminted; the recipient's restore still
+finds the funds). `npm run near:backfill-mint -- <deposit id>` (service stopped) finds the relayer's successful mint
+of that deposit to that recipient, publishes its pointer and records it. Not yet exercised on a live lost response. Withdrawals under 0.01 QTC are refused by the token itself before
 anything changes (direct redeem and WITHDRAW_TO alike; through Intents the verifier keeps the balance); a release that keeps failing is set aside
 after five attempts with its error, for a person to look at.
 

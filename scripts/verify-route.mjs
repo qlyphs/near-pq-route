@@ -8,7 +8,11 @@ import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { ml_dsa87 } from '@noble/post-quantum/ml-dsa.js';
 
-const RPC = 'https://archival-rpc.testnet.fastnear.com';
+// Two public archival endpoints (old transactions need an archival node); NEAR_RPC=<url> puts yours first. A rate limit
+// or a network error moves to the next one.
+const RPCS = [...(process.env.NEAR_RPC ? [process.env.NEAR_RPC] : []), 'https://archival-rpc.testnet.fastnear.com', 'https://archival-rpc.testnet.near.org'];
+let rpcAt = 0;
+const RPC = RPCS[0];
 const INDEX = 'https://api-testnet.nearblocks.io/v3'; // used only to list transaction hashes; everything else is read from RPC
 const B58 = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
 const b58 = (b) => { let n = BigInt('0x' + (Buffer.from(b).toString('hex') || '0')); let s = ''; while (n > 0n) { s = B58[Number(n % 58n)] + s; n /= 58n; } for (const x of b) { if (x) break; s = '1' + s; } return s; };
@@ -17,11 +21,13 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 async function rpc(method, params) {
   for (let i = 0; i < 8; i++) {
     // A dropped connection or a timeout is retried like an RPC error; only eight failures in a row stop the run.
-    const j = await fetch(RPC, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }) })
+    const j = await fetch(RPCS[rpcAt % RPCS.length], { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }) })
       .then((r) => r.json()).catch((e) => ({ error: { network: String(e?.cause?.code ?? e?.message ?? e) } }));
     if (j.result) return j.result;
     if (i === 7) throw new Error(`${method}: ${JSON.stringify(j.error).slice(0, 200)}`);
-    await sleep(/429|Rate limit/.test(JSON.stringify(j.error ?? '')) ? 4000 * (i + 1) : 1000);
+    const limited = /429|Rate limit/.test(JSON.stringify(j.error ?? '')), down = !!j.error?.network;
+    if (limited || down) rpcAt++;
+    await sleep(limited ? 2000 * (i + 1) : 1000);
   }
 }
 const view = async (account, method, args = {}) => JSON.parse(Buffer.from((await rpc('query', { request_type: 'call_function', finality: 'final', account_id: account, method_name: method, args_base64: Buffer.from(JSON.stringify(args)).toString('base64') })).result).toString());

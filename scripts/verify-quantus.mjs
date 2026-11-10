@@ -22,7 +22,7 @@ import { firstDuplicate, lockDeposit, lockRelease, transferCall } from './lib/qu
 
 const QUANTUS_RPC = 'https://testnet-rpc.qlyphs.com';
 const INDEXER = 'https://testnet.qlyphs.com/api';
-const NEAR_RPC = 'https://rpc.testnet.fastnear.com';
+const NEAR_RPCS = [...(process.env.NEAR_RPC ? [process.env.NEAR_RPC] : []), 'https://rpc.testnet.fastnear.com', 'https://rpc.testnet.near.org'];
 const lockDeployment = JSON.parse(readFileSync('deployments/quantus-lock-curve.json', 'utf8'));
 const index = JSON.parse(readFileSync('evidence/route-quantus-index.json', 'utf8'));
 const onchain = JSON.parse(readFileSync('evidence/route-onchain.json', 'utf8'));
@@ -34,13 +34,16 @@ const check = (name, ok, detail = '') => { results.push({ name, ok, detail }); i
 const hex = (b) => Buffer.from(b).toString('hex');
 const unhex = (s) => Uint8Array.from(Buffer.from(s.replace(/^0x/, ''), 'hex'));
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-async function post(url, method, params) {
+async function post(urls, method, params) {
+  // A list of endpoints (NEAR) is rotated on any failure, rate limits included; Quantus has one endpoint.
+  const list = Array.isArray(urls) ? urls : [urls];
   for (let i = 0; ; i++) {
+    const url = list[i % list.length];
     try {
       const j = await (await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }) })).json();
       if (j.error) throw new Error(JSON.stringify(j.error).slice(0, 200));
       return j.result;
-    } catch (e) { if (i >= 4) throw new Error(`${url} ${method}: ${e.message}`); await sleep(2000 * (i + 1)); }
+    } catch (e) { if (i >= 5) throw new Error(`${url} ${method}: ${e.message}`); await sleep(2000 * (i + 1)); }
   }
 }
 
@@ -109,10 +112,10 @@ for (const m of bridge.mints) {
 }
 
 // 3. Each redemption the bridge records has a distinct successful release, read at one NEAR block.
-const nearState = await post(NEAR_RPC, 'query', { request_type: 'call_function', finality: 'final', account_id: bridge.bridge, method_name: 'state', args_base64: Buffer.from('{}').toString('base64') });
+const nearState = await post(NEAR_RPCS, 'query', { request_type: 'call_function', finality: 'final', account_id: bridge.bridge, method_name: 'state', args_base64: Buffer.from('{}').toString('base64') });
 const nearBlock = nearState.block_hash, nearHeight = nearState.block_height;
 const state = JSON.parse(Buffer.from(nearState.result).toString());
-const nearView = async (method, args) => JSON.parse(Buffer.from((await post(NEAR_RPC, 'query', { request_type: 'call_function', block_id: nearBlock, account_id: bridge.bridge, method_name: method, args_base64: Buffer.from(JSON.stringify(args)).toString('base64') })).result).toString());
+const nearView = async (method, args) => JSON.parse(Buffer.from((await post(NEAR_RPCS, 'query', { request_type: 'call_function', block_id: nearBlock, account_id: bridge.bridge, method_name: method, args_base64: Buffer.from(JSON.stringify(args)).toString('base64') })).result).toString());
 const count = Number(state.redemptions);
 const byId = new Map(index.releases.map((r) => [r.redemption, r]));
 let released = 0n;

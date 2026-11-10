@@ -9,3 +9,26 @@ deployments/superseded-guardian-r1.json:generic-api-key:41
 evidence/guardian-sandbox.json:generic-api-key:4
 evidence/guardian-sandbox.json:generic-api-key:5
 evidence/token-sandbox.json:generic-api-key:4
+# Public key hashes, code hashes and NEAR transaction hashes in deployment records (history), not secrets
+8e7c2b6e978ab2d4681b12a738a1622996e84c9a:deployments/superseded-route-curve-r2.json:generic-api-key:24
+8e7c2b6e978ab2d4681b12a738a1622996e84c9a:deployments/superseded-route-curve-r2.json:generic-api-key:28
+8e7c2b6e978ab2d4681b12a738a1622996e84c9a:deployments/superseded-route-curve-r2.json:generic-api-key:32
+e1c973d8645634495f1051a0eb9c66f6c8119e8f:deployments/superseded-route-curve-r1.json:generic-api-key:24
+e1c973d8645634495f1051a0eb9c66f6c8119e8f:deployments/superseded-route-curve-r1.json:generic-api-key:28
+e1c973d8645634495f1051a0eb9c66f6c8119e8f:deployments/superseded-route-curve-r1.json:generic-api-key:32
+5437032fc2209d6c5f2a2f462e03b8604cbc5bbe:deployments/route-curve-testnet.json:generic-api-key:24
+5437032fc2209d6c5f2a2f462e03b8604cbc5bbe:deployments/route-curve-testnet.json:generic-api-key:28
+5437032fc2209d6c5f2a2f462e03b8604cbc5bbe:deployments/route-curve-testnet.json:generic-api-key:32
+dd2db896c8e8f7aac12cd2288799c09447e7595f:deployments/route-testnet.json:generic-api-key:17
+dd2db896c8e8f7aac12cd2288799c09447e7595f:deployments/route-testnet.json:generic-api-key:21
+dd2db896c8e8f7aac12cd2288799c09447e7595f:deployments/route-testnet.json:generic-api-key:25
+3adc9df921205863536871d9e72fb93843a17431:deployments/route-attesters.json:generic-api-key:6
+3adc9df921205863536871d9e72fb93843a17431:deployments/route-attesters.json:generic-api-key:12
+3adc9df921205863536871d9e72fb93843a17431:deployments/route-attesters.json:generic-api-key:18
+7d004d336907fed868ca6ada055d476f63df018e:evidence/token-sandbox.json:generic-api-key:3
+f1ec85862c7bc43e9909cc31360648370e63ba1e:evidence/token-sandbox.json:generic-api-key:3
+3ad28684cd18dd17a66f7e264ba3af10731eeb22:deployments/guardian-qlyphs-guardian.json:generic-api-key:126
+3ad28684cd18dd17a66f7e264ba3af10731eeb22:deployments/guardian-qlyphs-guardian.json:generic-api-key:145
+83ec663e83469700d4c23eadf4c97e9a73d2e0fd:deployments/guardian-testnet.json:generic-api-key:12
+83ec663e83469700d4c23eadf4c97e9a73d2e0fd:deployments/guardian-testnet.json:generic-api-key:18
+83ec663e83469700d4c23eadf4c97e9a73d2e0fd:deployments/guardian-testnet.json:generic-api-key:41

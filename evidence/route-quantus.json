@@ -1,0 +1,418 @@
+{
+ "date": "2026-11-10T12:41:54.671Z",
+ "quantus_rpc": "https://testnet-rpc.qlyphs.com",
+ "indexer": "https://testnet.qlyphs.com/api",
+ "bridge": "qtc-pq.qlyphs-pqroute-a.testnet",
+ "finalized": 130148,
+ "locks": [
+  {
+   "deposit_id": "47618b16a2ab8a38d94e28f06c38097bf099be11aea7d85295186226a32e5225",
+   "tx": "0x6982d95113dfe615efe374df55ec92b872b04917ffc3a8b6f23eff4483e65f2d",
+   "block": 120989,
+   "extrinsic": 1
+  },
+  {
+   "deposit_id": "d39c711aed576dd4ee4f9a534b71764598cea89f4120cd375991fc8cc66ec282",
+   "tx": "0x7b63b45aeaa1c87c65a97f114692314467512c6029673157c9ac9a17f9a4b396",
+   "block": 120973,
+   "extrinsic": 1
+  },
+  {
+   "deposit_id": "7bc5a967701769b92dfb9df67103d056774fc7a6da6dfb79fb701bf493b6eb33",
+   "tx": "0x78977915490caa5b6e304d9315277e4a1cc49fabc32bcd9adf6211b55bd1995f",
+   "block": 121022,
+   "extrinsic": 1
+  },
+  {
+   "deposit_id": "6e0f5612eb3d64bd0e53e6e994b7ca0d856b5350ad1e38f9c5b6c73c6cffbe54",
+   "tx": "0x558babc3b6a6f0f525b0fc10830e33ce75f34fe61cab40d949560b320abfa07f",
+   "block": 121161,
+   "extrinsic": 1
+  },
+  {
+   "deposit_id": "acb4569a950e8cccd2c9eb5665bd795f0ddbbe68790f6ad92fb82293333d54e9",
+   "tx": "0x525a6d2b1e56f2439a70e689274f1a4342ec93439a1fc2c76ac725689c1fadea",
+   "block": 121143,
+   "extrinsic": 1
+  },
+  {
+   "deposit_id": "83c3f4e4cac0d68542d3c1355525079d9d2c91b1aec6fcbdafa036980ddd6610",
+   "tx": "0x2cf9008314cc399688829dcdcff01f55fcf668e4b9ca851bbb0a71ab5f76ac37",
+   "block": 121127,
+   "extrinsic": 1
+  },
+  {
+   "deposit_id": "3735262503bf3b89a8dc3b5eb07d9655e1d46504b7f28a2070dcda692f67a8b4",
+   "tx": "0xe60555e03b0a99583d5be80d5389b01609c6eff2d24f27c36d58bcaffc0868c5",
+   "block": 121272,
+   "extrinsic": 1
+  },
+  {
+   "deposit_id": "3ab38a338c9b8fc24b2d04ab72a756b5f6fbd706bcaf462c1b30a376f9783d87",
+   "tx": "0x5f5d802430221d184ec1352ba1ae8649aca8592325934d8de72d7a95bff15c98",
+   "block": 121498,
+   "extrinsic": 1
+  },
+  {
+   "deposit_id": "2245841d9c53dc65490157ccf2105af09dc39832df5ee0a6ea678540b210732a",
+   "tx": "0xf6c6e3d7b1dfd14e3ad44425925b065c4927f98d2bd6b4e53a75e11f61dbf64f",
+   "block": 122686,
+   "extrinsic": 1
+  },
+  {
+   "deposit_id": "21c4769a4c75d7fca3b97b98cb7825ed9803db4aae19d0fbb46992fcc18ca263",
+   "tx": "0xf2cc6c0436e6a44eae6209f035b909144f602a299e1da66954c0e82e4511b9fd",
+   "block": 121659,
+   "extrinsic": 1
+  },
+  {
+   "deposit_id": "feecf0d736f66e1d80635f7831faffd1d1d91302482cddab4789077dcb514885",
+   "tx": "0xe19514e8b7ef87f892f15d176337e419279297edc4ba2aec9534d473c27febaf",
+   "block": 122798,
+   "extrinsic": 1
+  },
+  {
+   "deposit_id": "46ad2eccd1c4e6ad4e328e85c3a103a55054c3c44e6bdc795a42b5c90ea491f9",
+   "tx": "0xfddb2c82b276705e945a47c9865ab2b325f17e3c01a27694fc95d3f25c312b91",
+   "block": 129685,
+   "extrinsic": 1
+  },
+  {
+   "deposit_id": "a9e3868e92f45b7067a5ba5bc34440483b336f9ab114d013a8e29fb607cc4d29",
+   "tx": "0x2c682864e75b6c4ab3f2dc8dbb3fd6609a9546651ac0decfa31ea0bcb9ffb8e4",
+   "block": 129671,
+   "extrinsic": 1
+  },
+  {
+   "deposit_id": "7388ddc26a100b9e76e29fe986947cda9fa0b25beacbdd66877c4e3fc284e90d",
+   "tx": "0x282789a02a0e9d169a8072a834ca9235ce9534254ba34ce65000586924b8fee5",
+   "block": 129263,
+   "extrinsic": 1
+  },
+  {
+   "deposit_id": "f1c443274e3ae587884e86e9580ab1b71e64b2d6552555e6d45bd9f16544a7cd",
+   "tx": "0x6426ad84ad1c0cfc33813449f8c2562a61c0774db871fbe2560ec134fa7d152e",
+   "block": 126293,
+   "extrinsic": 1
+  },
+  {
+   "deposit_id": "380d99497083d596d7eec2db7454c9f6baf72b8be88390827309a15d92f29a90",
+   "tx": "0x8801355dc8cb5a2c23f27cf6b60256d3b53691e103242fd525e325cd89b16118",
+   "block": 125132,
+   "extrinsic": 1
+  },
+  {
+   "deposit_id": "4ad3e3da272cdf64bf442d920a7b4d1a728429bed0a27b54d3f8333b2449bf73",
+   "tx": "0x6ec7465aa990e37fbce98312acd49ed5816c397ef66eb56e1949516d30ed09fa",
+   "block": 125021,
+   "extrinsic": 1
+  },
+  {
+   "deposit_id": "8ff50bb751a18b00314fd300c2b1d2a057602ecb75e4bc77ec6ac664124d73e8",
+   "tx": "0x07c655406f28a070293dba1b49cd16fb9c294c39330978912eb880f6722e17e0",
+   "block": 124989,
+   "extrinsic": 1
+  },
+  {
+   "deposit_id": "e56cc36cc73135aa8ab629e4d3ec23c83fb7ae52c64cb99b290abe9133534c51",
+   "tx": "0x4aa76ed1359408b172e84b5f72869c29175f3c81cba86d32da726760aaf8ac8e",
+   "block": 124419,
+   "extrinsic": 1
+  },
+  {
+   "deposit_id": "fd45b0b338f9227c7003f389772298babfcbbf576f84003b07c816bd26f40c12",
+   "tx": "0x1c7d5fb5ac0528cf20532af71e543f0de1971bc3cd15b0bccd820dd93f217620",
+   "block": 124021,
+   "extrinsic": 1
+  },
+  {
+   "deposit_id": "8b072a6b1cc4a4d8a0f25722a0fe180a33c20bff94878c52b197a8de1f5a0358",
+   "tx": "0x44c31afd1352771c43ea98cf580d1693f3f7044a9793867b27ed08cc981dfec0",
+   "block": 124019,
+   "extrinsic": 1
+  },
+  {
+   "deposit_id": "39ff08dbc055306a4fcd41019ea6a3343c3cdf0b68e72e3bb9f8444a1021193c",
+   "tx": "0xe51a05352eb4b1f061ca4f5a845386f6c0505715531a5c5947e159999e439e8c",
+   "block": 123950,
+   "extrinsic": 1
+  },
+  {
+   "deposit_id": "9f13d832a17f76101793de858c26de6f6e7ef28c963998fa3fc04080810f3978",
+   "tx": "0xe8241502beb1178bcd50716a263832d907b0f9a38386b2988e7ac1252f074d5a",
+   "block": 123947,
+   "extrinsic": 1
+  },
+  {
+   "deposit_id": "46729ddc875323a91b794febac3f34a4d6f48238880ec0e461a27ef6b283aea0",
+   "tx": "0xdbe7aae6d8de6fe08e5b8eaf2b6bc2187afae98d126ae91a4e680b9e27fc297f",
+   "block": 123899,
+   "extrinsic": 1
+  },
+  {
+   "deposit_id": "e954cdbe3b4c9c136aded5b4942ca4e6b1f3763af88dbd597376bcc9adbb6976",
+   "tx": "0xf4660409e0e5237f7594abcbec3857f47d15e6ba9e9fc6c1821fe17fc6793920",
+   "block": 123826,
+   "extrinsic": 1
+  },
+  {
+   "deposit_id": "c4dd8ab4c28daee55f437de96a0fa8d8fc9093c6afa5dd839876cd797d611c94",
+   "tx": "0x4ab776968aebaeb73ffe891330216ddcfb2955bb2042b67a973e38632f4b9ad3",
+   "block": 123122,
+   "extrinsic": 1
+  },
+  {
+   "deposit_id": "ec0d4bc3bff432533a31cb75818de14ef67b595694fd47114119713c9128fee2",
+   "tx": "0x9570e246910dddfbc98a830ee53fc93c35019f02f604184443091404895428c6",
+   "block": 123076,
+   "extrinsic": 1
+  }
+ ],
+ "results": [
+  {
+   "name": "the Quantus RPC serves the test chain the lock lives on",
+   "ok": true,
+   "detail": "0x06fb13f7086158562fac1b684da75feb627261a277b63e44043f2997d0b24693"
+  },
+  {
+   "name": "mint 2dKio9M96J… is backed by lock 0x6982d95113… (block 120989 #1)",
+   "ok": true,
+   "detail": "deposit id recomputed from the block hash; call transfer_keep_alive(lock, 1500000000007); finalized; indexer: succeeded"
+  },
+  {
+   "name": "mint F2G7gtcRxu… is backed by lock 0x7b63b45aea… (block 120973 #1)",
+   "ok": true,
+   "detail": "deposit id recomputed from the block hash; call transfer_keep_alive(lock, 2000000000001); finalized; indexer: succeeded"
+  },
+  {
+   "name": "mint 8ct7bqnAhK… is backed by lock 0x7897791549… (block 121022 #1)",
+   "ok": true,
+   "detail": "deposit id recomputed from the block hash; call transfer_keep_alive(lock, 1250000000000); finalized; indexer: succeeded"
+  },
+  {
+   "name": "mint 6A8sTaNKSW… is backed by lock 0x558babc3b6… (block 121161 #1)",
+   "ok": true,
+   "detail": "deposit id recomputed from the block hash; call transfer_keep_alive(lock, 1100000000009); finalized; indexer: succeeded"
+  },
+  {
+   "name": "mint A4LG9Sxicc… is backed by lock 0x525a6d2b1e… (block 121143 #1)",
+   "ok": true,
+   "detail": "deposit id recomputed from the block hash; call transfer_keep_alive(lock, 1100000000009); finalized; indexer: succeeded"
+  },
+  {
+   "name": "mint Ajs2tsy1Jd… is backed by lock 0x2cf9008314… (block 121127 #1)",
+   "ok": true,
+   "detail": "deposit id recomputed from the block hash; call transfer_keep_alive(lock, 1750000000003); finalized; indexer: succeeded"
+  },
+  {
+   "name": "mint 6qYqnDtSQk… is backed by lock 0xe60555e03b… (block 121272 #1)",
+   "ok": true,
+   "detail": "deposit id recomputed from the block hash; call transfer_keep_alive(lock, 1300000000013); finalized; indexer: succeeded"
+  },
+  {
+   "name": "mint Dvr73b9Uw3… is backed by lock 0x5f5d802430… (block 121498 #1)",
+   "ok": true,
+   "detail": "deposit id recomputed from the block hash; call transfer_keep_alive(lock, 1000000000000); finalized; indexer: succeeded"
+  },
+  {
+   "name": "mint 7J5AAPJ4C8… is backed by lock 0xf6c6e3d7b1… (block 122686 #1)",
+   "ok": true,
+   "detail": "deposit id recomputed from the block hash; call transfer_keep_alive(lock, 1000000000000); finalized; indexer: succeeded"
+  },
+  {
+   "name": "mint GGL9NkDZEF… is backed by lock 0xf2cc6c0436… (block 121659 #1)",
+   "ok": true,
+   "detail": "deposit id recomputed from the block hash; call transfer_keep_alive(lock, 1000000000000); finalized; indexer: succeeded"
+  },
+  {
+   "name": "mint 8EfxFCZEMo… is backed by lock 0xe19514e8b7… (block 122798 #1)",
+   "ok": true,
+   "detail": "deposit id recomputed from the block hash; call transfer_keep_alive(lock, 1000000000000); finalized; indexer: succeeded"
+  },
+  {
+   "name": "mint CA47JA5EqX… is backed by lock 0xfddb2c82b2… (block 129685 #1)",
+   "ok": true,
+   "detail": "deposit id recomputed from the block hash; call transfer_keep_alive(lock, 100000000000); finalized; indexer: succeeded"
+  },
+  {
+   "name": "mint FY7L5G6sJX… is backed by lock 0x2c682864e7… (block 129671 #1)",
+   "ok": true,
+   "detail": "deposit id recomputed from the block hash; call transfer_keep_alive(lock, 100000000000); finalized; indexer: succeeded"
+  },
+  {
+   "name": "mint 9CeUV65puU… is backed by lock 0x282789a02a… (block 129263 #1)",
+   "ok": true,
+   "detail": "deposit id recomputed from the block hash; call transfer_keep_alive(lock, 1000000000000); finalized; indexer: succeeded"
+  },
+  {
+   "name": "mint HgUJXgW9e1… is backed by lock 0x6426ad84ad… (block 126293 #1)",
+   "ok": true,
+   "detail": "deposit id recomputed from the block hash; call transfer_keep_alive(lock, 2000000000000); finalized; indexer: succeeded"
+  },
+  {
+   "name": "mint GwT13cLQBM… is backed by lock 0x8801355dc8… (block 125132 #1)",
+   "ok": true,
+   "detail": "deposit id recomputed from the block hash; call transfer_keep_alive(lock, 1000000000000); finalized; indexer: succeeded"
+  },
+  {
+   "name": "mint EzWF4mJGx8… is backed by lock 0x6ec7465aa9… (block 125021 #1)",
+   "ok": true,
+   "detail": "deposit id recomputed from the block hash; call transfer_keep_alive(lock, 1000000000000); finalized; indexer: succeeded"
+  },
+  {
+   "name": "mint Dh52m9eA9x… is backed by lock 0x07c655406f… (block 124989 #1)",
+   "ok": true,
+   "detail": "deposit id recomputed from the block hash; call transfer_keep_alive(lock, 1000000000000); finalized; indexer: succeeded"
+  },
+  {
+   "name": "mint HdTT5cL2ar… is backed by lock 0x4aa76ed135… (block 124419 #1)",
+   "ok": true,
+   "detail": "deposit id recomputed from the block hash; call transfer_keep_alive(lock, 5000000000000); finalized; indexer: succeeded"
+  },
+  {
+   "name": "mint GVhNhugGgB… is backed by lock 0x1c7d5fb5ac… (block 124021 #1)",
+   "ok": true,
+   "detail": "deposit id recomputed from the block hash; call transfer_keep_alive(lock, 1000000000000); finalized; indexer: succeeded"
+  },
+  {
+   "name": "mint ECVJemC2k9… is backed by lock 0x44c31afd13… (block 124019 #1)",
+   "ok": true,
+   "detail": "deposit id recomputed from the block hash; call transfer_keep_alive(lock, 5000000000000); finalized; indexer: succeeded"
+  },
+  {
+   "name": "mint HYZcKxGCFt… is backed by lock 0xe51a05352e… (block 123950 #1)",
+   "ok": true,
+   "detail": "deposit id recomputed from the block hash; call transfer_keep_alive(lock, 1000000000000); finalized; indexer: succeeded"
+  },
+  {
+   "name": "mint JCPCiYNADR… is backed by lock 0xe8241502be… (block 123947 #1)",
+   "ok": true,
+   "detail": "deposit id recomputed from the block hash; call transfer_keep_alive(lock, 10000000000000); finalized; indexer: succeeded"
+  },
+  {
+   "name": "mint 7q3YbH6ndC… is backed by lock 0xdbe7aae6d8… (block 123899 #1)",
+   "ok": true,
+   "detail": "deposit id recomputed from the block hash; call transfer_keep_alive(lock, 1000000000000); finalized; indexer: succeeded"
+  },
+  {
+   "name": "mint 2u4uLpGSVk… is backed by lock 0xf4660409e0… (block 123826 #1)",
+   "ok": true,
+   "detail": "deposit id recomputed from the block hash; call transfer_keep_alive(lock, 1000000000000); finalized; indexer: succeeded"
+  },
+  {
+   "name": "mint 4Wx2AfNhdn… is backed by lock 0x4ab776968a… (block 123122 #1)",
+   "ok": true,
+   "detail": "deposit id recomputed from the block hash; call transfer_keep_alive(lock, 1000000000000); finalized; indexer: succeeded"
+  },
+  {
+   "name": "mint 4W7z6KNjSU… is backed by lock 0x9570e24691… (block 123076 #1)",
+   "ok": true,
+   "detail": "deposit id recomputed from the block hash; call transfer_keep_alive(lock, 1000000000000); finalized; indexer: succeeded"
+  },
+  {
+   "name": "redemption 0 (2000000000001 planck, withdrawn through intents.qlyphs-pqroute-b.testnet) released by 0x370045ac32…",
+   "ok": true,
+   "detail": "block 120987 #1; multisig of the lock pays 07f81a9542… exactly the redeemed amount; indexer: succeeded"
+  },
+  {
+   "name": "redemption 1 (1500000000007 planck, withdrawn through intents.qlyphs-pqroute-b.testnet) released by 0xabd2419c9e…",
+   "ok": true,
+   "detail": "block 121003 #1; multisig of the lock pays 07f81a9542… exactly the redeemed amount; indexer: succeeded"
+  },
+  {
+   "name": "redemption 2 (1250000000000 planck, withdrawn through intents.qlyphs-pqroute-b.testnet) released by 0xa5f349db4d…",
+   "ok": true,
+   "detail": "block 121038 #1; multisig of the lock pays 07f81a9542… exactly the redeemed amount; indexer: succeeded"
+  },
+  {
+   "name": "redemption 3 (1750000000003 planck, withdrawn through intents.qlyphs-pqroute-b.testnet) released by 0xcd245887d7…",
+   "ok": true,
+   "detail": "block 121138 #1; multisig of the lock pays 07f81a9542… exactly the redeemed amount; indexer: succeeded"
+  },
+  {
+   "name": "redemption 4 (1100000000009 planck, withdrawn through intents.qlyphs-pqroute-b.testnet) released by 0x83e1ff91b3…",
+   "ok": true,
+   "detail": "block 121154 #1; multisig of the lock pays 07f81a9542… exactly the redeemed amount; indexer: succeeded"
+  },
+  {
+   "name": "redemption 5 (1100000000009 planck, withdrawn through intents.qlyphs-pqroute-b.testnet) released by 0x84f05d159c…",
+   "ok": true,
+   "detail": "block 121172 #1; multisig of the lock pays 07f81a9542… exactly the redeemed amount; indexer: succeeded"
+  },
+  {
+   "name": "redemption 6 (1300000000013 planck, withdrawn through intents.qlyphs-pqroute-b.testnet) released by 0x7ea7a1dfa5…",
+   "ok": true,
+   "detail": "block 121287 #1; multisig of the lock pays 07f81a9542… exactly the redeemed amount; indexer: succeeded"
+  },
+  {
+   "name": "redemption 7 (1000000000000 planck, withdrawn through intents.qlyphs-pqroute-b.testnet) released by 0x622f9ab016…",
+   "ok": true,
+   "detail": "block 121624 #1; multisig of the lock pays f54cbe340b… exactly the redeemed amount; indexer: succeeded"
+  },
+  {
+   "name": "redemption 8 (1000000000000 planck, withdrawn through intents.qlyphs-pqroute-b.testnet) released by 0x8650840288…",
+   "ok": true,
+   "detail": "block 122712 #1; multisig of the lock pays a1417c3341… exactly the redeemed amount; indexer: succeeded"
+  },
+  {
+   "name": "redemption 9 (1000000000000 planck, withdrawn through intents.qlyphs-pqroute-b.testnet) released by 0x6afa6e1ac6…",
+   "ok": true,
+   "detail": "block 122825 #1; multisig of the lock pays a1417c3341… exactly the redeemed amount; indexer: succeeded"
+  },
+  {
+   "name": "redemption 10 (1000000000000 planck, withdrawn through intents.qlyphs-pqroute-b.testnet) released by 0xf18ac7cad4…",
+   "ok": true,
+   "detail": "block 123136 #1; multisig of the lock pays a1417c3341… exactly the redeemed amount; indexer: succeeded"
+  },
+  {
+   "name": "redemption 11 (1000000000000 planck, withdrawn through intents.qlyphs-pqroute-b.testnet) released by 0x487c8fdbfe…",
+   "ok": true,
+   "detail": "block 123916 #1; multisig of the lock pays a1417c3341… exactly the redeemed amount; indexer: succeeded"
+  },
+  {
+   "name": "redemption 12 (10000000000000 planck, withdrawn through intents.qlyphs-pqroute-b.testnet) released by 0xabee243eeb…",
+   "ok": true,
+   "detail": "block 123965 #1; multisig of the lock pays a1417c3341… exactly the redeemed amount; indexer: succeeded"
+  },
+  {
+   "name": "redemption 13 (1000000000000 planck, withdrawn through intents.qlyphs-pqroute-b.testnet) released by 0x93d6571d86…",
+   "ok": true,
+   "detail": "block 123977 #1; multisig of the lock pays a1417c3341… exactly the redeemed amount; indexer: succeeded"
+  },
+  {
+   "name": "redemption 14 (5000000000000 planck, withdrawn through intents.qlyphs-pqroute-b.testnet) released by 0xba932edd47…",
+   "ok": true,
+   "detail": "block 124973 #1; multisig of the lock pays a1417c3341… exactly the redeemed amount; indexer: succeeded"
+  },
+  {
+   "name": "redemption 15 (1000000000000 planck, withdrawn through intents.qlyphs-pqroute-b.testnet) released by 0x65ed62d30f…",
+   "ok": true,
+   "detail": "block 126278 #1; multisig of the lock pays a1417c3341… exactly the redeemed amount; indexer: succeeded"
+  },
+  {
+   "name": "redemption 16 (1000000000000 planck, withdrawn through intents.qlyphs-pqroute-b.testnet) released by 0x75576f3974…",
+   "ok": true,
+   "detail": "block 126286 #1; multisig of the lock pays a1417c3341… exactly the redeemed amount; indexer: succeeded"
+  },
+  {
+   "name": "redemption 17 (2000000000000 planck, withdrawn through intents.qlyphs-pqroute-b.testnet) released by 0x7f5ae48f0c…",
+   "ok": true,
+   "detail": "block 126579 #1; multisig of the lock pays a1417c3341… exactly the redeemed amount; indexer: succeeded"
+  },
+  {
+   "name": "redemption 18 (100000000000 planck, withdrawn through intents.qlyphs-pqroute-b.testnet) released by 0x670c6cbfc8…",
+   "ok": true,
+   "detail": "block 129701 #1; multisig of the lock pays edad0c07b9… exactly the redeemed amount; indexer: succeeded"
+  },
+  {
+   "name": "every mint and redemption of the bridge is accounted for",
+   "ok": true,
+   "detail": "27 mints (46200000000042 planck) − 19 redemptions (35100000000042 planck) = 11100000000000; bridge supply 11100000000000"
+  },
+  {
+   "name": "QTC on NEAR is fully backed by QTC in the lock",
+   "ok": true,
+   "detail": "bridge supply 11100000000000 planck; lock free balance 13100000000000 planck (indexer); minted 46200000000042, released 35100000000042"
+  }
+ ]
+}

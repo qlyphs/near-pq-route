@@ -1,57 +1,71 @@
-# Qlyphs: a post-quantum route for NEAR Intents
+# Qlyphs: a post-quantum route into NEAR Intents
 
-**0 classical keys in the authorization path · 60/60 on-chain checks you can rerun · 7/7 live attacks refused.**
+**QTC is signed with ML-DSA on Quantus. This route brings it into NEAR Intents and back with an ML-DSA signature
+at every authorization step, and you can check every one of them yourself.**
 
-**A post-quantum chain's coin enters and leaves NEAR Intents with no classical key in the authorization path.**
-The route is built for any chain whose accounts sign with ML-DSA and support a native ML-DSA multisig; this
-repository runs it with QTC, the coin of Quantus. Today the route that brings QTC to NEAR mints on the word of
-one ed25519 key. On this route, every authorization is post-quantum:
+Today the token that represents QTC on NEAR mainnet is minted by an account whose only key is one ed25519 key
+([snapshot](evidence/bridge-mng-snapshot.json)). On this route, nothing that authorizes a mint, a withdrawal or
+a release is classical:
 
 | Step | Who authorizes | Scheme |
 |---|---|---|
-| Lock QTC on Quantus | the payer's Qlyphs wallet | ML-DSA-87 |
-| Choose the destination on NEAR | the same key, signing the route | ML-DSA-87 |
-| Mint on NEAR, straight into NEAR Intents | 2 of 3 attesters, verified on-chain by a keyless contract | ML-DSA-87 |
-| Withdraw from NEAR Intents to Quantus | the recipient's NEAR account, whose only key is native | ML-DSA-65 |
-| Release from the Quantus lock | 2 of 3 attesters, enforced by Quantus's native multisig | ML-DSA-87 |
+| 1. Lock QTC on Quantus | the sender's Qlyphs wallet, into a native 2-of-3 multisig | ML-DSA-87 |
+| Choose the destination on NEAR | the same wallet key, signing the exact route | ML-DSA-87 |
+| 2. Mint on NEAR, straight into NEAR Intents | 2 of 3 attesters, verified on-chain by a contract that has no key | ML-DSA-87 |
+| Hold and move inside NEAR Intents | a NEAR account whose only key is native | ML-DSA-65 |
+| 3. Withdraw to Quantus | that account (`ft_withdraw`, `WITHDRAW_TO:`) | ML-DSA-65 |
+| 4. Release from the Quantus lock | 2 of 3 attesters, enforced by Quantus's own multisig | ML-DSA-87 |
 
-Payment requests and receipts are encrypted with **ML-KEM-1024**: the recipient gets a fresh NEAR account
-for every payment and finds them all again from one backup.
+Payment requests are signed with ML-DSA-87 and encrypted with **ML-KEM-1024** for the one person who pays.
 
-Test networks only (the Quantus test chain the Qlyphs app uses, and NEAR testnet). Unaudited prototype.
+Test networks only: the Quantus test chain the Qlyphs app uses, and NEAR testnet. Unaudited prototype. Qlyphs
+runs all three attester keys in one service: this demonstrates 2-of-3 post-quantum authorization, not
+independent operators (see [what this is not](#what-this-is-and-is-not)).
 
-## Check it yourself (2 minutes, read-only)
+## Check it yourself (read-only, a few minutes)
 
 ```sh
 npm ci
-node scripts/verify-route.mjs
+node scripts/verify-route.mjs      # NEAR testnet       → evidence/route-onchain.json
+node scripts/verify-quantus.mjs    # Quantus test chain → evidence/route-quantus.json
 ```
 
-It reads NEAR testnet and checks 60 things. Among them:
-- the bridge and the Intents verifier have **no access key** and run the published code;
-- the relayer's and the sponsor's only key is ML-DSA-65;
-- every forged or replayed mint ever sent to a bridge was refused;
-- for **every mint**, it fetches the transaction, decodes the attestation and **verifies both ML-DSA-87
-  signatures on your machine** against the attester keys in `deployments/route-attesters.json`;
-- every withdrawal from Intents was signed with ML-DSA-65 by an account whose only key is ML-DSA-65.
+`verify-route.mjs` reads NEAR testnet and checks, among other things:
+- the bridge and the Intents verifier have **no access key** and run the pinned code (and your own build, if
+  you ran `scripts/build.sh`);
+- for **every mint**, both **ML-DSA-87 attester signatures, verified again on your machine** against
+  `deployments/route-attesters.json`;
+- every withdrawal was signed with ML-DSA-65 by an account whose only key is ML-DSA-65, opened before its mint;
+- every forged or replayed mint ever sent to a bridge was refused.
 
-Its output is `evidence/route-onchain.json`.
+`verify-quantus.mjs` reads the Quantus test chain's public RPC and checks that **every mint is backed by a lock
+transfer of the same amount** (deposit id recomputed from the block, extrinsic hash and call checked byte for
+byte), that **every redemption on NEAR was released once** by the lock's multisig to the recorded destination,
+that mints minus redemptions equal the token's supply, and that the lock still holds at least that supply.
 
-## Try it in the app
+Every round trip, with a link at each of the four steps: **[docs/EVIDENCE.md](docs/EVIDENCE.md)**.
 
-`/bridge/quantum` in the Qlyphs app, test network build: **https://qlyphs-pqroute-app.qlyphs.workers.dev/bridge/quantum**
-(Request and My payments work there in any browser; the payer's Qlyphs wallet connects only on the app's own test
-address, app-testnet.qlyphs.com, once this page ships there):
+## Try it
 
-1. **Request.** Paste the payer's route card and an amount. Your browser derives a fresh ML-DSA-65 key, has the
-   sponsor open its NEAR account with only that key, signs the request with ML-DSA-87 and seals it to the payer
-   with ML-KEM-1024.
-2. **Pay.** The payer pins the recipient's card, opens the link, and the page checks the account has only the
-   requested key. Their Qlyphs wallet sends the QTC to the 2-of-3 lock, then signs the
-   route: a site session whose nonce is SHA-256 of the exact destination. About two minutes later the QTC is
-   inside NEAR Intents for the recipient.
-3. **My payments.** From the backup alone, the browser reads every public receipt, keeps the ones it can open,
-   and withdraws from NEAR Intents to a Quantus address with that payment's ML-DSA-65 key.
+**https://app-testnet.qlyphs.com/bridge/quantum** (the Qlyphs app on its test network)
+
+- **Bridge.** Send QTC from Quantus to NEAR Intents and back. The page opens a fresh NEAR account whose only key
+  is ML-DSA-65, held by your browser; your Qlyphs wallet approves the lock, then signs the exact destination.
+  About two minutes later the QTC is inside NEAR Intents. Bringing it back is signed in the page with that
+  account's ML-DSA-65 key, and two of three attesters release it on Quantus.
+- **Request.** Ask someone for QTC. Their *pay link* holds their ML-KEM-1024 public key; your request is signed
+  with ML-DSA-87 and sealed so that only they can open it. No wallet needed to make a request.
+- **Pay.** Open a payment link: your browser decrypts the request, checks the sender's signature and the
+  receiving account, then your wallet pays.
+
+The picture beside the form follows each step live, with the scheme that signs it and a link to the
+transaction. Bridging and paying need the Qlyphs wallet on its test network; making a request, opening a pay
+link and the read-only checks above need nothing.
+
+An account you already hold in **Meteor Wallet** can also receive, if its keys are exactly one ML-DSA-65
+full-access key: open the page with `?meteor=1`. Experimental: the route delivers to such an account, named only by
+the key handle NEAR lists (last row of [docs/EVIDENCE.md](docs/EVIDENCE.md), a stand-in account), but a round trip
+approved in Meteor itself has not been recorded yet.
 
 ## Attack lab (live, NEAR testnet)
 
@@ -70,58 +84,76 @@ address, app-testnet.qlyphs.com, once this page ships there):
 | 8 | A queued claim redirecting someone's deposit, without the depositor's key | `address(publicKey) is not the sender of the deposit` |
 | 9 | A second attester service on the same state | `state directory is in use` |
 
-Live attacks 3 to 6 change the deposit id so the contract reaches its signature check; one-field-at-a-time
-mutations of an unused attestation are in the sandbox: 46 refusals and edge cases in `tests/bridge.sandbox.mjs`. Attester service: fault injection shows a
-crash after a proposal or an approval reached the chain still pays exactly once.
+One-field-at-a-time mutations of an unused attestation are in the sandbox: 46 refusals and edge cases in
+`tests/bridge.sandbox.mjs`. Attester service: releases killed with SIGKILL after the proposal, the approval and
+the paying execution each paid exactly once after restart (`evidence/route-crash-drills.json`).
 
-## On-chain evidence (NEAR testnet)
+## On-chain
 
 | What | Where |
 |---|---|
 | Intents verifier, upstream `near/intents@32cd1f97`, unmodified, no key | [`intents.qlyphs-pqroute-b.testnet`](https://testnet.nearblocks.io/address/intents.qlyphs-pqroute-b.testnet) |
-| Bridge token for the Qlyphs app's test chain, no key (current) | [`qtc-pq.qlyphs-pqroute-a.testnet`](https://testnet.nearblocks.io/address/qtc-pq.qlyphs-pqroute-a.testnet) |
-| Earlier bridge token (its attestations named the wrong Quantus genesis) | [`qtcpq.qlyphs-pqroute-a.testnet`](https://testnet.nearblocks.io/address/qtcpq.qlyphs-pqroute-a.testnet) |
-| Earlier bridge token, before the contract enforced the minimum withdrawal | [`pqqtc.qlyphs-pqroute-a.testnet`](https://testnet.nearblocks.io/address/pqqtc.qlyphs-pqroute-a.testnet) |
-| Bridge token for the Quantus development network, no key | [`qtc.qlyphs-pqroute-a.testnet`](https://testnet.nearblocks.io/address/qtc.qlyphs-pqroute-a.testnet) |
-| Relayer, ML-DSA-65 key only (pays gas, no authority) | [`relay.qlyphs-pqroute-a.testnet`](https://testnet.nearblocks.io/address/relay.qlyphs-pqroute-a.testnet) |
-| Sponsor that opens recipients' accounts, ML-DSA-65 key only | [`qlyphs-pqroute-c.testnet`](https://testnet.nearblocks.io/address/qlyphs-pqroute-c.testnet) |
-| A round trip through the app, every step in a browser: encrypted request, payment approved in the Qlyphs wallet extension (testnet build; once from a fresh test wallet, once from the team's own test wallet), found from the route backup, ML-DSA-65 withdrawal, 2-of-3 release | `evidence/route-app-run.json` |
-| Releases killed with SIGKILL after the proposal, the approval, and the payment-bearing execution were sent: each paid exactly once after restart | `evidence/route-crash-drills.json` |
-| Full round trips from the command line (earlier deployments, on both Quantus test chains) | `evidence/superseded-route-cycle-curve-r2.json`, `evidence/route-cycle-devnet.json` |
-| The existing route's minting key, at a pinned mainnet block | `evidence/bridge-mng-snapshot.json` |
+| Bridge token (current), no key | [`qtc-pq.qlyphs-pqroute-a.testnet`](https://testnet.nearblocks.io/address/qtc-pq.qlyphs-pqroute-a.testnet) |
+| Relayer: pays gas for mints, no authority, ML-DSA-65 key only | [`relay.qlyphs-pqroute-a.testnet`](https://testnet.nearblocks.io/address/relay.qlyphs-pqroute-a.testnet) |
+| Sponsor: opens recipients' accounts, ML-DSA-65 key only | [`qlyphs-pqroute-c.testnet`](https://testnet.nearblocks.io/address/qlyphs-pqroute-c.testnet) |
+| The lock on the Quantus test chain: native 2-of-3 multisig of the three attester keys | `qzpPEKhGncdyaUgZSxY1zMq3VvB5ng5LmZBP4arD83PFp46jE` (`deployments/quantus-lock-curve.json`) |
+| Earlier bridge tokens, kept for their records | [`qtcpq`](https://testnet.nearblocks.io/address/qtcpq.qlyphs-pqroute-a.testnet) (wrong Quantus genesis), [`pqqtc`](https://testnet.nearblocks.io/address/pqqtc.qlyphs-pqroute-a.testnet) (no minimum withdrawal), [`qtc`](https://testnet.nearblocks.io/address/qtc.qlyphs-pqroute-a.testnet) (Quantus development network) |
 
 ## Reproduce the code
 
 ```sh
-bash scripts/build.sh                 # contracts (LLVM 19+); build/bridge-testnet.wasm is the deployed bridge
-node tests/bridge.sandbox.mjs         # 46 checks: quorum, every signed field, one mint per deposit, receipts, Intents mode, minimum withdrawal, NEP-145 storage
-node --test tests/route-crypto.unit.mjs   # 13 tests: sealing, tampering, pinned recipient, validation, fresh accounts, restore
+bash scripts/build.sh                     # contracts (LLVM 19+); build/bridge-testnet.wasm is the deployed bridge, sha256 6c375c5b…
+node tests/bridge.sandbox.mjs             # 46 checks: quorum, every signed field, one mint per deposit, Intents mode, minimum withdrawal, storage
+node --test tests/route-crypto.unit.mjs   # sealing, tampering, pinned recipient, fresh accounts, restore
 ```
 
 `tests/intents.sandbox.mjs` runs the bridge against the verifier, but the sandbox node that near-workspaces
-ships is older than the verifier build, so that part runs on testnet (the evidence above). The attester
-service is in a separate repository; its formats are in [docs/ROUTE.md](docs/ROUTE.md).
+ships is older than the verifier build, so that part runs on testnet (the evidence above).
+
+## What is in this repository, and what is not
+
+- **Here:** the bridge contract (`contract/bridge.c`), the route cryptography (`sdk/route-crypto.mjs`), the route
+  service Worker (`route-worker/`: encrypted request mailbox, claim queue, account sponsor), both verifiers, the
+  attack lab, the formats ([docs/ROUTE.md](docs/ROUTE.md)) and the evidence.
+- **Not here:** the attester service and the `/bridge/quantum` page are part of the Qlyphs codebase, which is not
+  public. Their formats are specified in [docs/ROUTE.md](docs/ROUTE.md), and what they did is checked on both
+  chains by the two verifiers above: you do not need their source to check the results.
 
 ## What this is, and is not
 
-- **Confirmation.** The attesters sign a deposit once it is 8 blocks deep on the test chain's best chain (the
-  demo policy). That is a confirmation depth, not Quantus's default finality rule (100 blocks).
-- **Trust.** The demo uses three separate ML-DSA-87 attester keys, all operated by the Qlyphs team in one service. It
-  demonstrates 2-of-3 post-quantum authorization, not independent operators or decentralized custody. The
-  attesters check Quantus deposits themselves; NEAR does not verify Quantus consensus.
-- **Scope.** User accounts, attestations and the lock are post-quantum. NEAR's validators and consensus, and
-  the RPC transport, are not.
-- **Privacy.** Requests, notes and the link between a recipient and each fresh account are encrypted.
-  Amounts, times and accounts are public on both chains, and the payer knows who they paid.
-- **NEAR Intents.** Deposits and withdrawals run on the unmodified upstream verifier. Intents signed inside the
-  verifier (swaps) still use classical schemes today; this route does not change that.
-- **The existing route** already serves users. This is a separate test-network prototype of quorum-enforced
-  post-quantum authorization. We do not claim that any partner uses or endorses it.
+- **Trust.** Three separate ML-DSA-87 attester keys, all operated by Qlyphs in one service. This shows 2-of-3
+  post-quantum authorization, not independent operators or decentralized custody. Two compromised attester keys
+  could mint unbacked tokens or release the lock. The attesters check Quantus deposits themselves; NEAR does not
+  verify Quantus consensus.
+- **Confirmation.** The attesters sign a deposit 8 blocks deep (the demo policy), not at Quantus's default
+  finality rule (100 blocks).
+- **Scope.** User accounts, attestations and the lock are post-quantum. NEAR's validators and consensus, the RPC
+  transport and the browser that holds a fresh account's key are outside that claim. Intents signed inside the
+  verifier (swaps) still use classical schemes; this route does not change that.
+- **Privacy.** Requests, notes and the link between a person and each fresh account are encrypted. Amounts,
+  times and accounts are public on both chains, and the payer knows who they paid. A Meteor account is linked to
+  its own history.
+- **The existing route** serves users today. This is a separate test-network prototype. We do not claim that any
+  partner uses or endorses it.
+
+## Hackathon
+
+Built for the NEAR HACKATHON (November 2026). This repository's first commit is 2026-10-22, after the hackathon
+was announced on 2026-10-19. It began as an ML-DSA-87 vault ([docs/VAULT.md](docs/VAULT.md)) and an admin-control
+prototype ([docs/GUARDIAN-README.md](docs/GUARDIAN-README.md)); the route is the entry. The Qlyphs app and
+wallet on Quantus existed before; only the NEAR route is submitted.
+
+The bridge verifies ML-DSA-87 on-chain with its own freestanding C verifier (`core/pq87.c`, written after the
+pq-crystals reference; see [THIRD_PARTY.md](THIRD_PARTY.md)). Built with [`near/intents`](https://github.com/near/intents) (unmodified verifier),
+[`@noble/post-quantum`](https://github.com/paulmillr/noble-post-quantum) (ML-DSA-87, ML-KEM-1024),
+[`@fastnear/ml-dsa-65`](https://www.npmjs.com/package/@fastnear/ml-dsa-65) and `@fastnear/api` (NEAR ML-DSA-65
+keys and transactions), `@noble/hashes`, `@noble/ciphers`, `near-api-js` and `near-workspaces`.
 
 ## Docs
 
 - [docs/ROUTE.md](docs/ROUTE.md): formats, trust model, privacy limits.
-- [docs/PROPOSAL.md](docs/PROPOSAL.md): a draft interface any post-quantum chain can use to plug into NEAR Intents.
-- [docs/GUARDIAN-README.md](docs/GUARDIAN-README.md): the earlier admin-control prototype this repository started from.
+- [docs/EVIDENCE.md](docs/EVIDENCE.md): every round trip, step by step.
+- [docs/PROPOSAL.md](docs/PROPOSAL.md): a draft interface any chain with a native ML-DSA multisig can use to plug
+  into NEAR Intents.
 
 MIT or Apache-2.0, at your option.

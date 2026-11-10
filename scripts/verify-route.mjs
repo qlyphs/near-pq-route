@@ -53,7 +53,9 @@ const attesters = JSON.parse(readFileSync('deployments/route-attesters.json', 'u
 const pks = attesters.map((a) => Buffer.from(a.public_key_hex, 'hex'));
 const ctx = new TextEncoder().encode('qlyphs/near-bridge/v1');
 const verifierWasm = readFileSync('third_party/near-intents/defuse-32cd1f97.wasm');
-const bridgeWasm = readFileSync('build/bridge-testnet.wasm');
+// The deployed code is checked against the hash pinned in deployments/; also against a local build when there is one
+// (bash scripts/build.sh writes build/bridge-testnet.wasm; a clone without LLVM can still run every other check).
+const bridgeWasm = existsSync('build/bridge-testnet.wasm') ? readFileSync('build/bridge-testnet.wasm') : null;
 const out = { date: new Date().toISOString(), rpc: RPC, bridges: [] };
 
 // The current bridge (curve test chain) must equal the local build; earlier ones must equal the hash they were deployed with.
@@ -72,7 +74,7 @@ for (const route of routes) {
   const entry = { bridge: b, current: route.current, quantus_network: route.bridge.quantus_network ?? 'Quantus development network', mints: [], withdrawals: [] };
   check(`${b} has no access key`, (await keys(b)).length === 0);
   const want = Buffer.from(route.bridge.wasm_sha256, 'hex');
-  check(`${b} runs the code it was deployed with${route.current ? ' (= build/bridge-testnet.wasm)' : ' (earlier version)'}`, (await codeHash(b)) === b58(want) && (!route.current || want.equals(sha256(bridgeWasm))));
+  check(`${b} runs the code it was deployed with, sha256 ${want.toString('hex').slice(0, 16)}…${!route.current ? ' (earlier version)' : bridgeWasm ? ' (= your build/bridge-testnet.wasm)' : ' (run scripts/build.sh to compare with your own build)'}`, (await codeHash(b)) === b58(want) && (!route.current || !bridgeWasm || want.equals(sha256(bridgeWasm))));
   const st = await view(b, 'state');
   check(`${b} names the Quantus genesis and the three attester keys`, st.quantus_genesis === route.bridge.quantus_genesis.replace(/^0x/, '') && st.attesters.every((h, i) => h === attesters[i].key_sha256));
   entry.refused_attempts = [];

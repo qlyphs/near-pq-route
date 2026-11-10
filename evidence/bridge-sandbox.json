@@ -1,5 +1,5 @@
 {
-  "date": "2026-11-08",
+  "date": "2026-11-10",
   "wasm_sha256": "e8760fa21f926d633cfea002c0af040b5436c5053e0f7a828207ee879ae7f3a5",
   "results": [
     {
@@ -100,7 +100,7 @@
     {
       "name": "2-of-3 attested deposit mints",
       "ok": true,
-      "detail": "13.978982179208 Tgas"
+      "detail": "13.98357068942 Tgas"
     },
     {
       "name": "deposit recorded as minted",

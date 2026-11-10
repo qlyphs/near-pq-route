@@ -1,6 +1,26 @@
 # Security model and limits
 
-Research proof of concept. Not audited. Never use it with real funds.
+Research proof of concept on test networks. Not audited. Never use it with real funds.
+
+## The route (the hackathon entry)
+
+The trust model, formats and limits of the post-quantum route are in [docs/ROUTE.md](docs/ROUTE.md) and summarized
+in the [README](README.md#what-this-is-and-is-not). In short:
+
+- **What is enforced on-chain.** The bridge contract has no access key: nobody can upgrade it or change its
+  attesters. It mints only when two different attesters signed the exact attestation (network, bridge, Quantus
+  genesis, deposit id, amount, receiver, receipt, delivery mode) with ML-DSA-87, and each deposit id at most once,
+  recorded before crediting. Withdrawals burn through the unmodified Intents verifier and are recorded under a
+  sequential redemption id.
+- **What is trusted.** Two of the three attester keys. Qlyphs operates all three in one service, so today this is
+  one operator: two compromised keys could mint unbacked tokens or release the lock. NEAR does not verify Quantus
+  consensus; the attesters do, at 8 confirmations.
+- **What is checked after the fact.** `scripts/verify-route.mjs` and `scripts/verify-quantus.mjs` re-check every
+  mint, withdrawal, redemption and release on both chains, and that the lock backs the supply.
+- **Reporting.** Please report a vulnerability privately to the repository owner through GitHub before
+  disclosing it.
+
+## The vault (earlier prototype in this repository)
 
 This file covers the vault. For Qlyphs Guardian, the trust boundary, the state machine and what the
 verification report can and cannot prove are in [docs/GUARDIAN.md](docs/GUARDIAN.md); its limits are

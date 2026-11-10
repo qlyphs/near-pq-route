@@ -124,9 +124,12 @@ ships is older than the verifier build, so that part runs on testnet (the eviden
 - **Here:** the bridge contract (`contract/bridge.c`), the route cryptography (`sdk/route-crypto.mjs`), the route
   service Worker (`route-worker/`: encrypted request mailbox, claim queue, account sponsor), both verifiers, the
   attack lab, the formats ([docs/ROUTE.md](docs/ROUTE.md)) and the evidence.
-- **Not here:** the attester service and the `/bridge/quantum` page are part of the Qlyphs codebase, which is not
-  public. Their formats are specified in [docs/ROUTE.md](docs/ROUTE.md), and what they did is checked on both
-  chains by the two verifiers above: you do not need their source to check the results.
+- **Not here:** the attester service (deposit inspection, attestation, mint and release orchestration, journal and
+  recovery) and the `/bridge/quantum` page are part of the Qlyphs codebase, which is not public. Their formats are
+  specified in [docs/ROUTE.md](docs/ROUTE.md). You can exercise them on the hosted app above; you cannot run the
+  whole route yourself from this repository.
+- **What the verifiers prove:** the effects of that service on both chains (every mint, withdrawal, redemption and
+  release listed in [docs/EVIDENCE.md](docs/EVIDENCE.md)), not its internal implementation.
 
 ## What this is, and is not
 

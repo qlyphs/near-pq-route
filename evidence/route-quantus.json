@@ -1,9 +1,21 @@
 {
- "date": "2026-11-10T12:41:54.671Z",
+ "date": "2026-11-10T13:08:22.837Z",
  "quantus_rpc": "https://testnet-rpc.qlyphs.com",
- "indexer": "https://testnet.qlyphs.com/api",
+ "quantus_finalized": {
+  "number": 130264,
+  "hash": "0x6c19cadf984ccd6d5ac4c8d155e95b5e1cbe400b8709abfbd34bfc8c776c9975"
+ },
+ "near_block": {
+  "height": 277071486,
+  "hash": "5rECUQ2zpFxp7iayvTEjLLGQsi4r62TWNpnhRrm6eyn5"
+ },
+ "upstream": {
+  "file": "evidence/route-onchain.json",
+  "date": "2026-11-10T12:22:21.621Z",
+  "checks": 104
+ },
+ "indexer_used_for": "locating release extrinsics by hash",
  "bridge": "qtc-pq.qlyphs-pqroute-a.testnet",
- "finalized": 130148,
  "locks": [
   {
    "deposit_id": "47618b16a2ab8a38d94e28f06c38097bf099be11aea7d85295186226a32e5225",
@@ -170,249 +182,264 @@
  ],
  "results": [
   {
+   "name": "the NEAR report is a passing verify-route run on the bridge this index names",
+   "ok": true,
+   "detail": "104 checks at 2026-11-10T12:22:21.621Z, bridge qtc-pq.qlyphs-pqroute-a.testnet"
+  },
+  {
+   "name": "mints, deposits and releases are each listed once",
+   "ok": true,
+   "detail": "27 mints, 27 deposits, 19 releases"
+  },
+  {
    "name": "the Quantus RPC serves the test chain the lock lives on",
    "ok": true,
    "detail": "0x06fb13f7086158562fac1b684da75feb627261a277b63e44043f2997d0b24693"
   },
   {
-   "name": "mint 2dKio9M96J… is backed by lock 0x6982d95113… (block 120989 #1)",
+   "name": "the lock is a native 2-of-3 multisig of the three attester keys",
    "ok": true,
-   "detail": "deposit id recomputed from the block hash; call transfer_keep_alive(lock, 1500000000007); finalized; indexer: succeeded"
+   "detail": "threshold 2, 3 signers, at finalized block 130264"
   },
   {
-   "name": "mint F2G7gtcRxu… is backed by lock 0x7b63b45aea… (block 120973 #1)",
+   "name": "mint 2dKio9M96J… is backed by lock deposit 0x6982d95113… (block 120989 #1)",
    "ok": true,
-   "detail": "deposit id recomputed from the block hash; call transfer_keep_alive(lock, 2000000000001); finalized; indexer: succeeded"
+   "detail": "deposit id recomputed from the block hash; finalized; succeeded, Transfer of 1500000000007 planck to the lock"
   },
   {
-   "name": "mint 8ct7bqnAhK… is backed by lock 0x7897791549… (block 121022 #1)",
+   "name": "mint F2G7gtcRxu… is backed by lock deposit 0x7b63b45aea… (block 120973 #1)",
    "ok": true,
-   "detail": "deposit id recomputed from the block hash; call transfer_keep_alive(lock, 1250000000000); finalized; indexer: succeeded"
+   "detail": "deposit id recomputed from the block hash; finalized; succeeded, Transfer of 2000000000001 planck to the lock"
   },
   {
-   "name": "mint 6A8sTaNKSW… is backed by lock 0x558babc3b6… (block 121161 #1)",
+   "name": "mint 8ct7bqnAhK… is backed by lock deposit 0x7897791549… (block 121022 #1)",
    "ok": true,
-   "detail": "deposit id recomputed from the block hash; call transfer_keep_alive(lock, 1100000000009); finalized; indexer: succeeded"
+   "detail": "deposit id recomputed from the block hash; finalized; succeeded, Transfer of 1250000000000 planck to the lock"
   },
   {
-   "name": "mint A4LG9Sxicc… is backed by lock 0x525a6d2b1e… (block 121143 #1)",
+   "name": "mint 6A8sTaNKSW… is backed by lock deposit 0x558babc3b6… (block 121161 #1)",
    "ok": true,
-   "detail": "deposit id recomputed from the block hash; call transfer_keep_alive(lock, 1100000000009); finalized; indexer: succeeded"
+   "detail": "deposit id recomputed from the block hash; finalized; succeeded, Transfer of 1100000000009 planck to the lock"
   },
   {
-   "name": "mint Ajs2tsy1Jd… is backed by lock 0x2cf9008314… (block 121127 #1)",
+   "name": "mint A4LG9Sxicc… is backed by lock deposit 0x525a6d2b1e… (block 121143 #1)",
    "ok": true,
-   "detail": "deposit id recomputed from the block hash; call transfer_keep_alive(lock, 1750000000003); finalized; indexer: succeeded"
+   "detail": "deposit id recomputed from the block hash; finalized; succeeded, Transfer of 1100000000009 planck to the lock"
   },
   {
-   "name": "mint 6qYqnDtSQk… is backed by lock 0xe60555e03b… (block 121272 #1)",
+   "name": "mint Ajs2tsy1Jd… is backed by lock deposit 0x2cf9008314… (block 121127 #1)",
    "ok": true,
-   "detail": "deposit id recomputed from the block hash; call transfer_keep_alive(lock, 1300000000013); finalized; indexer: succeeded"
+   "detail": "deposit id recomputed from the block hash; finalized; succeeded, Transfer of 1750000000003 planck to the lock"
   },
   {
-   "name": "mint Dvr73b9Uw3… is backed by lock 0x5f5d802430… (block 121498 #1)",
+   "name": "mint 6qYqnDtSQk… is backed by lock deposit 0xe60555e03b… (block 121272 #1)",
    "ok": true,
-   "detail": "deposit id recomputed from the block hash; call transfer_keep_alive(lock, 1000000000000); finalized; indexer: succeeded"
+   "detail": "deposit id recomputed from the block hash; finalized; succeeded, Transfer of 1300000000013 planck to the lock"
   },
   {
-   "name": "mint 7J5AAPJ4C8… is backed by lock 0xf6c6e3d7b1… (block 122686 #1)",
+   "name": "mint Dvr73b9Uw3… is backed by lock deposit 0x5f5d802430… (block 121498 #1)",
    "ok": true,
-   "detail": "deposit id recomputed from the block hash; call transfer_keep_alive(lock, 1000000000000); finalized; indexer: succeeded"
+   "detail": "deposit id recomputed from the block hash; finalized; succeeded, Transfer of 1000000000000 planck to the lock"
   },
   {
-   "name": "mint GGL9NkDZEF… is backed by lock 0xf2cc6c0436… (block 121659 #1)",
+   "name": "mint 7J5AAPJ4C8… is backed by lock deposit 0xf6c6e3d7b1… (block 122686 #1)",
    "ok": true,
-   "detail": "deposit id recomputed from the block hash; call transfer_keep_alive(lock, 1000000000000); finalized; indexer: succeeded"
+   "detail": "deposit id recomputed from the block hash; finalized; succeeded, Transfer of 1000000000000 planck to the lock"
   },
   {
-   "name": "mint 8EfxFCZEMo… is backed by lock 0xe19514e8b7… (block 122798 #1)",
+   "name": "mint GGL9NkDZEF… is backed by lock deposit 0xf2cc6c0436… (block 121659 #1)",
    "ok": true,
-   "detail": "deposit id recomputed from the block hash; call transfer_keep_alive(lock, 1000000000000); finalized; indexer: succeeded"
+   "detail": "deposit id recomputed from the block hash; finalized; succeeded, Transfer of 1000000000000 planck to the lock"
   },
   {
-   "name": "mint CA47JA5EqX… is backed by lock 0xfddb2c82b2… (block 129685 #1)",
+   "name": "mint 8EfxFCZEMo… is backed by lock deposit 0xe19514e8b7… (block 122798 #1)",
    "ok": true,
-   "detail": "deposit id recomputed from the block hash; call transfer_keep_alive(lock, 100000000000); finalized; indexer: succeeded"
+   "detail": "deposit id recomputed from the block hash; finalized; succeeded, Transfer of 1000000000000 planck to the lock"
   },
   {
-   "name": "mint FY7L5G6sJX… is backed by lock 0x2c682864e7… (block 129671 #1)",
+   "name": "mint CA47JA5EqX… is backed by lock deposit 0xfddb2c82b2… (block 129685 #1)",
    "ok": true,
-   "detail": "deposit id recomputed from the block hash; call transfer_keep_alive(lock, 100000000000); finalized; indexer: succeeded"
+   "detail": "deposit id recomputed from the block hash; finalized; succeeded, Transfer of 100000000000 planck to the lock"
   },
   {
-   "name": "mint 9CeUV65puU… is backed by lock 0x282789a02a… (block 129263 #1)",
+   "name": "mint FY7L5G6sJX… is backed by lock deposit 0x2c682864e7… (block 129671 #1)",
    "ok": true,
-   "detail": "deposit id recomputed from the block hash; call transfer_keep_alive(lock, 1000000000000); finalized; indexer: succeeded"
+   "detail": "deposit id recomputed from the block hash; finalized; succeeded, Transfer of 100000000000 planck to the lock"
   },
   {
-   "name": "mint HgUJXgW9e1… is backed by lock 0x6426ad84ad… (block 126293 #1)",
+   "name": "mint 9CeUV65puU… is backed by lock deposit 0x282789a02a… (block 129263 #1)",
    "ok": true,
-   "detail": "deposit id recomputed from the block hash; call transfer_keep_alive(lock, 2000000000000); finalized; indexer: succeeded"
+   "detail": "deposit id recomputed from the block hash; finalized; succeeded, Transfer of 1000000000000 planck to the lock"
   },
   {
-   "name": "mint GwT13cLQBM… is backed by lock 0x8801355dc8… (block 125132 #1)",
+   "name": "mint HgUJXgW9e1… is backed by lock deposit 0x6426ad84ad… (block 126293 #1)",
    "ok": true,
-   "detail": "deposit id recomputed from the block hash; call transfer_keep_alive(lock, 1000000000000); finalized; indexer: succeeded"
+   "detail": "deposit id recomputed from the block hash; finalized; succeeded, Transfer of 2000000000000 planck to the lock"
   },
   {
-   "name": "mint EzWF4mJGx8… is backed by lock 0x6ec7465aa9… (block 125021 #1)",
+   "name": "mint GwT13cLQBM… is backed by lock deposit 0x8801355dc8… (block 125132 #1)",
    "ok": true,
-   "detail": "deposit id recomputed from the block hash; call transfer_keep_alive(lock, 1000000000000); finalized; indexer: succeeded"
+   "detail": "deposit id recomputed from the block hash; finalized; succeeded, Transfer of 1000000000000 planck to the lock"
   },
   {
-   "name": "mint Dh52m9eA9x… is backed by lock 0x07c655406f… (block 124989 #1)",
+   "name": "mint EzWF4mJGx8… is backed by lock deposit 0x6ec7465aa9… (block 125021 #1)",
    "ok": true,
-   "detail": "deposit id recomputed from the block hash; call transfer_keep_alive(lock, 1000000000000); finalized; indexer: succeeded"
+   "detail": "deposit id recomputed from the block hash; finalized; succeeded, Transfer of 1000000000000 planck to the lock"
   },
   {
-   "name": "mint HdTT5cL2ar… is backed by lock 0x4aa76ed135… (block 124419 #1)",
+   "name": "mint Dh52m9eA9x… is backed by lock deposit 0x07c655406f… (block 124989 #1)",
    "ok": true,
-   "detail": "deposit id recomputed from the block hash; call transfer_keep_alive(lock, 5000000000000); finalized; indexer: succeeded"
+   "detail": "deposit id recomputed from the block hash; finalized; succeeded, Transfer of 1000000000000 planck to the lock"
   },
   {
-   "name": "mint GVhNhugGgB… is backed by lock 0x1c7d5fb5ac… (block 124021 #1)",
+   "name": "mint HdTT5cL2ar… is backed by lock deposit 0x4aa76ed135… (block 124419 #1)",
    "ok": true,
-   "detail": "deposit id recomputed from the block hash; call transfer_keep_alive(lock, 1000000000000); finalized; indexer: succeeded"
+   "detail": "deposit id recomputed from the block hash; finalized; succeeded, Transfer of 5000000000000 planck to the lock"
   },
   {
-   "name": "mint ECVJemC2k9… is backed by lock 0x44c31afd13… (block 124019 #1)",
+   "name": "mint GVhNhugGgB… is backed by lock deposit 0x1c7d5fb5ac… (block 124021 #1)",
    "ok": true,
-   "detail": "deposit id recomputed from the block hash; call transfer_keep_alive(lock, 5000000000000); finalized; indexer: succeeded"
+   "detail": "deposit id recomputed from the block hash; finalized; succeeded, Transfer of 1000000000000 planck to the lock"
   },
   {
-   "name": "mint HYZcKxGCFt… is backed by lock 0xe51a05352e… (block 123950 #1)",
+   "name": "mint ECVJemC2k9… is backed by lock deposit 0x44c31afd13… (block 124019 #1)",
    "ok": true,
-   "detail": "deposit id recomputed from the block hash; call transfer_keep_alive(lock, 1000000000000); finalized; indexer: succeeded"
+   "detail": "deposit id recomputed from the block hash; finalized; succeeded, Transfer of 5000000000000 planck to the lock"
   },
   {
-   "name": "mint JCPCiYNADR… is backed by lock 0xe8241502be… (block 123947 #1)",
+   "name": "mint HYZcKxGCFt… is backed by lock deposit 0xe51a05352e… (block 123950 #1)",
    "ok": true,
-   "detail": "deposit id recomputed from the block hash; call transfer_keep_alive(lock, 10000000000000); finalized; indexer: succeeded"
+   "detail": "deposit id recomputed from the block hash; finalized; succeeded, Transfer of 1000000000000 planck to the lock"
   },
   {
-   "name": "mint 7q3YbH6ndC… is backed by lock 0xdbe7aae6d8… (block 123899 #1)",
+   "name": "mint JCPCiYNADR… is backed by lock deposit 0xe8241502be… (block 123947 #1)",
    "ok": true,
-   "detail": "deposit id recomputed from the block hash; call transfer_keep_alive(lock, 1000000000000); finalized; indexer: succeeded"
+   "detail": "deposit id recomputed from the block hash; finalized; succeeded, Transfer of 10000000000000 planck to the lock"
   },
   {
-   "name": "mint 2u4uLpGSVk… is backed by lock 0xf4660409e0… (block 123826 #1)",
+   "name": "mint 7q3YbH6ndC… is backed by lock deposit 0xdbe7aae6d8… (block 123899 #1)",
    "ok": true,
-   "detail": "deposit id recomputed from the block hash; call transfer_keep_alive(lock, 1000000000000); finalized; indexer: succeeded"
+   "detail": "deposit id recomputed from the block hash; finalized; succeeded, Transfer of 1000000000000 planck to the lock"
   },
   {
-   "name": "mint 4Wx2AfNhdn… is backed by lock 0x4ab776968a… (block 123122 #1)",
+   "name": "mint 2u4uLpGSVk… is backed by lock deposit 0xf4660409e0… (block 123826 #1)",
    "ok": true,
-   "detail": "deposit id recomputed from the block hash; call transfer_keep_alive(lock, 1000000000000); finalized; indexer: succeeded"
+   "detail": "deposit id recomputed from the block hash; finalized; succeeded, Transfer of 1000000000000 planck to the lock"
   },
   {
-   "name": "mint 4W7z6KNjSU… is backed by lock 0x9570e24691… (block 123076 #1)",
+   "name": "mint 4Wx2AfNhdn… is backed by lock deposit 0x4ab776968a… (block 123122 #1)",
    "ok": true,
-   "detail": "deposit id recomputed from the block hash; call transfer_keep_alive(lock, 1000000000000); finalized; indexer: succeeded"
+   "detail": "deposit id recomputed from the block hash; finalized; succeeded, Transfer of 1000000000000 planck to the lock"
   },
   {
-   "name": "redemption 0 (2000000000001 planck, withdrawn through intents.qlyphs-pqroute-b.testnet) released by 0x370045ac32…",
+   "name": "mint 4W7z6KNjSU… is backed by lock deposit 0x9570e24691… (block 123076 #1)",
    "ok": true,
-   "detail": "block 120987 #1; multisig of the lock pays 07f81a9542… exactly the redeemed amount; indexer: succeeded"
+   "detail": "deposit id recomputed from the block hash; finalized; succeeded, Transfer of 1000000000000 planck to the lock"
   },
   {
-   "name": "redemption 1 (1500000000007 planck, withdrawn through intents.qlyphs-pqroute-b.testnet) released by 0xabd2419c9e…",
+   "name": "redemption 0 (2000000000001 planck to 07f81a9542…) released by 0x370045ac32…",
    "ok": true,
-   "detail": "block 121003 #1; multisig of the lock pays 07f81a9542… exactly the redeemed amount; indexer: succeeded"
+   "detail": "block 120987 #1; hash recomputed; proposal 4 executed by the lock, inner call succeeded, 2 signers approved, Transfer of the redeemed amount to the destination"
   },
   {
-   "name": "redemption 2 (1250000000000 planck, withdrawn through intents.qlyphs-pqroute-b.testnet) released by 0xa5f349db4d…",
+   "name": "redemption 1 (1500000000007 planck to 07f81a9542…) released by 0xabd2419c9e…",
    "ok": true,
-   "detail": "block 121038 #1; multisig of the lock pays 07f81a9542… exactly the redeemed amount; indexer: succeeded"
+   "detail": "block 121003 #1; hash recomputed; proposal 5 executed by the lock, inner call succeeded, 2 signers approved, Transfer of the redeemed amount to the destination"
   },
   {
-   "name": "redemption 3 (1750000000003 planck, withdrawn through intents.qlyphs-pqroute-b.testnet) released by 0xcd245887d7…",
+   "name": "redemption 2 (1250000000000 planck to 07f81a9542…) released by 0xa5f349db4d…",
    "ok": true,
-   "detail": "block 121138 #1; multisig of the lock pays 07f81a9542… exactly the redeemed amount; indexer: succeeded"
+   "detail": "block 121038 #1; hash recomputed; proposal 6 executed by the lock, inner call succeeded, 2 signers approved, Transfer of the redeemed amount to the destination"
   },
   {
-   "name": "redemption 4 (1100000000009 planck, withdrawn through intents.qlyphs-pqroute-b.testnet) released by 0x83e1ff91b3…",
+   "name": "redemption 3 (1750000000003 planck to 07f81a9542…) released by 0xcd245887d7…",
    "ok": true,
-   "detail": "block 121154 #1; multisig of the lock pays 07f81a9542… exactly the redeemed amount; indexer: succeeded"
+   "detail": "block 121138 #1; hash recomputed; proposal 7 executed by the lock, inner call succeeded, 2 signers approved, Transfer of the redeemed amount to the destination"
   },
   {
-   "name": "redemption 5 (1100000000009 planck, withdrawn through intents.qlyphs-pqroute-b.testnet) released by 0x84f05d159c…",
+   "name": "redemption 4 (1100000000009 planck to 07f81a9542…) released by 0x83e1ff91b3…",
    "ok": true,
-   "detail": "block 121172 #1; multisig of the lock pays 07f81a9542… exactly the redeemed amount; indexer: succeeded"
+   "detail": "block 121154 #1; hash recomputed; proposal 8 executed by the lock, inner call succeeded, 2 signers approved, Transfer of the redeemed amount to the destination"
   },
   {
-   "name": "redemption 6 (1300000000013 planck, withdrawn through intents.qlyphs-pqroute-b.testnet) released by 0x7ea7a1dfa5…",
+   "name": "redemption 5 (1100000000009 planck to 07f81a9542…) released by 0x84f05d159c…",
    "ok": true,
-   "detail": "block 121287 #1; multisig of the lock pays 07f81a9542… exactly the redeemed amount; indexer: succeeded"
+   "detail": "block 121172 #1; hash recomputed; proposal 9 executed by the lock, inner call succeeded, 2 signers approved, Transfer of the redeemed amount to the destination"
   },
   {
-   "name": "redemption 7 (1000000000000 planck, withdrawn through intents.qlyphs-pqroute-b.testnet) released by 0x622f9ab016…",
+   "name": "redemption 6 (1300000000013 planck to 07f81a9542…) released by 0x7ea7a1dfa5…",
    "ok": true,
-   "detail": "block 121624 #1; multisig of the lock pays f54cbe340b… exactly the redeemed amount; indexer: succeeded"
+   "detail": "block 121287 #1; hash recomputed; proposal 10 executed by the lock, inner call succeeded, 2 signers approved, Transfer of the redeemed amount to the destination"
   },
   {
-   "name": "redemption 8 (1000000000000 planck, withdrawn through intents.qlyphs-pqroute-b.testnet) released by 0x8650840288…",
+   "name": "redemption 7 (1000000000000 planck to f54cbe340b…) released by 0x622f9ab016…",
    "ok": true,
-   "detail": "block 122712 #1; multisig of the lock pays a1417c3341… exactly the redeemed amount; indexer: succeeded"
+   "detail": "block 121624 #1; hash recomputed; proposal 11 executed by the lock, inner call succeeded, 2 signers approved, Transfer of the redeemed amount to the destination"
   },
   {
-   "name": "redemption 9 (1000000000000 planck, withdrawn through intents.qlyphs-pqroute-b.testnet) released by 0x6afa6e1ac6…",
+   "name": "redemption 8 (1000000000000 planck to a1417c3341…) released by 0x8650840288…",
    "ok": true,
-   "detail": "block 122825 #1; multisig of the lock pays a1417c3341… exactly the redeemed amount; indexer: succeeded"
+   "detail": "block 122712 #1; hash recomputed; proposal 12 executed by the lock, inner call succeeded, 2 signers approved, Transfer of the redeemed amount to the destination"
   },
   {
-   "name": "redemption 10 (1000000000000 planck, withdrawn through intents.qlyphs-pqroute-b.testnet) released by 0xf18ac7cad4…",
+   "name": "redemption 9 (1000000000000 planck to a1417c3341…) released by 0x6afa6e1ac6…",
    "ok": true,
-   "detail": "block 123136 #1; multisig of the lock pays a1417c3341… exactly the redeemed amount; indexer: succeeded"
+   "detail": "block 122825 #1; hash recomputed; proposal 13 executed by the lock, inner call succeeded, 2 signers approved, Transfer of the redeemed amount to the destination"
   },
   {
-   "name": "redemption 11 (1000000000000 planck, withdrawn through intents.qlyphs-pqroute-b.testnet) released by 0x487c8fdbfe…",
+   "name": "redemption 10 (1000000000000 planck to a1417c3341…) released by 0xf18ac7cad4…",
    "ok": true,
-   "detail": "block 123916 #1; multisig of the lock pays a1417c3341… exactly the redeemed amount; indexer: succeeded"
+   "detail": "block 123136 #1; hash recomputed; proposal 14 executed by the lock, inner call succeeded, 2 signers approved, Transfer of the redeemed amount to the destination"
   },
   {
-   "name": "redemption 12 (10000000000000 planck, withdrawn through intents.qlyphs-pqroute-b.testnet) released by 0xabee243eeb…",
+   "name": "redemption 11 (1000000000000 planck to a1417c3341…) released by 0x487c8fdbfe…",
    "ok": true,
-   "detail": "block 123965 #1; multisig of the lock pays a1417c3341… exactly the redeemed amount; indexer: succeeded"
+   "detail": "block 123916 #1; hash recomputed; proposal 15 executed by the lock, inner call succeeded, 2 signers approved, Transfer of the redeemed amount to the destination"
   },
   {
-   "name": "redemption 13 (1000000000000 planck, withdrawn through intents.qlyphs-pqroute-b.testnet) released by 0x93d6571d86…",
+   "name": "redemption 12 (10000000000000 planck to a1417c3341…) released by 0xabee243eeb…",
    "ok": true,
-   "detail": "block 123977 #1; multisig of the lock pays a1417c3341… exactly the redeemed amount; indexer: succeeded"
+   "detail": "block 123965 #1; hash recomputed; proposal 16 executed by the lock, inner call succeeded, 2 signers approved, Transfer of the redeemed amount to the destination"
   },
   {
-   "name": "redemption 14 (5000000000000 planck, withdrawn through intents.qlyphs-pqroute-b.testnet) released by 0xba932edd47…",
+   "name": "redemption 13 (1000000000000 planck to a1417c3341…) released by 0x93d6571d86…",
    "ok": true,
-   "detail": "block 124973 #1; multisig of the lock pays a1417c3341… exactly the redeemed amount; indexer: succeeded"
+   "detail": "block 123977 #1; hash recomputed; proposal 17 executed by the lock, inner call succeeded, 2 signers approved, Transfer of the redeemed amount to the destination"
   },
   {
-   "name": "redemption 15 (1000000000000 planck, withdrawn through intents.qlyphs-pqroute-b.testnet) released by 0x65ed62d30f…",
+   "name": "redemption 14 (5000000000000 planck to a1417c3341…) released by 0xba932edd47…",
    "ok": true,
-   "detail": "block 126278 #1; multisig of the lock pays a1417c3341… exactly the redeemed amount; indexer: succeeded"
+   "detail": "block 124973 #1; hash recomputed; proposal 18 executed by the lock, inner call succeeded, 2 signers approved, Transfer of the redeemed amount to the destination"
   },
   {
-   "name": "redemption 16 (1000000000000 planck, withdrawn through intents.qlyphs-pqroute-b.testnet) released by 0x75576f3974…",
+   "name": "redemption 15 (1000000000000 planck to a1417c3341…) released by 0x65ed62d30f…",
    "ok": true,
-   "detail": "block 126286 #1; multisig of the lock pays a1417c3341… exactly the redeemed amount; indexer: succeeded"
+   "detail": "block 126278 #1; hash recomputed; proposal 19 executed by the lock, inner call succeeded, 2 signers approved, Transfer of the redeemed amount to the destination"
   },
   {
-   "name": "redemption 17 (2000000000000 planck, withdrawn through intents.qlyphs-pqroute-b.testnet) released by 0x7f5ae48f0c…",
+   "name": "redemption 16 (1000000000000 planck to a1417c3341…) released by 0x75576f3974…",
    "ok": true,
-   "detail": "block 126579 #1; multisig of the lock pays a1417c3341… exactly the redeemed amount; indexer: succeeded"
+   "detail": "block 126286 #1; hash recomputed; proposal 20 executed by the lock, inner call succeeded, 2 signers approved, Transfer of the redeemed amount to the destination"
   },
   {
-   "name": "redemption 18 (100000000000 planck, withdrawn through intents.qlyphs-pqroute-b.testnet) released by 0x670c6cbfc8…",
+   "name": "redemption 17 (2000000000000 planck to a1417c3341…) released by 0x7f5ae48f0c…",
    "ok": true,
-   "detail": "block 129701 #1; multisig of the lock pays edad0c07b9… exactly the redeemed amount; indexer: succeeded"
+   "detail": "block 126579 #1; hash recomputed; proposal 21 executed by the lock, inner call succeeded, 2 signers approved, Transfer of the redeemed amount to the destination"
   },
   {
-   "name": "every mint and redemption of the bridge is accounted for",
+   "name": "redemption 18 (100000000000 planck to edad0c07b9…) released by 0x670c6cbfc8…",
    "ok": true,
-   "detail": "27 mints (46200000000042 planck) − 19 redemptions (35100000000042 planck) = 11100000000000; bridge supply 11100000000000"
+   "detail": "block 129701 #1; hash recomputed; proposal 22 executed by the lock, inner call succeeded, 2 signers approved, Transfer of the redeemed amount to the destination"
   },
   {
-   "name": "QTC on NEAR is fully backed by QTC in the lock",
+   "name": "verified mints minus redemptions equal the bridge supply",
    "ok": true,
-   "detail": "bridge supply 11100000000000 planck; lock free balance 13100000000000 planck (indexer); minted 46200000000042, released 35100000000042"
+   "detail": "27 mints (46200000000042 planck) − 19 redemptions (35100000000042 planck) = 11100000000000; supply 11100000000000 at NEAR block 277071486"
+  },
+  {
+   "name": "the lock holds at least the bridge supply",
+   "ok": true,
+   "detail": "lock free balance 13100000000000 planck at Quantus block 130264 (0x6c19cadf98…); supply 11100000000000 at NEAR block 277071486"
   }
  ]
 }

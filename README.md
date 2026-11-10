@@ -1,18 +1,21 @@
 # Qlyphs: a post-quantum route into NEAR Intents
 
-**QTC is signed with ML-DSA on Quantus. This route brings it into NEAR Intents and back with an ML-DSA signature
-at every authorization step, and you can check every one of them yourself.**
+**QTC is signed with ML-DSA on Quantus. This route brings it into NEAR Intents and back with ML-DSA at every
+application authorization step: user transactions, bridge approvals and withdrawals.**
 
-Today the token that represents QTC on NEAR mainnet is minted by an account whose only key is one ed25519 key
-([snapshot](evidence/bridge-mng-snapshot.json)). On this route, nothing that authorizes a mint, a withdrawal or
-a release is classical:
+At NEAR mainnet block 223,674,074 (2026-11-09), `bridge-mng.near`, the account that signs the `ft_deposit` calls
+minting the existing QTC token on NEAR, had one ed25519 full-access key ([snapshot](evidence/bridge-mng-snapshot.json)).
+The demonstrated deposit-and-return flow below uses ML-DSA for user transactions and bridge approvals. The NEAR
+bridge enforces two ML-DSA-87 attestations, recipient withdrawals use native ML-DSA-65, and Quantus enforces the
+reserve multisig. This covers application authorization; it does not cover NEAR consensus or signed swaps inside
+Intents.
 
 | Step | Who authorizes | Scheme |
 |---|---|---|
 | 1. Lock QTC on Quantus | the sender's Qlyphs wallet, into a native 2-of-3 multisig | ML-DSA-87 |
 | Choose the destination on NEAR | the same wallet key, signing the exact route | ML-DSA-87 |
 | 2. Mint on NEAR, straight into NEAR Intents | 2 of 3 attesters, verified on-chain by a contract that has no key | ML-DSA-87 |
-| Hold and move inside NEAR Intents | a NEAR account whose only key is native | ML-DSA-65 |
+| Recipient account control | a NEAR account whose only key, at the checked snapshot, is native | ML-DSA-65 |
 | 3. Withdraw to Quantus | that account (`ft_withdraw`, `WITHDRAW_TO:`) | ML-DSA-65 |
 | 4. Release from the Quantus lock | 2 of 3 attesters, enforced by Quantus's own multisig | ML-DSA-87 |
 
@@ -38,12 +41,17 @@ node scripts/verify-quantus.mjs    # Quantus test chain → evidence/route-quant
 - every withdrawal was signed with ML-DSA-65 by an account whose only key is ML-DSA-65, opened before its mint;
 - every forged or replayed mint ever sent to a bridge was refused.
 
-`verify-quantus.mjs` reads the Quantus test chain's public RPC and checks that **every mint is backed by a lock
-transfer of the same amount** (deposit id recomputed from the block, extrinsic hash and call checked byte for
-byte), that **every redemption on NEAR was released once** by the lock's multisig to the recorded destination,
-that mints minus redemptions equal the token's supply, and that the lock still holds at least that supply.
+`verify-quantus.mjs` reads the Quantus test chain's public RPC and checks:
+- the lock is a native multisig whose three signers and threshold of 2 it reads from chain state;
+- **every mint is backed by a lock deposit of the same amount**: the deposit id is recomputed from the block hash,
+  and that extrinsic dispatched successfully and emitted a transfer of exactly that amount to the lock;
+- **for each NEAR redemption, a distinct successful release**: the lock's multisig executed exactly the transfer
+  to the recorded destination for the recorded amount, its inner call succeeded, two distinct signers approved;
+- the verified mints minus the redemptions equal the token's supply, and the lock's balance at a recorded block
+  is at least that supply.
 
-Every round trip, with a link at each of the four steps: **[docs/EVIDENCE.md](docs/EVIDENCE.md)**.
+It does not establish that no other transfer ever left the lock, and it uses the Qlyphs test indexer only to find
+a release extrinsic's block from its hash. Every mint and redemption, with links: **[docs/EVIDENCE.md](docs/EVIDENCE.md)**.
 
 ## Try it
 
@@ -105,6 +113,7 @@ the paying execution each paid exactly once after restart (`evidence/route-crash
 bash scripts/build.sh                     # contracts (LLVM 19+); build/bridge-testnet.wasm is the deployed bridge, sha256 6c375c5b…
 node tests/bridge.sandbox.mjs             # 46 checks: quorum, every signed field, one mint per deposit, Intents mode, minimum withdrawal, storage
 node --test tests/route-crypto.unit.mjs   # sealing, tampering, pinned recipient, fresh accounts, restore
+node --test tests/quantus-evidence.unit.mjs   # what verify-quantus accepts: real transfers; not remarks, failed inner calls, other extrinsics, duplicates
 ```
 
 `tests/intents.sandbox.mjs` runs the bridge against the verifier, but the sandbox node that near-workspaces
@@ -138,16 +147,17 @@ ships is older than the verifier build, so that part runs on testnet (the eviden
 
 ## Hackathon
 
-Built for the NEAR HACKATHON (November 2026). This repository's first commit is 2026-10-22, after the hackathon
-was announced on 2026-10-19. It began as an ML-DSA-87 vault ([docs/VAULT.md](docs/VAULT.md)) and an admin-control
-prototype ([docs/GUARDIAN-README.md](docs/GUARDIAN-README.md)); the route is the entry. The Qlyphs app and
-wallet on Quantus existed before; only the NEAR route is submitted.
+Built for the NEAR HACKATHON (November 2026). Every commit in this repository was written after the hackathon was
+announced on 2026-10-19 (first commit 2026-10-22): first an ML-DSA-87 vault ([docs/VAULT.md](docs/VAULT.md)) and an
+admin-control prototype ([docs/GUARDIAN-README.md](docs/GUARDIAN-README.md)), then the route, which is the entry
+([full history](../../commits)). Pre-existing and not submitted: the Qlyphs app and wallet on Quantus, whose
+wallet signs the lock and the route, and the Quantus chain itself.
 
 The bridge verifies ML-DSA-87 on-chain with its own freestanding C verifier (`core/pq87.c`, written after the
 pq-crystals reference; see [THIRD_PARTY.md](THIRD_PARTY.md)). Built with [`near/intents`](https://github.com/near/intents) (unmodified verifier),
 [`@noble/post-quantum`](https://github.com/paulmillr/noble-post-quantum) (ML-DSA-87, ML-KEM-1024),
 [`@fastnear/ml-dsa-65`](https://www.npmjs.com/package/@fastnear/ml-dsa-65) and `@fastnear/api` (NEAR ML-DSA-65
-keys and transactions), `@noble/hashes`, `@noble/ciphers`, `near-api-js` and `near-workspaces`.
+keys and transactions), `@polkadot/api` (Quantus events and state), `@noble/hashes`, `@noble/ciphers`, `near-api-js` and `near-workspaces`.
 
 ## Docs
 

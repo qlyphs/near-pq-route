@@ -43,8 +43,9 @@ mint unbacked tokens or release the reserve. NEAR validator signatures and conse
 **Route** (240 bytes): `"QLYPRTE2"` | deposit id (32) | bridge id (length u8 + 64) | receiver id (length u8 +
 64) | mode u8 (1 = into Intents) | SHA-256(receipt) (32) | SHA-256(the receiver's ML-DSA-65 key handle, ASCII)
 (32) | zeros. The route commits to the handle NEAR lists the key under (`ml-dsa-65-hash:…`, SHA3-256 of the key),
-never to the full key, so a claim may name the receiver's key either in full or by that handle: an account opened in
-another wallet (Meteor) is known on NEAR only by the handle. The depositor authorizes it with the key that signed the Quantus transfer: either an ML-DSA-87
+never to the full key, so a claim may name the receiver's key either in full or by that handle (exactly 32 bytes,
+canonical base58): an account opened in another wallet (Meteor) is known on NEAR only by the handle. Substituting
+another key under a fixed handle is a second-preimage search on SHA3-256. The depositor authorizes it with the key that signed the Quantus transfer: either an ML-DSA-87
 signature over it (context `qlyphs/near-route/v1`, command line), or, from the Qlyphs wallet, a site session
 challenge whose nonce is SHA-256 of these bytes, whose service is the lock and whose account is the depositor.
 
@@ -53,8 +54,11 @@ locking and by every attester before signing: the receiver
 exists; its only access key is a FullAccess key whose handle is exactly the route's; it has no contract, local or
 global; NEAR Intents holds no signing key for it (`public_keys_of` is empty) and authenticates it by its own
 account (`is_auth_by_predecessor_id_enabled`). So nobody, the sponsor included, can hold the account before the
-tokens arrive. The same rule admits an account the person already holds, such as one in Meteor Wallet, once its only
-key is one full-access ML-DSA-65 key: an account that still has a classical key is refused before any QTC moves.
+tokens arrive. The same rule admits an account the person already holds, such as one in Meteor Wallet, whose keys are
+exactly one full-access ML-DSA-65 key (the configuration this demo supports). The app checks the recipient's eligibility
+before requesting the QTC lock. Attesters check it again before approving delivery. A subsequent account change can
+interrupt the route; an attestation already issued stays valid. Such an account is restored by its own wallet, not by
+the Qlyphs backup, and it gives up the fresh-account privacy: the payment is linked to its history.
 
 **Attestation** (288 bytes, signed by two attesters, context `qlyphs/near-bridge/v1`):
 

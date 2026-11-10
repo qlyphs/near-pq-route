@@ -1,13 +1,13 @@
 {
- "date": "2026-11-10T13:36:08.911Z",
+ "date": "2026-11-10T17:51:57.111Z",
  "quantus_rpc": "https://testnet-rpc.qlyphs.com",
  "quantus_finalized": {
-  "number": 130372,
-  "hash": "0x41d6a405b9a747a1e978e2588b6b8fafc28285b7b4b2895cc0581581b0de9d92"
+  "number": 131414,
+  "hash": "0x8b217d417bcad97f79264fe2b8de30a5ffa180a5b695a6bdf934df71f2e3dc4c"
  },
  "near_block": {
-  "height": 277074334,
-  "hash": "7adsZp9hwbeF691R3gYhhzvBCt5ZENSNHBfXCnvGg12"
+  "height": 277100435,
+  "hash": "92ZvdjuMNNhJjG5ktARQ7n1JVno9PRgCc5aDKCx83Wpp"
  },
  "upstream": {
   "file": "evidence/route-onchain.json",
@@ -200,7 +200,7 @@
   {
    "name": "the lock is a native 2-of-3 multisig of the three attester keys",
    "ok": true,
-   "detail": "threshold 2, 3 signers, at finalized block 130372"
+   "detail": "threshold 2, 3 signers, at finalized block 131414"
   },
   {
    "name": "mint 2dKio9M96J… is backed by lock deposit 0x6982d95113… (block 120989 #1)",
@@ -435,12 +435,12 @@
   {
    "name": "verified mints minus redemptions equal the bridge supply",
    "ok": true,
-   "detail": "27 mints (46200000000042 planck) − 19 redemptions (35100000000042 planck) = 11100000000000; supply 11100000000000 at NEAR block 277074334"
+   "detail": "27 mints (46200000000042 planck) − 19 redemptions (35100000000042 planck) = 11100000000000; supply 11100000000000 at NEAR block 277100435"
   },
   {
    "name": "the lock holds at least the bridge supply",
    "ok": true,
-   "detail": "lock free balance 13100000000000 planck at Quantus block 130372 (0x41d6a405b9…); supply 11100000000000 at NEAR block 277074334"
+   "detail": "lock free balance 13100000000000 planck at Quantus block 131414 (0x8b217d417b…); supply 11100000000000 at NEAR block 277100435"
   }
  ]
 }

@@ -120,5 +120,22 @@
    "execute": "0xf18ac7cad474e178e024debe38eb8b55da3ee4a91f466cb8dfc217aeb312dfa3",
    "destination": "qzo6foG1F5X1f7Bd1kq7pivCgFoVeCSft3fbNT9bKa8LaeBri"
   }
+ },
+ "redesigned_page_run": {
+  "date": "2026-11-10",
+  "label": "bridge to NEAR from the redesigned page (tabs Bridge / Request / Pay) on https://app-testnet.qlyphs.com, approved in a Qlyphs wallet",
+  "claim_origin": "https://app-testnet.qlyphs.com",
+  "payer": "qzo6foG1F5X1f7Bd1kq7pivCgFoVeCSft3fbNT9bKa8LaeBri",
+  "lock": {
+   "block": 129263,
+   "block_hash": "0x8c9d9fc79925df5e5f72d763440a3f62174d5ba542a352d40f2e890e81e527db",
+   "extrinsic": 1,
+   "planck": "1000000000000"
+  },
+  "fresh_account": "rcf95044cb2ccb461b2f3.qlyphs-pqroute-c.testnet",
+  "mint_near_tx": "9CeUV65puUuVky647hsf9DsHurzERMQAjEFdsCKKpami",
+  "delivered": "intents (attester service log: \"delivered intents\")",
+  "not_yet_shown": "the way back from this account, and a recording of the run",
+  "checked_by": "verify-route.mjs (both ML-DSA-87 signatures of the mint) and verify-quantus.mjs (lock deposit of the same amount)"
  }
 }

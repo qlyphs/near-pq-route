@@ -1,6 +1,6 @@
 # Evidence: the current bridge, step by step
 
-Generated from `evidence/route-onchain.json` (104/104 checks on NEAR testnet, 2026-11-10T12:22:21.621Z) and `evidence/route-quantus.json` (52/52 checks on the Quantus test chain, finalized block 130264, NEAR block 277071486). Rerun both and this page with:
+Generated from `evidence/route-onchain.json` (104/104 checks on NEAR testnet, 2026-11-10T12:22:21.621Z) and `evidence/route-quantus.json` (52/52 checks on the Quantus test chain, finalized block 130372, NEAR block 277074334). Rerun both and this page with:
 
 ```sh
 node scripts/verify-route.mjs && node scripts/verify-quantus.mjs && node scripts/evidence-page.mjs
@@ -68,8 +68,8 @@ The NEAR bridge records every burn as a numbered redemption (amount, Quantus des
 | 17 | 2 | `0xa1417c334104e2a4…` | [0x7f5ae48f…](https://testnet.qlyphs.com/api/transactions/0x7f5ae48f0cf9ce02d8880f5af590f0c8c51f67301dd875fe53739533108bf722) |
 | 18 | 0.1 | `0xedad0c07b9d00088…` | [0x670c6cbf…](https://testnet.qlyphs.com/api/transactions/0x670c6cbfc80d6eccaf329b53e9c59a9fc8439643a2d605c3f3ed2ce3331bcdc2) |
 
-**Accounting.** 27 mints (46200000000042 planck) − 19 redemptions (35100000000042 planck) = 11100000000000; supply 11100000000000 at NEAR block 277071486.
+**Accounting.** 27 mints (46200000000042 planck) − 19 redemptions (35100000000042 planck) = 11100000000000; supply 11100000000000 at NEAR block 277074334.
 
-**Lock balance.** lock free balance 13100000000000 planck at Quantus block 130264 (0x6c19cadf98…); supply 11100000000000 at NEAR block 277071486.
+**Lock balance.** lock free balance 13100000000000 planck at Quantus block 130372 (0x41d6a405b9…); supply 11100000000000 at NEAR block 277074334.
 
 Mints and releases are approved by two of the three attester keys, all operated by Qlyphs in one service: this shows 2-of-3 post-quantum authorization, not independent operators. The relayer that submits mints pays gas and has no authority; its only key is ML-DSA-65.

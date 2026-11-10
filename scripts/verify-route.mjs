@@ -74,7 +74,7 @@ for (const route of routes) {
   const entry = { bridge: b, current: route.current, quantus_network: route.bridge.quantus_network ?? 'Quantus development network', mints: [], withdrawals: [] };
   check(`${b} has no access key`, (await keys(b)).length === 0);
   const want = Buffer.from(route.bridge.wasm_sha256, 'hex');
-  check(`${b} runs the code it was deployed with, sha256 ${want.toString('hex').slice(0, 16)}…${!route.current ? ' (earlier version)' : bridgeWasm ? ' (= your build/bridge-testnet.wasm)' : ' (run scripts/build.sh to compare with your own build)'}`, (await codeHash(b)) === b58(want) && (!route.current || !bridgeWasm || want.equals(sha256(bridgeWasm))));
+  check(`${b} runs the code it was deployed with, sha256 ${want.toString('hex').slice(0, 16)}…${!route.current ? ' (earlier version)' : bridgeWasm ? ' (= your build/bridge-testnet.wasm)' : '; local build comparison not run (no build/bridge-testnet.wasm)'}`, (await codeHash(b)) === b58(want) && (!route.current || !bridgeWasm || want.equals(sha256(bridgeWasm))));
   const st = await view(b, 'state');
   check(`${b} names the Quantus genesis and the three attester keys`, st.quantus_genesis === route.bridge.quantus_genesis.replace(/^0x/, '') && st.attesters.every((h, i) => h === attesters[i].key_sha256));
   entry.refused_attempts = [];

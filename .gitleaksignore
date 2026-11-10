@@ -32,3 +32,19 @@ f1ec85862c7bc43e9909cc31360648370e63ba1e:evidence/token-sandbox.json:generic-api
 83ec663e83469700d4c23eadf4c97e9a73d2e0fd:deployments/guardian-testnet.json:generic-api-key:12
 83ec663e83469700d4c23eadf4c97e9a73d2e0fd:deployments/guardian-testnet.json:generic-api-key:18
 83ec663e83469700d4c23eadf4c97e9a73d2e0fd:deployments/guardian-testnet.json:generic-api-key:41
+# Same public key hashes, as a directory scan names them
+deployments/superseded-route-curve-r2.json:generic-api-key:24
+deployments/superseded-route-curve-r2.json:generic-api-key:28
+deployments/superseded-route-curve-r2.json:generic-api-key:32
+deployments/route-testnet.json:generic-api-key:17
+deployments/route-testnet.json:generic-api-key:21
+deployments/route-testnet.json:generic-api-key:25
+deployments/superseded-route-curve-r1.json:generic-api-key:24
+deployments/superseded-route-curve-r1.json:generic-api-key:28
+deployments/superseded-route-curve-r1.json:generic-api-key:32
+deployments/route-curve-testnet.json:generic-api-key:24
+deployments/route-curve-testnet.json:generic-api-key:28
+deployments/route-curve-testnet.json:generic-api-key:32
+deployments/route-attesters.json:generic-api-key:6
+deployments/route-attesters.json:generic-api-key:12
+deployments/route-attesters.json:generic-api-key:18

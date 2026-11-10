@@ -25,7 +25,8 @@ const INDEXER = 'https://testnet.qlyphs.com/api';
 const NEAR_RPCS = [...(process.env.NEAR_RPC ? [process.env.NEAR_RPC] : []), 'https://rpc.testnet.fastnear.com', 'https://rpc.testnet.near.org'];
 const lockDeployment = JSON.parse(readFileSync('deployments/quantus-lock-curve.json', 'utf8'));
 const index = JSON.parse(readFileSync('evidence/route-quantus-index.json', 'utf8'));
-const onchain = JSON.parse(readFileSync('evidence/route-onchain.json', 'utf8'));
+const onchainBytes = readFileSync('evidence/route-onchain.json');
+const onchain = JSON.parse(onchainBytes.toString('utf8'));
 const LOCK = '0x' + lockDeployment.accountId.replace(/^0x/, '');
 
 const results = [];
@@ -149,7 +150,7 @@ check('the lock holds at least the bridge supply', free >= supply, `lock free ba
 await api.disconnect();
 writeFileSync('evidence/route-quantus.json', JSON.stringify({
   date: new Date().toISOString(), quantus_rpc: QUANTUS_RPC, quantus_finalized: { number: finalized, hash: finalizedHash },
-  near_block: { height: nearHeight, hash: nearBlock }, upstream: { file: 'evidence/route-onchain.json', date: onchain.date, checks: onchain.results.length },
+  near_block: { height: nearHeight, hash: nearBlock }, upstream: { file: 'evidence/route-onchain.json', sha256: hex(sha256(onchainBytes)), date: onchain.date, checks: onchain.results.length },
   indexer_used_for: 'locating release extrinsics by hash', bridge: bridge.bridge, locks, results,
 }, null, 1) + '\n');
 console.log(`${results.length - failures}/${results.length} passed · evidence/route-quantus.json`);

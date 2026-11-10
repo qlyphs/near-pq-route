@@ -153,6 +153,9 @@ admin-control prototype ([docs/GUARDIAN-README.md](docs/GUARDIAN-README.md)), th
 ([full history](../../commits)). Pre-existing and not submitted: the Qlyphs app and wallet on Quantus, whose
 wallet signs the lock and the route, and the Quantus chain itself.
 
+AI assistance: this repository was written with AI coding assistants (Claude Code for implementation and tests,
+ChatGPT for security reviews), directed and reviewed by the author, who is responsible for it.
+
 The bridge verifies ML-DSA-87 on-chain with its own freestanding C verifier (`core/pq87.c`, written after the
 pq-crystals reference; see [THIRD_PARTY.md](THIRD_PARTY.md)). Built with [`near/intents`](https://github.com/near/intents) (unmodified verifier),
 [`@noble/post-quantum`](https://github.com/paulmillr/noble-post-quantum) (ML-DSA-87, ML-KEM-1024),

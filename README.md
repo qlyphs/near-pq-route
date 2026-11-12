@@ -185,8 +185,7 @@ admin-control prototype ([docs/GUARDIAN-README.md](docs/GUARDIAN-README.md)), th
 November.
 
 Pre-existing and not submitted:
-- the ML-DSA-87 verifier in `core/`, written on 2026-10-17 for an earlier Qlyphs prototype on Solana and reused
-  unchanged (see [THIRD_PARTY.md](THIRD_PARTY.md));
+- the ML-DSA-87 verifier in `core/`, reused unchanged from earlier Qlyphs work (see [THIRD_PARTY.md](THIRD_PARTY.md));
 - the rest of the Qlyphs app;
 - the Qlyphs wallet on Quantus, which signs the lock and the route;
 - the Quantus chain itself.

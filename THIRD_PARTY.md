@@ -1,9 +1,6 @@
 # Third-party code and attribution
 
-- `core/` is the ML-DSA-87 verifier. It was written in October 2026, before the hackathon, for an earlier Qlyphs
-  prototype of the same verifier on Solana, which is why its comments mention SBF, the Solana virtual machine. It
-  is reused here unchanged (hashes in `core/SOURCE.sha256`). The files that existed only for Solana are not in this
-  repository: the Solana ABI headers and linker script, the Keccak round generator and the test-vector generator.
+- `core/` is the ML-DSA-87 verifier, reused unchanged from earlier Qlyphs work (hashes in `core/SOURCE.sha256`).
   - `core/pq87.c` follows FIPS 204 and the structure of the pq-crystals reference (commit
     `d35ba3fe5449bee3e6d43e1f296c3ca818bd36be`, public domain / CC0, Apache-2.0 or GPL-2.0; the public-domain
     option is used).

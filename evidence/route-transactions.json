@@ -894,6 +894,110 @@
    "methods": [
     "mint"
    ]
+  },
+  {
+   "hash": "FrxYP3ueWFg92G24LA5nMtdLguVj2NtVLSk3tJGjK3tS",
+   "signer": "relay.qlyphs-pqroute-a.testnet",
+   "receiver": "qtc-pq.qlyphs-pqroute-a.testnet",
+   "methods": [
+    "mint"
+   ]
+  },
+  {
+   "hash": "9yY5WxbTn4RdfQ65cC84gnNvCQqZfCAbfzHR9UCSJQpT",
+   "signer": "relay.qlyphs-pqroute-a.testnet",
+   "receiver": "qtc-pq.qlyphs-pqroute-a.testnet",
+   "methods": [
+    "mint"
+   ]
+  },
+  {
+   "hash": "G96pMd7U4sWWjgCcTE6G9Zv1cDf7A5U83wXTo6W4WXeG",
+   "signer": "relay.qlyphs-pqroute-a.testnet",
+   "receiver": "qtc-pq.qlyphs-pqroute-a.testnet",
+   "methods": [
+    "mint"
+   ]
+  },
+  {
+   "hash": "FNTQFxR45YwnEkEXLFwcB4PRLPtEHiWuv96BDMVnnDg2",
+   "signer": "relay.qlyphs-pqroute-a.testnet",
+   "receiver": "qtc-pq.qlyphs-pqroute-a.testnet",
+   "methods": [
+    "mint"
+   ]
+  },
+  {
+   "hash": "2Bv5FfZsQ9yxWq4YZdn2ZyrgPebKdiZwNmojaPesLB6R",
+   "signer": "relay.qlyphs-pqroute-a.testnet",
+   "receiver": "qtc-pq.qlyphs-pqroute-a.testnet",
+   "methods": [
+    "mint"
+   ]
+  },
+  {
+   "hash": "5BPE68s89tuq4WGPTMPsuM6BvvShBuJfn1r71GhVbTT",
+   "signer": "relay.qlyphs-pqroute-a.testnet",
+   "receiver": "qtc-pq.qlyphs-pqroute-a.testnet",
+   "methods": [
+    "mint"
+   ]
+  },
+  {
+   "hash": "CkiwwXBA8RJ1NhXwgmpSXd3Lvday4RtS7zt4E6N19Fmk",
+   "signer": "relay.qlyphs-pqroute-a.testnet",
+   "receiver": "qtc-pq.qlyphs-pqroute-a.testnet",
+   "methods": [
+    "mint"
+   ]
+  },
+  {
+   "hash": "417t3Y9XhoWU2jRFCgjMCtpjHvQmYqQPr59AFs46BJ6r",
+   "signer": "relay.qlyphs-pqroute-a.testnet",
+   "receiver": "qtc-pq.qlyphs-pqroute-a.testnet",
+   "methods": [
+    "mint"
+   ]
+  },
+  {
+   "hash": "4w3ADUpG85xnGw7k4cvmDPEteYBYVf6cxgXDHuJuNXWC",
+   "signer": "relay.qlyphs-pqroute-a.testnet",
+   "receiver": "qtc-pq.qlyphs-pqroute-a.testnet",
+   "methods": [
+    "mint"
+   ]
+  },
+  {
+   "hash": "4izFE5Lp9nTKSH5hwrkSMWb2Z3UMVAvAhChxBnP1V1Hy",
+   "signer": "relay.qlyphs-pqroute-a.testnet",
+   "receiver": "qtc-pq.qlyphs-pqroute-a.testnet",
+   "methods": [
+    "mint"
+   ]
+  },
+  {
+   "hash": "5ZbQ4wDnuTVTo7FtQKwFBnjb7xYEJJUNgvLFxQpvj9ap",
+   "signer": "relay.qlyphs-pqroute-a.testnet",
+   "receiver": "qtc-pq.qlyphs-pqroute-a.testnet",
+   "methods": [
+    "mint"
+   ]
+  },
+  {
+   "hash": "BubpZXffatD4iMJAeb2oJXYreKg9hfy2za5bNxoeh2R6",
+   "signer": "relay.qlyphs-pqroute-a.testnet",
+   "receiver": "qtc-pq.qlyphs-pqroute-a.testnet",
+   "methods": [
+    "mint"
+   ]
+  },
+  {
+   "hash": "6KrpQheV59aXoxgsTg2SKUfUxoM2JEGMeeyPx4PjLq8",
+   "signer": "relay.qlyphs-pqroute-a.testnet",
+   "receiver": "qtc-pq.qlyphs-pqroute-a.testnet",
+   "methods": [
+    "mint"
+   ]
   }
  ],
  "qlyphs-pqroute-c.testnet": [

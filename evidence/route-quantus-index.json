@@ -1,6 +1,10 @@
 {
- "what": "Public facts the attester service recorded for the current bridge: where each deposit was locked on the Quantus test chain, and the multisig extrinsics that released each redemption. scripts/verify-quantus.mjs re-reads every one of them from the chain and checks it against NEAR; this file only says where to look.",
+ "what": "Public facts the attester service recorded for the current bridge, as a snapshot at near_block: where each deposit was locked on the Quantus test chain, and the multisig extrinsics that released each redemption. scripts/verify-quantus.mjs re-reads every one of them from the chain and checks it against NEAR at that block; this file only says where to look.",
  "bridge": "qtc-pq.qlyphs-pqroute-a.testnet",
+ "near_block": {
+  "height": 277430232,
+  "hash": "3VBjyp7Pr7rQttNT2iGChrsSfDDJkZphStvbazY9Jqa6"
+ },
  "deposits": [
   {
    "deposit_id": "d39c711aed576dd4ee4f9a534b71764598cea89f4120cd375991fc8cc66ec282",
@@ -217,6 +221,110 @@
    "extrinsic": 1,
    "planck": "100000000000",
    "from": "qzppsPak2eHzVHMMRGUqHbtvd17Ap9oEW3HaT5YsALeDUQ5rh"
+  },
+  {
+   "deposit_id": "83fbbb8d496c928076ed17728c2026556a9dfe9b28090c28567b66978e2b3b3e",
+   "block": 142048,
+   "block_hash": "0x74d1fbd7158a934724ad20a62c1e918c6ebcd026c3ab2d827313c543eca42b1b",
+   "extrinsic": 1,
+   "planck": "1000000000000",
+   "from": "qzo6foG1F5X1f7Bd1kq7pivCgFoVeCSft3fbNT9bKa8LaeBri"
+  },
+  {
+   "deposit_id": "4c240429766e26a5768bc72c13ab5614b5d224c4290d060cf7f535c504dab3b0",
+   "block": 142072,
+   "block_hash": "0x1dd26615d70771593962152b1e1f3dd7aa4c80cdea8cc221aad389cfb76c5ecd",
+   "extrinsic": 1,
+   "planck": "1000000000000",
+   "from": "qzo6foG1F5X1f7Bd1kq7pivCgFoVeCSft3fbNT9bKa8LaeBri"
+  },
+  {
+   "deposit_id": "c54ea0774fec51ea6996871c2f7458121c7d60e152ed1562ac5906fe2690ad70",
+   "block": 142092,
+   "block_hash": "0xece8a811183772d844e52354da694d5630de286159e6a8812ace909468368eb0",
+   "extrinsic": 1,
+   "planck": "1000000000000",
+   "from": "qzo6foG1F5X1f7Bd1kq7pivCgFoVeCSft3fbNT9bKa8LaeBri"
+  },
+  {
+   "deposit_id": "d7279a364a6f78924e18785f157094f317858d8191ac8f2227bce0fa01b149d4",
+   "block": 142110,
+   "block_hash": "0xbd116eb90495a4a4103bea43b83bb5f9183e60ae0f96738757849fcb2435717e",
+   "extrinsic": 1,
+   "planck": "2000000000000",
+   "from": "qzo6foG1F5X1f7Bd1kq7pivCgFoVeCSft3fbNT9bKa8LaeBri"
+  },
+  {
+   "deposit_id": "5bb5babf451883daba0ca4b8679dd6f4031524d46acc4e3f4dcfb69f875b549f",
+   "block": 142205,
+   "block_hash": "0x4e85c4ea4ab6ec69cfaa9a60ed759d2f52f3805895586e1e0203a7e4751e6c27",
+   "extrinsic": 1,
+   "planck": "1000000000000",
+   "from": "qzo6foG1F5X1f7Bd1kq7pivCgFoVeCSft3fbNT9bKa8LaeBri"
+  },
+  {
+   "deposit_id": "d2716accd56fa795c34a67b9a4dfcaa73714e9eab3cbbcf9721c0c35ef274541",
+   "block": 142221,
+   "block_hash": "0x17a2f6c288e364bfb7a6ca5ca8b2d3bb4cbc219b2a4cc5df83ce9cf555652faa",
+   "extrinsic": 1,
+   "planck": "1000000000000",
+   "from": "qzo6foG1F5X1f7Bd1kq7pivCgFoVeCSft3fbNT9bKa8LaeBri"
+  },
+  {
+   "deposit_id": "9d935b739694b9221301fbba9c4b96f4b6343c14acd9caf77e63eb5239e9a0da",
+   "block": 142243,
+   "block_hash": "0x780b69c760088f8214d786d950bf61ecac4af643d5e90567f4e7471181ec3182",
+   "extrinsic": 1,
+   "planck": "1000000000000",
+   "from": "qzo6foG1F5X1f7Bd1kq7pivCgFoVeCSft3fbNT9bKa8LaeBri"
+  },
+  {
+   "deposit_id": "0fb9460cdbd326db70e19e15c6bea3d66d4516581ce52a84a62143ffa06e6bc3",
+   "block": 142274,
+   "block_hash": "0xb2f4cca249be9fe9cdf1bd223833189a1167e245a57c980beff9f807ee155bd8",
+   "extrinsic": 1,
+   "planck": "1000000000000",
+   "from": "qzo6foG1F5X1f7Bd1kq7pivCgFoVeCSft3fbNT9bKa8LaeBri"
+  },
+  {
+   "deposit_id": "18c87e974cf57f5da95add903a345db7e6b7ceb65cd536a327889c371cdb82d0",
+   "block": 143400,
+   "block_hash": "0x296327b5b339144034ffc5f680757671925b3b5435bf06f0fd94f50302e29551",
+   "extrinsic": 1,
+   "planck": "1000000000000",
+   "from": "qzo6foG1F5X1f7Bd1kq7pivCgFoVeCSft3fbNT9bKa8LaeBri"
+  },
+  {
+   "deposit_id": "b1afdfc7f93dfbb56dd4d90aff9c166410f49df5ab32c513f744d82382b6b190",
+   "block": 143427,
+   "block_hash": "0x48025ffa14369245036fb005ed9ca92f5b482b8e332eaed3a188bdc137fa16aa",
+   "extrinsic": 1,
+   "planck": "1000000000000",
+   "from": "qzo6foG1F5X1f7Bd1kq7pivCgFoVeCSft3fbNT9bKa8LaeBri"
+  },
+  {
+   "deposit_id": "4191fb41ca686ddcf2917f8f1685cae44dbd864fa4374fa538cd4903a19d33fb",
+   "block": 143486,
+   "block_hash": "0xeff280700840e0f75387a9ba1c91f2a0433f8016bed76025995f9204e1f81f72",
+   "extrinsic": 1,
+   "planck": "1000000000000",
+   "from": "qzo6foG1F5X1f7Bd1kq7pivCgFoVeCSft3fbNT9bKa8LaeBri"
+  },
+  {
+   "deposit_id": "cdd5316b7e67311d0f2097580c9b2eae7222a3278d23fbbc7c1523c79b8657cc",
+   "block": 143873,
+   "block_hash": "0xa686614fb975eedb9f2d2fef054f7693c5cec4c1bac59438a50e8e5a041d530d",
+   "extrinsic": 1,
+   "planck": "1000000000000",
+   "from": "qzo6foG1F5X1f7Bd1kq7pivCgFoVeCSft3fbNT9bKa8LaeBri"
+  },
+  {
+   "deposit_id": "82bf9560eeef13f86070ad53a2420765d43fb4d6ba69c32f6bd4403f24ce3523",
+   "block": 143900,
+   "block_hash": "0x892f99503b71a3ece7243ed22428c571bc38e28e6aaa0c91c2332940516cea7a",
+   "extrinsic": 1,
+   "planck": "3000000000000",
+   "from": "qzo6foG1F5X1f7Bd1kq7pivCgFoVeCSft3fbNT9bKa8LaeBri"
   }
  ],
  "releases": [
@@ -390,6 +498,114 @@
    "destination": "edad0c07b9d0008888f02640f887ba4d2ba67a31d454bfc6a16cde4282bf7a57",
    "planck": "100000000000",
    "destination_address": "qzppsPak2eHzVHMMRGUqHbtvd17Ap9oEW3HaT5YsALeDUQ5rh"
+  },
+  {
+   "redemption": 19,
+   "execute": "0xb7d515f2743e63bdfe21b0cf798d419fd3d001f19ce0540c5b2aab3e8c4d672e",
+   "propose": "0x99d8debafb6bf73151c522a99832ccf6548a342e28b21dfacd67dccb64fb917f",
+   "approve": "0x7c938be44d3da6b9bd67ea99a2837147e693442f7660f815c7b877c2b8706662",
+   "destination": "a1417c334104e2a42d0a4d498cad19758dd53ae128569a9bfa723ee763578392",
+   "planck": "1000000000000",
+   "destination_address": "qzo6foG1F5X1f7Bd1kq7pivCgFoVeCSft3fbNT9bKa8LaeBri"
+  },
+  {
+   "redemption": 20,
+   "execute": "0x182a8baf6e831575d9f37e4b7b6b7f4d2f42f8417524e611d70b6bbbaa889839",
+   "propose": "0xad97b970ddbecd270dcc5427e59248dd5deb9528eb528a474fb6bce5ba30ebc1",
+   "approve": "0xfd3e29f20cf02d8dd6e8f245516ff708de23be74384eb1f381425ee3aa71e821",
+   "destination": "a1417c334104e2a42d0a4d498cad19758dd53ae128569a9bfa723ee763578392",
+   "planck": "1000000000000",
+   "destination_address": "qzo6foG1F5X1f7Bd1kq7pivCgFoVeCSft3fbNT9bKa8LaeBri"
+  },
+  {
+   "redemption": 21,
+   "execute": "0x956e59860fec4c3dbcf8c6ad4dfae34003def2fc3dadfd8b4109bf99f3de8570",
+   "propose": "0xb7c8e6a7b70863ba1584cee68c60591394b8d10f0b04957fd63069fb5a4c6eff",
+   "approve": "0x6df871afb83a67e262e16c136c9a282913736a97d6d593e2af75eaff8c27939f",
+   "destination": "a1417c334104e2a42d0a4d498cad19758dd53ae128569a9bfa723ee763578392",
+   "planck": "1000000000000",
+   "destination_address": "qzo6foG1F5X1f7Bd1kq7pivCgFoVeCSft3fbNT9bKa8LaeBri"
+  },
+  {
+   "redemption": 22,
+   "execute": "0x207590e5b4ee1bda5bad2e5ca3e5dd6128468500bf99ad88ea193df3151c8bbb",
+   "propose": "0x0810ab948ca1ca68d9899c5ab85dbd8e1963e4ebf7247f3ff2232b030c281684",
+   "approve": "0x2f84ff4613c89d8c8772423a89ebccdf7c957dc73425e80d4ff18f229c37bf8c",
+   "destination": "a1417c334104e2a42d0a4d498cad19758dd53ae128569a9bfa723ee763578392",
+   "planck": "1000000000000",
+   "destination_address": "qzo6foG1F5X1f7Bd1kq7pivCgFoVeCSft3fbNT9bKa8LaeBri"
+  },
+  {
+   "redemption": 23,
+   "execute": "0xc4c28a2caaa484f6eb4271ffdcd661618bf51c97231efb9ca4fe7866590210fb",
+   "propose": "0xf1fbcd38a464db2b547cd0af01987406b048e17d98445ca301b29c0f2da5e7bc",
+   "approve": "0x857b1fa96bdc9cdf39167c152372c74965e560d39af71fe11ed1a1a48b46dd3d",
+   "destination": "a1417c334104e2a42d0a4d498cad19758dd53ae128569a9bfa723ee763578392",
+   "planck": "2000000000000",
+   "destination_address": "qzo6foG1F5X1f7Bd1kq7pivCgFoVeCSft3fbNT9bKa8LaeBri"
+  },
+  {
+   "redemption": 24,
+   "execute": "0x451b1a4ed2f780ffdba7336fe18ab191c5ba5017f23e7cc739794eae145a8573",
+   "propose": "0xba8aefb33546dc14ea82f999fcfc0b00816f0f80c9ab304017b309b5296e9b37",
+   "approve": "0xca2925ba062163d3b490772554877eb2c0ce440446963e8058595bf399566653",
+   "destination": "a1417c334104e2a42d0a4d498cad19758dd53ae128569a9bfa723ee763578392",
+   "planck": "1000000000000",
+   "destination_address": "qzo6foG1F5X1f7Bd1kq7pivCgFoVeCSft3fbNT9bKa8LaeBri"
+  },
+  {
+   "redemption": 25,
+   "execute": "0xe0898bd8e286aa161d5cfea1ffe366159b0dc38f5404393ae3dc1e06ebc9af70",
+   "propose": "0xc100c1eeebf78220bcdc3242195e93dcd55bcd11017a6918de257f632710f3e6",
+   "approve": "0xa8d3614c3277093c1669cfe6e1b36bf3334ed6d0ac433fe79adca51f39a23d53",
+   "destination": "a1417c334104e2a42d0a4d498cad19758dd53ae128569a9bfa723ee763578392",
+   "planck": "1000000000000",
+   "destination_address": "qzo6foG1F5X1f7Bd1kq7pivCgFoVeCSft3fbNT9bKa8LaeBri"
+  },
+  {
+   "redemption": 26,
+   "execute": "0xa65d8b4f6fd769d0c6f02637a6a9a5759afe27f661361d19c1841831b56958aa",
+   "propose": "0xdb667e74b69294610bbdd05315e7a87700c86a5084bf28f05d8ce075de4c55dd",
+   "approve": "0x0076ef18fd31b50742b1592693a04b991bebabdab10a19fed69dcc889ffcad96",
+   "destination": "a1417c334104e2a42d0a4d498cad19758dd53ae128569a9bfa723ee763578392",
+   "planck": "1000000000000",
+   "destination_address": "qzo6foG1F5X1f7Bd1kq7pivCgFoVeCSft3fbNT9bKa8LaeBri"
+  },
+  {
+   "redemption": 27,
+   "execute": "0x6bae24f6b432bb5ed82f0ae3c9ce468dd41fcec4c9178189136751ef3ba7c615",
+   "propose": "0x30152ca523a65b6a6fc1a73c4b696de81b5a01826d7c34ab8c791cf05e17b547",
+   "approve": "0x6913a4df3f1f2b4327df8f78c42baa2d96ba118c379b22d33dc4ec73653e5a92",
+   "destination": "a1417c334104e2a42d0a4d498cad19758dd53ae128569a9bfa723ee763578392",
+   "planck": "1000000000000",
+   "destination_address": "qzo6foG1F5X1f7Bd1kq7pivCgFoVeCSft3fbNT9bKa8LaeBri"
+  },
+  {
+   "redemption": 28,
+   "execute": "0x9394cd728d5991ccd39050e3194644f48097a17440685491a47786834704a7c4",
+   "propose": "0x2a5f0b14b73ec9be734a86b1bd4861b9e1a190c1a283d6c8e9c906bd9db1a8e0",
+   "approve": "0x6236828fc5d435f5fd7d1ef335f49201950c190c9944ab30807caabd22fb538f",
+   "destination": "a1417c334104e2a42d0a4d498cad19758dd53ae128569a9bfa723ee763578392",
+   "planck": "1000000000000",
+   "destination_address": "qzo6foG1F5X1f7Bd1kq7pivCgFoVeCSft3fbNT9bKa8LaeBri"
+  },
+  {
+   "redemption": 29,
+   "execute": "0xf53f018dae72123f07841a6164fbfbef0d9962d4717c289c641ede062022e5c7",
+   "propose": "0xd53da1dc9f241074631d02de9b0e8776ee9cdf43f7248ec3e0528843080f77da",
+   "approve": "0x175fff4477cc817835cf86b4a2f177c4cd91f6da68e25bec93e79d264faf0300",
+   "destination": "a1417c334104e2a42d0a4d498cad19758dd53ae128569a9bfa723ee763578392",
+   "planck": "1000000000000",
+   "destination_address": "qzo6foG1F5X1f7Bd1kq7pivCgFoVeCSft3fbNT9bKa8LaeBri"
+  },
+  {
+   "redemption": 30,
+   "execute": "0x73e6219e31d4b2e0c3379e6d2adbb6a92a3bb06bdbb4c786cf9b40c0f8293fbb",
+   "propose": "0x76c07e35c21272d06f5d3363812c2cf9515eb6a5219f274d8347d7b14eaba3a0",
+   "approve": "0xa1a5c930c64ebac5abf1dca1244f886fb0643defa2a892211c7aa15cb9517321",
+   "destination": "a1417c334104e2a42d0a4d498cad19758dd53ae128569a9bfa723ee763578392",
+   "planck": "1000000000000",
+   "destination_address": "qzo6foG1F5X1f7Bd1kq7pivCgFoVeCSft3fbNT9bKa8LaeBri"
   }
  ]
 }

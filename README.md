@@ -164,8 +164,14 @@ published here.
 Built for the NEAR HACKATHON (November 2026). Every commit in this repository was written after the hackathon was
 announced on 2026-10-19 (first commit 2026-10-22): first an ML-DSA-87 vault ([docs/VAULT.md](docs/VAULT.md)) and an
 admin-control prototype ([docs/GUARDIAN-README.md](docs/GUARDIAN-README.md)), then the route, which is the entry
-([full history](../../commits)). Pre-existing and not submitted: the Qlyphs app and wallet on Quantus, whose
-wallet signs the lock and the route, and the Quantus chain itself.
+([full history](../../commits)). The `/bridge/quantum` page ([app/](app/README.md)) was written for the route in
+November. Pre-existing and not submitted: the rest of the Qlyphs app, the Qlyphs wallet on Quantus (which signs the
+lock and the route), and the Quantus chain itself.
+
+Commit dates can be rewritten, block times cannot. On NEAR testnet, the route's Intents verifier was created at
+2026-11-08 21:35 UTC (block 276,831,137, tx `2iBeS7DWvjpczchycknGzSAcm9U2oemeedT1u4GhLGdg`). The bridge contract was
+created at 2026-11-08 23:59 UTC (block 276,845,398, tx `3ciFNuoeFNPAn5aoUoauiNGvAmoTx9WZPyaYBGAcjJgD`). Every mint and
+withdrawal in [docs/EVIDENCE.md](docs/EVIDENCE.md) came after that.
 
 AI assistance: this repository was written with AI coding assistants (Claude Code for implementation and tests,
 ChatGPT for security reviews), directed and reviewed by the author, who is responsible for it.

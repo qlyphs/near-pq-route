@@ -7,10 +7,14 @@ application authorization step: user transactions, bridge approvals and withdraw
 - On 2026-11-11, `qtc.omft.near` reported a supply of about 216,000 QTC on NEAR mainnet, roughly $13M at that day's
   price. The account that mints it signs with one ed25519 key (snapshot below). A coin built to survive quantum
   computers reaches NEAR through a classical key.
-- This route uses NEAR's own pieces end to end. Receiving accounts hold a single native ML-DSA-65 key (protocol
-  88), and the NEAR Intents verifier runs unmodified, so the asset lands where solvers and apps already are.
-- The pattern is not specific to QTC. Any chain with a native ML-DSA multisig can join Intents the same way, with
-  no new cryptography and no new host functions ([docs/PROPOSAL.md](docs/PROPOSAL.md)).
+- NEAR Intents is built to be the gateway where every chain's assets meet. As chains move to post-quantum keys,
+  their assets need a way in that does not fall back to a classical key. This is that way in, working today. NEAR's
+  roadmap puts post-quantum verification of foreign chains in 2027; this route covers the authorization half now.
+- It uses NEAR's own pieces. Receiving accounts hold a single native ML-DSA-65 key (protocol 88), and the NEAR
+  Intents verifier runs unmodified, so the asset lands where solvers and apps already are.
+- The pattern is not specific to QTC. The bridge contract only checks two ML-DSA-87 attestations, so another chain
+  needs its own lock and attesters, with the same code. Any chain with a native ML-DSA multisig can join Intents
+  this way, with no new cryptography and no new host functions ([docs/PROPOSAL.md](docs/PROPOSAL.md)).
 
 At NEAR mainnet block 223,674,074 (2026-11-09), `bridge-mng.near`, the account that signs the `ft_deposit` calls
 minting the existing QTC token on NEAR, had one ed25519 full-access key ([snapshot](evidence/bridge-mng-snapshot.json)).

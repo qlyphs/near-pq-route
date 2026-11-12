@@ -3,6 +3,15 @@
 **QTC is signed with ML-DSA on Quantus. This route brings it into NEAR Intents and back with ML-DSA at every
 application authorization step: user transactions, bridge approvals and withdrawals.**
 
+**Why this matters for NEAR**
+- On 2026-11-11, `qtc.omft.near` reported a supply of about 216,000 QTC on NEAR mainnet, roughly $13M at that day's
+  price. The account that mints it signs with one ed25519 key (snapshot below). A coin built to survive quantum
+  computers reaches NEAR through a classical key.
+- This route uses NEAR's own pieces end to end. Receiving accounts hold a single native ML-DSA-65 key (protocol
+  88), and the NEAR Intents verifier runs unmodified, so the asset lands where solvers and apps already are.
+- The pattern is not specific to QTC. Any chain with a native ML-DSA multisig can join Intents the same way, with
+  no new cryptography and no new host functions ([docs/PROPOSAL.md](docs/PROPOSAL.md)).
+
 At NEAR mainnet block 223,674,074 (2026-11-09), `bridge-mng.near`, the account that signs the `ft_deposit` calls
 minting the existing QTC token on NEAR, had one ed25519 full-access key ([snapshot](evidence/bridge-mng-snapshot.json)).
 The demonstrated deposit-and-return flow below uses ML-DSA for user transactions and bridge approvals. The NEAR
@@ -13,7 +22,7 @@ Intents.
 | Step | Who authorizes | Scheme |
 |---|---|---|
 | 1. Lock QTC on Quantus | the sender's Qlyphs wallet, into a native 2-of-3 multisig | ML-DSA-87 |
-| Choose the destination on NEAR | the same wallet key, signing the exact route | ML-DSA-87 |
+| Choose the destination on NEAR | the same wallet key, signing the exact route; the attesters check it before they sign, the contract then enforces the receiver named in their attestation ([details](docs/ROUTE.md#formats)) | ML-DSA-87 |
 | 2. Mint on NEAR, straight into NEAR Intents | 2 of 3 attesters, verified on-chain by a contract that has no key | ML-DSA-87 |
 | Recipient account control | a NEAR account whose only key, at the checked snapshot, is native | ML-DSA-65 |
 | 3. Withdraw to Quantus | that account (`ft_withdraw`, `WITHDRAW_TO:`) | ML-DSA-65 |
@@ -23,7 +32,8 @@ Payment requests are signed with ML-DSA-87 and encrypted with **ML-KEM-1024** fo
 
 Test networks only: the Quantus test chain the Qlyphs app uses, and NEAR testnet. Unaudited prototype. Qlyphs
 runs all three attester keys in one service: this demonstrates 2-of-3 post-quantum authorization, not
-independent operators (see [what this is not](#what-this-is-and-is-not)).
+independent operators (see [what this is not](#what-this-is-and-is-not) and the
+[path to independent operators](#path-to-independent-operators)).
 
 ## Check it yourself (read-only)
 
@@ -166,7 +176,8 @@ published here.
   could mint unbacked tokens or release the lock. The attesters check Quantus deposits themselves; NEAR does not
   verify Quantus consensus.
 - **Confirmation.** The attesters sign a deposit 8 blocks deep (the demo policy), not at Quantus's default
-  finality rule (100 blocks).
+  finality rule (100 blocks). The deposit id names the deposit's block, so a reorganization deeper than that
+  policy is handled by the attesters, not by the contract ([Reorgs](docs/ROUTE.md#formats)).
 - **Scope.** User accounts, attestations and the lock are post-quantum. NEAR's validators and consensus, the RPC
   transport and the browser that holds a fresh account's key are outside that claim. Intents signed inside the
   verifier (swaps) still use classical schemes; this route does not change that.
@@ -175,6 +186,30 @@ published here.
   its own history.
 - **The existing route** serves users today. This is a separate test-network prototype. We do not claim that any
   partner uses or endorses it.
+
+## Path to independent operators
+
+Today Qlyphs runs all three attester keys. The trust model is built so that handing them over changes nothing on
+chain. The lock on Quantus is a native multisig, and the bridge contract accepts any two of the three keys it was
+created with. Changing who holds the keys means a new lock and a new bridge with the new keys, the same code.
+
+1. **Three operators who are not Qlyphs.** Each holds one ML-DSA-87 key and runs the attester service against its
+   own Quantus and NEAR nodes. Two of them must agree for anything to move, and none of them can act alone.
+2. **Whoever lies loses their money**, in the spirit of Arbitrum's fraud proofs:
+   - each operator posts a bond;
+   - every attestation is public on NEAR, and each one makes a claim anyone can check on Quantus: this deposit, in
+     this block, of this amount;
+   - mints wait out a short challenge window;
+   - anyone who shows an attestation with no matching lock deposit cancels the mint and takes part of the signers'
+     bonds.
+
+   Honest operators lose nothing. Bonds are sized so that a lying pair would lose more than it could steal.
+3. **The hard part.** NEAR cannot read Quantus by itself, so a contract cannot judge a challenge alone. Quantus
+   blocks are mined (proof of work), so a NEAR contract could follow Quantus headers and their work, and check a
+   deposit's inclusion against them. Until then, a dispute would be settled by the other bonded operators. Both
+   need a new bridge contract; the current one is keyless and stays as it is.
+
+This is the next piece of work, not something this repository does today.
 
 ## Hackathon
 

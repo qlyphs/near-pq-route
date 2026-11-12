@@ -1,6 +1,6 @@
 # The post-quantum QTC route: Quantus ↔ NEAR, through NEAR Intents
 
-Status: testnet prototype (Quantus development network, NEAR testnet). Not audited. No real funds.
+Status: testnet prototype (the Quantus test chain the Qlyphs app uses, NEAR testnet). Not audited. No real funds.
 
 ## The gap
 
@@ -30,12 +30,13 @@ It demonstrates 2-of-3 authorization, not independent operators or decentralized
 check Quantus deposits themselves; NEAR does not verify Quantus consensus. Two compromised attesters could
 mint unbacked tokens or release the reserve. NEAR validator signatures and consensus remain ed25519.
 
-## Contracts on NEAR testnet (`deployments/route-testnet.json`)
+## Contracts on NEAR testnet (`deployments/route-curve-testnet.json`)
 
 - `intents.qlyphs-pqroute-b.testnet`: the NEAR Intents verifier, built from github.com/near/intents at
   `32cd1f97`, unmodified, initialized with no roles. There is no official Intents deployment on testnet.
-- `qtc.qlyphs-pqroute-a.testnet`: the bridge token, `contract/bridge.c`. Created, deployed and initialized in
+- `qtc-pq.qlyphs-pqroute-a.testnet`: the bridge token, `contract/bridge.c`. Created, deployed and initialized in
   one batch by its parent: it has never had an access key, so nobody can upgrade it or change its attesters.
+  Earlier bridge tokens (`qtc`, `qtcpq`, `pqqtc`) are kept for their records; see the README.
 - `relay.qlyphs-pqroute-a.testnet`: pays gas for mints; its only key is ML-DSA-65.
 
 ## Formats
@@ -48,6 +49,11 @@ canonical base58): an account opened in another wallet (Meteor) is known on NEAR
 another key under a fixed handle is a second-preimage search on SHA3-256. The depositor authorizes it with the key that signed the Quantus transfer: either an ML-DSA-87
 signature over it (context `qlyphs/near-route/v1`, command line), or, from the Qlyphs wallet, a site session
 challenge whose nonce is SHA-256 of these bytes, whose service is the lock and whose account is the depositor.
+The hosted app uses the session challenge, because the wallet signs those. It is bound to this chain, this lock, the
+depositor, the route audience and action, and an allowed app origin, so it cannot stand for a sign-in elsewhere.
+The wallet shows it as a session approval, not as the destination itself. **The attesters check this signature
+before they sign; the NEAR contract does not see it.** On NEAR, the destination is enforced through the attestation,
+which names the receiver and which two attesters must sign.
 
 **Receiver readiness**, read at one finalized block (all conditions hold together), checked by the payer before
 locking and by every attester before signing: the receiver
@@ -68,7 +74,7 @@ the Qlyphs backup, and it gives up the fresh-account privacy: the payment is lin
 | 8 | 8 | NEAR network tag, zero padded |
 | 16 | 65 | bridge account id (length + 64, zero padded) |
 | 81 | 32 | Quantus genesis hash |
-| 113 | 32 | deposit id = SHA-256(Quantus block hash ‖ extrinsic index u32 LE) |
+| 113 | 32 | deposit id = SHA-256(Quantus block hash ‖ extrinsic index u32 LE), see *Reorgs* below |
 | 145 | 16 | amount in planck, u128 LE (QTC keeps its 12 decimals: 1 planck = 1 unit) |
 | 161 | 65 | receiver account id |
 | 226 | 32 | SHA-256 of the encrypted receipt, or zero |
@@ -78,6 +84,15 @@ the Qlyphs backup, and it gives up the fresh-account privacy: the payment is lin
 **Mint input**: attestation | index | signature (4,627) | index | signature | receipt length u16 | receipt.
 The contract checks every field, two different attesters, both signatures, and that the deposit id was never
 minted; it records the deposit id before crediting.
+
+**Reorgs.** The deposit id names a block, so it is not stable across a reorganization. If a deposit's block were
+replaced after the attesters signed, the same transfer included in another block would get a new id, which the
+contract would accept as new. The attesters guard against this off chain: each one re-reads the chain right before
+signing and requires the deposit's block to still be on the best chain, at least 8 blocks deep. That is a policy of
+the service, not a property of the contract. On Quantus mainnet, over about 37,000 blocks in early October 2026, we
+measured 206 reorganizations: 204 one block deep, 2 two blocks deep, none deeper. The next contract version should
+derive the id from data that survives a reorg: the signer and the nonce of the transfer, with the genesis and a
+domain tag.
 
 **Withdrawal**: the holder calls the verifier's `ft_withdraw({token, receiver_id: token, amount,
 memo: "WITHDRAW_TO:<64 hex Quantus account id>"})`. The verifier calls the bridge's `ft_transfer` to itself,

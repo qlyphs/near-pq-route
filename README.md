@@ -173,8 +173,8 @@ Commit dates can be rewritten, block times cannot. On NEAR testnet, the route's 
 created at 2026-11-08 23:59 UTC (block 276,845,398, tx `3ciFNuoeFNPAn5aoUoauiNGvAmoTx9WZPyaYBGAcjJgD`). Every mint and
 withdrawal in [docs/EVIDENCE.md](docs/EVIDENCE.md) came after that.
 
-AI assistance: this repository was written with AI coding assistants (Claude Code for implementation and tests,
-ChatGPT for security reviews), directed and reviewed by the author, who is responsible for it.
+AI assistance: this repository was written with AI coding assistants (Claude Code and Pi Code), directed and
+reviewed by the author, who is responsible for it.
 
 The bridge verifies ML-DSA-87 on-chain with its own freestanding C verifier (`core/pq87.c`, written after the
 pq-crystals reference; see [THIRD_PARTY.md](THIRD_PARTY.md)). Built with [`near/intents`](https://github.com/near/intents) (unmodified verifier),

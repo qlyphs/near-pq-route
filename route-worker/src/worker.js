@@ -3,10 +3,23 @@
 //  - the queue of route claims the payer's wallet signed (public data the attesters verify themselves),
 //  - a sponsor that creates a fresh NEAR testnet account whose only key is the ML-DSA-65 key it is given; the
 //    sponsor itself signs with ML-DSA-65 (its only key).
-import { actions, sendTx } from '@fastnear/api';
+import { actions, config, sendTx } from '@fastnear/api';
 import { signerFromSeed } from '@fastnear/ml-dsa-65';
 
 const MAX_REQUEST = 32 * 1024;
+// Public NEAR testnet RPCs, in order. A worker shares its outgoing addresses with other sites, so one provider's rate
+// limit (429) is common: the sponsor then moves to the next. Only a refusal before execution moves on, never a timeout.
+const RPCS = ['https://rpc.testnet.fastnear.com/', 'https://rpc.testnet.near.org/', 'https://near-testnet.drpc.org/'];
+const rateLimited = (e) => /\b429\b|rate limit|too many requests/i.test(String(e?.message ?? e) + JSON.stringify(e?.data ?? ''));
+async function sendOnAnyRpc(tx) {
+  let last;
+  for (const nodeUrl of RPCS) {
+    config({ networkId: 'testnet', nodeUrl });
+    try { return await sendTx({ ...tx, network: 'testnet' }); }
+    catch (e) { last = e; if (!rateLimited(e)) throw e; }
+  }
+  throw new Error(`NEAR testnet RPCs are all rate limiting (${RPCS.length} tried), try again in a minute: ${String(last?.message ?? last)}`);
+}
 const DAY = 86400;
 const json = (status, body, headers) => new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json', 'cache-control': 'no-store', ...headers } });
 const hex = (b) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, '0')).join('');
@@ -87,7 +100,7 @@ export default {
         if (!(await rateLimit(env, `acct:${ip}`, 12, 3600)) || !(await rateLimit(env, 'acct:all', 200, DAY))) return json(429, { error: 'account limit reached, try again later' }, cors);
         const accountId = await accountFor(publicKey, env.SPONSOR_ID);
         const sponsor = signerFromSeed(Uint8Array.from(env.SPONSOR_SEED.match(/../g).map((h) => parseInt(h, 16))));
-        const r = await sendTx({ signerId: env.SPONSOR_ID, signer: sponsor, receiverId: accountId, network: 'testnet', waitUntil: 'FINAL',
+        const r = await sendOnAnyRpc({ signerId: env.SPONSOR_ID, signer: sponsor, receiverId: accountId, waitUntil: 'FINAL',
           actions: [actions.createAccount(), actions.transfer('250000000000000000000000'), actions.addFullAccessKey({ publicKey })] }).finally(() => sponsor.destroy());
         const s = JSON.stringify(r);
         const failure = s.match(/"(AccountAlreadyExists|ExecutionError)":?[^}]*/)?.[0];

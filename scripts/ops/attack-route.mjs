@@ -1,5 +1,6 @@
 // Live attacks on the testnet bridge, sent by the relayer (ML-DSA-65): replay a real mint, change its amount, its
-// receiver, its mode, reuse one attester twice. Every one must be refused by the contract. Read-only otherwise.
+// receiver, its mode, reuse one attester twice. Every one must be refused by the contract.
+// It needs the relayer key (~/.qlyphs/near-testnet) to pay gas, so only the operator can run it.
 import { readFileSync } from 'node:fs';
 import { actions, sendTx } from '@fastnear/api';
 import { signerFromSeed } from '@fastnear/ml-dsa-65';

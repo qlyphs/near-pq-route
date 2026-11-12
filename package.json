@@ -1,12 +1,15 @@
 {
   "name": "qlyphs-pq87-near",
   "version": "1.0.0",
-  "description": "ML-DSA-87 vault on NEAR: contract, SDK and relayer",
+  "description": "Qlyphs post-quantum QTC route into NEAR Intents: keyless bridge contract, route cryptography, service Worker, page source and on-chain verifiers",
   "directories": {
     "test": "tests"
   },
   "scripts": {
     "build": "bash scripts/build.sh",
+    "test": "node --test tests/route-crypto.unit.mjs tests/quantus-evidence.unit.mjs tests/sdk.unit.mjs tests/demo.unit.mjs app/lib/pq-route/*.test.ts",
+    "test:sandbox": "node tests/bridge.sandbox.mjs",
+    "verify": "node scripts/verify-route.mjs && node scripts/verify-quantus.mjs",
     "measure": "node tests/measure.mjs",
     "test:relayer": "node --test relayer/",
     "relayer": "node relayer/server.mjs"

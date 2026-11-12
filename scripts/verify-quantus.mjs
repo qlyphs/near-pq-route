@@ -7,7 +7,10 @@
 //     multisig executed exactly the transfer to the recorded destination for the recorded amount with a successful
 //     inner result, approved by two distinct signers of the lock, and the transfer event followed;
 //   - the verified mints, unique, minus the redemptions equal the bridge's supply, and the lock's balance read from
-//     the RPC at a recorded block is at least that supply.
+//     the RPC at a recorded block is at least the bridge's supply now.
+// The index is a snapshot taken at one NEAR block (index.near_block): steps 3 and 4 read the bridge at that block, so
+// transfers made later (anyone can use the hosted app) do not break a run. They are counted and reported, not
+// checked; refreshing the index covers them.
 // This does not establish the absence of other transfers out of the lock, and it does not re-verify the Quantus
 // signatures themselves (the chain did). It uses the Qlyphs test indexer for one thing only: finding the block and
 // index of a release extrinsic from its hash; the hash is then recomputed from the bytes the RPC returns.
@@ -22,7 +25,8 @@ import { firstDuplicate, lockDeposit, lockRelease, transferCall } from './lib/qu
 
 const QUANTUS_RPC = 'https://testnet-rpc.qlyphs.com';
 const INDEXER = 'https://testnet.qlyphs.com/api';
-const NEAR_RPCS = [...(process.env.NEAR_RPC ? [process.env.NEAR_RPC] : []), 'https://rpc.testnet.fastnear.com', 'https://rpc.testnet.near.org'];
+// Reading the bridge at the index's block needs an archival node once that block is a few days old.
+const NEAR_RPCS = [...(process.env.NEAR_RPC ? [process.env.NEAR_RPC] : []), 'https://archival-rpc.testnet.fastnear.com', 'https://archival-rpc.testnet.near.org'];
 const lockDeployment = JSON.parse(readFileSync('deployments/quantus-lock-curve.json', 'utf8'));
 const index = JSON.parse(readFileSync('evidence/route-quantus-index.json', 'utf8'));
 const onchainBytes = readFileSync('evidence/route-onchain.json');
@@ -94,11 +98,35 @@ async function extrinsicAt(block, at) {
   return { blockHash, hash: '0x' + hex(blake2b(unhex(x), { dkLen: 32 })) };
 }
 
+// The bridge at the index's NEAR block (the snapshot), and now.
+const stateAt = async (at) => {
+  const r = await post(NEAR_RPCS, 'query', { request_type: 'call_function', ...at, account_id: bridge.bridge, method_name: 'state', args_base64: Buffer.from('{}').toString('base64') });
+  return { block: r.block_hash, height: r.block_height, state: JSON.parse(Buffer.from(r.result).toString()) };
+};
+const pinned = await stateAt(index.near_block ? { block_id: index.near_block.hash } : { finality: 'final' });
+const live = await stateAt({ finality: 'final' });
+const nearBlock = pinned.block, nearHeight = pinned.height, state = pinned.state;
+check('the index is a snapshot at a NEAR block', !!index.near_block && index.near_block.height === nearHeight,
+  index.near_block ? `NEAR block ${nearHeight}: ${state.redemptions} redemptions, supply ${state.supply}` : 'no near_block in the index: reading the latest block');
+// A mint the index does not list is either newer than the snapshot (reported) or unbacked (a failure).
+const mintHeight = async (m) => (await post(NEAR_RPCS, 'block', { block_id: (await post(NEAR_RPCS, 'tx', { tx_hash: m.tx, sender_account_id: m.signer, wait_until: 'NONE' })).transaction_outcome.block_hash })).header.height;
+const inSnapshot = [];
+let newerMints = 0;
+for (const m of bridge.mints) {
+  if (index.deposits.some((d) => d.deposit_id === m.deposit_id)) { inSnapshot.push(m); continue; }
+  const h = await mintHeight(m).catch(() => null);
+  if (index.near_block && h !== null && h > nearHeight) { newerMints++; continue; }
+  inSnapshot.push(m);
+}
+// Receipts are optional per mint, so the bridge keeps no mint count: step 4's accounting at the same block is what
+// shows that no mint up to the snapshot is missing from the list.
+console.log(`INFO ${inSnapshot.length} mints up to NEAR block ${nearHeight}${newerMints ? `; ${newerMints} later mint${newerMints === 1 ? '' : 's'} not covered by the index yet` : ''}`);
+
 // 2. Every mint is backed by a lock deposit of the same amount.
 const byDeposit = new Map(index.deposits.map((d) => [d.deposit_id, d]));
 let backed = 0n;
 const locks = [];
-for (const m of bridge.mints) {
+for (const m of inSnapshot) {
   const d = byDeposit.get(m.deposit_id);
   if (!d) { check(`mint ${m.tx.slice(0, 10)}… has a recorded lock`, false, `deposit ${m.deposit_id.slice(0, 12)}… not in the index`); continue; }
   try {
@@ -112,10 +140,7 @@ for (const m of bridge.mints) {
   } catch (e) { check(`mint ${m.tx.slice(0, 10)}… is backed by its lock deposit`, false, e.message); }
 }
 
-// 3. Each redemption the bridge records has a distinct successful release, read at one NEAR block.
-const nearState = await post(NEAR_RPCS, 'query', { request_type: 'call_function', finality: 'final', account_id: bridge.bridge, method_name: 'state', args_base64: Buffer.from('{}').toString('base64') });
-const nearBlock = nearState.block_hash, nearHeight = nearState.block_height;
-const state = JSON.parse(Buffer.from(nearState.result).toString());
+// 3. Each redemption the bridge records has a distinct successful release, read at the index's NEAR block.
 const nearView = async (method, args) => JSON.parse(Buffer.from((await post(NEAR_RPCS, 'query', { request_type: 'call_function', block_id: nearBlock, account_id: bridge.bridge, method_name: method, args_base64: Buffer.from(JSON.stringify(args)).toString('base64') })).result).toString());
 const count = Number(state.redemptions);
 const byId = new Map(index.releases.map((r) => [r.redemption, r]));
@@ -140,17 +165,20 @@ for (let i = 0; i < count; i++) {
 
 // 4. Accounting: the verified unique mints minus the redemptions equal the supply, and the lock covers it.
 const supply = BigInt(state.supply);
-const minted = bridge.mints.reduce((t, m) => t + BigInt(m.planck), 0n);
+const minted = inSnapshot.reduce((t, m) => t + BigInt(m.planck), 0n);
 check('verified mints minus redemptions equal the bridge supply', backed === minted && minted - released === supply,
-  `${bridge.mints.length} mints (${minted} planck) − ${count} redemptions (${released} planck) = ${minted - released}; supply ${supply} at NEAR block ${nearHeight}`);
+  `${inSnapshot.length} mints (${minted} planck) − ${count} redemptions (${released} planck) = ${minted - released}; supply ${supply} at NEAR block ${nearHeight}`);
 const account = (await atFinal.query.system.account(LOCK)).toJSON();
 const free = BigInt(account.data.free);
-check('the lock holds at least the bridge supply', free >= supply, `lock free balance ${free} planck at Quantus block ${finalized} (${finalizedHash.slice(0, 12)}…); supply ${supply} at NEAR block ${nearHeight}`);
+const supplyNow = BigInt(live.state.supply);
+check('the lock holds at least the bridge supply now', free >= supplyNow, `lock free balance ${free} planck at Quantus block ${finalized} (${finalizedHash.slice(0, 12)}…); supply ${supplyNow} at NEAR block ${live.height}`);
+const newer = Number(live.state.redemptions) - count;
+console.log(`INFO after the index's block ${nearHeight}: ${newer} more redemption${newer === 1 ? '' : 's'} and supply ${live.state.supply} at block ${live.height}. Not checked here: the index does not list them yet.`);
 
 await api.disconnect();
 writeFileSync('evidence/route-quantus.json', JSON.stringify({
   date: new Date().toISOString(), quantus_rpc: QUANTUS_RPC, quantus_finalized: { number: finalized, hash: finalizedHash },
-  near_block: { height: nearHeight, hash: nearBlock }, upstream: { file: 'evidence/route-onchain.json', sha256: hex(sha256(onchainBytes)), date: onchain.date, checks: onchain.results.length },
+  near_block: { height: nearHeight, hash: nearBlock }, near_live: { height: live.height, redemptions: live.state.redemptions, supply: live.state.supply }, upstream: { file: 'evidence/route-onchain.json', sha256: hex(sha256(onchainBytes)), date: onchain.date, checks: onchain.results.length },
   indexer_used_for: 'locating release extrinsics by hash', bridge: bridge.bridge, locks, results,
 }, null, 1) + '\n');
 console.log(`${results.length - failures}/${results.length} passed · evidence/route-quantus.json`);

@@ -8,10 +8,10 @@ import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { ml_dsa87 } from '@noble/post-quantum/ml-dsa.js';
 
-// Old transactions need an archival node. The public one is FastNEAR's (near.org's archival endpoints are deprecated and
-// answer every call with an error); NEAR_RPC=<url> puts yours first. A rate limit or a network error moves to the next
-// endpoint and waits; the public node lifts its rate limit after about half a minute.
-const RPCS = [...(process.env.NEAR_RPC ? [process.env.NEAR_RPC] : []), 'https://archival-rpc.testnet.fastnear.com'];
+// Old transactions need an archival node. Two public ones are tried in turn (near.org's is deprecated and sometimes
+// refuses every call); NEAR_RPC=<url> puts yours first. A rate limit or a network error moves to the next endpoint,
+// and the run waits only once every endpoint has refused; FastNEAR lifts its rate limit after about half a minute.
+const RPCS = [...(process.env.NEAR_RPC ? [process.env.NEAR_RPC] : []), 'https://archival-rpc.testnet.fastnear.com', 'https://archival-rpc.testnet.near.org'];
 let rpcAt = 0;
 const RPC = RPCS[0];
 const INDEX = 'https://api-testnet.nearblocks.io/v3'; // used only to list transaction hashes; everything else is read from RPC
@@ -20,18 +20,19 @@ const b58 = (b) => { let n = BigInt('0x' + (Buffer.from(b).toString('hex') || '0
 const sha256 = (b) => createHash('sha256').update(b).digest();
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 async function rpc(method, params) {
-  for (let i = 0; i < 12; i++) {
-    // A dropped connection or a timeout is retried like an RPC error; twelve failures in a row (about five minutes of
-    // waiting under a rate limit) stop the run.
+  for (let i = 0; i < 12 * RPCS.length; i++) {
+    // Any failure (rate limit, dropped connection, an error from one node) moves to the next endpoint; twelve full
+    // rounds of failures (about five minutes of waiting under a rate limit) stop the run.
     const url = RPCS[rpcAt % RPCS.length];
     const j = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }) })
       .then((r) => r.json()).catch((e) => ({ error: { network: String(e?.cause?.code ?? e?.message ?? e) } }));
     if (j.result) return j.result;
     const limited = /429|Rate limit/.test(JSON.stringify(j.error ?? '')), down = !!j.error?.network;
-    if (i === 11) throw new Error(`NEAR RPC ${url}, ${method}: ${JSON.stringify(j.error).slice(0, 200)}${limited ? ' (rate limited: wait a minute and rerun, or set NEAR_RPC to an archival testnet endpoint of your own)' : ''}`);
-    if (limited || down) rpcAt++;
+    if (i === 12 * RPCS.length - 1) throw new Error(`NEAR RPC ${url}, ${method}: ${JSON.stringify(j.error).slice(0, 200)}${limited ? ' (rate limited: wait a minute and rerun, or set NEAR_RPC to an archival testnet endpoint of your own)' : ''}`);
+    rpcAt++;
     if (limited && i === 0) console.error(`NEAR RPC ${url} is rate limiting; waiting and retrying`);
-    await sleep(limited ? Math.min(5000 * (i + 1), 45000) : 1000);
+    // Waits only after a full round of refusals.
+    if (rpcAt % RPCS.length === 0) await sleep(limited ? Math.min(2500 * (i + 1), 45000) : 1000);
   }
 }
 const view = async (account, method, args = {}) => JSON.parse(Buffer.from((await rpc('query', { request_type: 'call_function', finality: 'final', account_id: account, method_name: method, args_base64: Buffer.from(JSON.stringify(args)).toString('base64') })).result).toString());

@@ -1,4 +1,4 @@
-// Client side of the Qlyphs PQ bridge (docs/BRIDGE.md): the 288-byte attestation two of three ML-DSA-87
+// Client side of the Qlyphs PQ bridge (docs/ROUTE.md): the 288-byte attestation two of three ML-DSA-87
 // attesters sign for one Quantus deposit, and the mint input the NEAR contract checks.
 import { createHash } from 'node:crypto';
 

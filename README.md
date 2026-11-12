@@ -25,18 +25,24 @@ Test networks only: the Quantus test chain the Qlyphs app uses, and NEAR testnet
 runs all three attester keys in one service: this demonstrates 2-of-3 post-quantum authorization, not
 independent operators (see [what this is not](#what-this-is-and-is-not)).
 
-## Check it yourself (read-only, a few minutes)
+## Check it yourself (read-only)
 
 ```sh
 npm ci
+npm test                           # 59 offline tests, seconds: route crypto, evidence parsing, the page's logic
+bash scripts/build.sh              # optional (LLVM 19+): rebuild the contracts so verify-route compares your bytes too
 node scripts/verify-route.mjs      # NEAR testnet       → evidence/route-onchain.json
 node scripts/verify-quantus.mjs    # Quantus test chain → evidence/route-quantus.json
 ```
 
+The two verifiers read public nodes only. NEAR's free archival nodes rate limit, so `verify-route` can take 10 to
+30 minutes when they are busy: it rotates between two of them and waits, and `NEAR_RPC=<url>` puts yours first.
+
 `verify-route.mjs` reads NEAR testnet and checks, among other things:
 - the bridge and the Intents verifier have **no access key** and run the pinned code (and your own build, if
   you ran `scripts/build.sh`);
-- for **every mint**, both **ML-DSA-87 attester signatures, verified again on your machine** against
+- for **every mint** listed in `evidence/route-transactions.json` (`--index` refreshes the list from a public
+  indexer), both **ML-DSA-87 attester signatures, verified again on your machine** against
   `deployments/route-attesters.json`;
 - every withdrawal was signed with ML-DSA-65 by an account whose only key is ML-DSA-65, opened before its mint;
 - every forged or replayed mint ever sent to a bridge was refused.
@@ -48,9 +54,11 @@ node scripts/verify-quantus.mjs    # Quantus test chain → evidence/route-quant
 - **for each NEAR redemption, a distinct successful release**: the lock's multisig executed exactly the transfer
   to the recorded destination for the recorded amount, its inner call succeeded, two distinct signers approved;
 - the verified mints minus the redemptions equal the token's supply, and the lock's balance at a recorded block
-  is at least that supply.
+  is at least the token's supply now.
 
-It does not establish that no other transfer ever left the lock, and it uses the Qlyphs test indexer only to find
+The Quantus facts come from `evidence/route-quantus-index.json`, a snapshot at one NEAR block. Steps 2 to 4 are
+checked at that block, so transfers people make later on the hosted app do not break a run: they are counted and
+reported, not checked. It does not establish that no other transfer ever left the lock, and it uses the Qlyphs test indexer only to find
 a release extrinsic's block from its hash. Every mint and redemption, with links: **[docs/EVIDENCE.md](docs/EVIDENCE.md)**.
 
 ## Try it
@@ -71,21 +79,22 @@ transaction. Bridging and paying need the Qlyphs wallet on its test network; mak
 link and the read-only checks above need nothing.
 
 An account you already hold in **Meteor Wallet** can also receive, if its keys are exactly one ML-DSA-65
-full-access key: open the page with `?meteor=1`. Experimental: the route delivers to such an account, named only by
+full-access key: choose **Meteor** under *To*. Experimental: the route delivers to such an account, named only by
 the key handle NEAR lists (last row of [docs/EVIDENCE.md](docs/EVIDENCE.md), a stand-in account), but a round trip
 approved in Meteor itself has not been recorded yet.
 
 ## Attack lab (live, NEAR testnet)
 
-`node scripts/ops/attack-route.mjs` sends forged mints to the real bridge; each one must be refused
-(`evidence/route-attacks.json`, with transaction links):
+Rows 1 to 7 are forged mints sent to the real bridge by `node scripts/ops/attack-route.mjs`, each one refused
+(`evidence/route-attacks.json`, with transaction links). The script needs the relayer's key to pay gas, so it
+cannot be rerun from this repository. Its results are on chain. Rows 8 and 9 are attacks on the attester service.
 
 | # | Attack | Refused with |
 |---|---|---|
 | 1 | Replay a real mint | `deposit already minted` |
 | 2 | Replay it with a changed amount | `deposit already minted` |
 | 3 | Real signatures moved to a fresh deposit id | `invalid attestation signature` |
-| 4 | A fresh deposit id plus a doubled amount | `invalid attestation signature` |
+| 4 | A fresh deposit id plus a changed amount (one bit flipped) | `invalid attestation signature` |
 | 5 | A fresh deposit id plus another receiver | `invalid attestation signature` |
 | 6 | A fresh deposit id, credited directly instead of into Intents | `invalid attestation signature` |
 | 7 | One attester counted twice | `two different attesters are required` |
@@ -141,6 +150,14 @@ published here.
   hosted app above, but you cannot run the whole route yourself from this repository.
 - **What the verifiers prove:** the effects of that service on both chains (every mint, withdrawal, redemption and
   release listed in [docs/EVIDENCE.md](docs/EVIDENCE.md)), not its internal implementation.
+- **Earlier prototypes, not the entry.** They were built in the same window and are kept for their history:
+  - the ML-DSA-87 vault: `contract/vault.c`, `contract/factory.c`, `sdk/vault.mjs`, `relayer/`,
+    [docs/VAULT.md](docs/VAULT.md);
+  - the Guardian: `contract/guardian.c`, `contract/token.c`, `sdk/guardian.mjs`, `demo/`, `docs/GUARDIAN*.md`;
+  - files named `superseded-*`.
+
+  The entry is the route: everything listed under *Here*, plus `contract/near.c`, `sdk/bridge.mjs` and the
+  `route-*` files in `deployments/` and `evidence/`.
 
 ## What this is, and is not
 
@@ -165,8 +182,17 @@ Built for the NEAR HACKATHON (November 2026). Every commit in this repository wa
 announced on 2026-10-19 (first commit 2026-10-22): first an ML-DSA-87 vault ([docs/VAULT.md](docs/VAULT.md)) and an
 admin-control prototype ([docs/GUARDIAN-README.md](docs/GUARDIAN-README.md)), then the route, which is the entry
 ([full history](../../commits)). The `/bridge/quantum` page ([app/](app/README.md)) was written for the route in
-November. Pre-existing and not submitted: the rest of the Qlyphs app, the Qlyphs wallet on Quantus (which signs the
-lock and the route), and the Quantus chain itself.
+November.
+
+Pre-existing and not submitted:
+- the ML-DSA-87 verifier in `core/`, written on 2026-10-17 for an earlier Qlyphs prototype on Solana and reused
+  unchanged (see [THIRD_PARTY.md](THIRD_PARTY.md));
+- the rest of the Qlyphs app;
+- the Qlyphs wallet on Quantus, which signs the lock and the route;
+- the Quantus chain itself.
+
+What is submitted is the NEAR side built on top of them: the contract, the Intents integration, the route, the
+service Worker, the page and the verifiers.
 
 Commit dates can be rewritten, block times cannot. On NEAR testnet, the route's Intents verifier was created at
 2026-11-08 21:35 UTC (block 276,831,137, tx `2iBeS7DWvjpczchycknGzSAcm9U2oemeedT1u4GhLGdg`). The bridge contract was

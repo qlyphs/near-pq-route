@@ -1,7 +1,7 @@
 /* Qlyphs PQ bridge, NEAR side: a fungible token (NEP-141 subset) for QTC locked on Quantus. It mints only
  * when two of three fixed ML-DSA-87 attesters sign the exact deposit (Quantus deposit id, amount, receiver),
  * once per deposit, and burns on redeem with a Quantus destination that the attesters release to.
- * Keyless after deployment: no owner, no upgrade, no attester rotation. Protocol: docs/BRIDGE.md. */
+ * Keyless after deployment: no owner, no upgrade, no attester rotation. Protocol: docs/ROUTE.md. */
 #include <stdint.h>
 #include <stddef.h>
 #include "../core/pq87.h"
@@ -57,7 +57,7 @@ IMPORT(sha256) void sha256(uint64_t len, uint64_t ptr, uint64_t reg);
 #define RESOLVE_GAS (10 * TGAS)
 #define WITHDRAW "WITHDRAW_TO:"
 
-/* Attestation offsets (docs/BRIDGE.md). */
+/* Attestation offsets (docs/ROUTE.md). */
 enum { A_MAGIC = 0, A_CHAIN = 8, A_BRIDGE = 16, A_GENESIS = 81, A_DEPOSIT = 113, A_AMOUNT = 145, A_RECV = 161,
        A_RECEIPT = 226, A_ZERO = 258 };
 

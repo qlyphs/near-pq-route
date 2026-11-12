@@ -121,13 +121,24 @@ ships is older than the verifier build, so that part runs on testnet (the eviden
 
 ## What is in this repository, and what is not
 
-- **Here:** the bridge contract (`contract/bridge.c`), the route cryptography (`sdk/route-crypto.mjs`), the route
-  service Worker (`route-worker/`: encrypted request mailbox, claim queue, account sponsor), both verifiers, the
-  attack lab, the formats ([docs/ROUTE.md](docs/ROUTE.md)) and the evidence.
-- **Not here:** the attester service (deposit inspection, attestation, mint and release orchestration, journal and
-  recovery) and the `/bridge/quantum` page are part of the Qlyphs codebase, which is not public. Their formats are
-  specified in [docs/ROUTE.md](docs/ROUTE.md). You can exercise them on the hosted app above; you cannot run the
-  whole route yourself from this repository.
+Qlyphs is a live product and its codebase is not open source. Everything the route needs to be checked is
+published here.
+
+- **Here:**
+  - the bridge contract (`contract/bridge.c`);
+  - the route cryptography (`sdk/route-crypto.mjs`);
+  - the source of the `/bridge/quantum` page, with its tests ([app/](app/README.md));
+  - the route service Worker (`route-worker/`: encrypted request mailbox, claim queue, account sponsor);
+  - both verifiers and the attack lab;
+  - the formats ([docs/ROUTE.md](docs/ROUTE.md)) and the evidence.
+- **Not here:**
+  - The attester service: deposit inspection, attestation, mint and release orchestration, journal and recovery.
+    It runs the three attester keys, and it stays private.
+  - The shared platform parts the page imports: UI kit, logos, and the connection to the Qlyphs wallet extension
+    (listed in [app/README.md](app/README.md#not-included)).
+
+  The attester service's formats are specified in [docs/ROUTE.md](docs/ROUTE.md). You can exercise it on the
+  hosted app above, but you cannot run the whole route yourself from this repository.
 - **What the verifiers prove:** the effects of that service on both chains (every mint, withdrawal, redemption and
   release listed in [docs/EVIDENCE.md](docs/EVIDENCE.md)), not its internal implementation.
 

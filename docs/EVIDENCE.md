@@ -1,6 +1,6 @@
 # Evidence: the current bridge, step by step
 
-Generated from `evidence/route-onchain.json` (104/104 checks on NEAR testnet, 2026-11-10T17:54:59.406Z) and `evidence/route-quantus.json` (52/52 checks on the Quantus test chain, finalized block 131414, NEAR block 277100435). Rerun both and this page with:
+Generated from `evidence/route-onchain.json` (130/130 checks on NEAR testnet, 2026-11-13T00:02:23.968Z) and `evidence/route-quantus.json` (78/78 checks on the Quantus test chain, finalized block 144839, NEAR block 277430232). Rerun both and this page with:
 
 ```sh
 node scripts/verify-route.mjs && node scripts/verify-quantus.mjs && node scripts/evidence-page.mjs
@@ -41,6 +41,19 @@ Each mint is backed by a lock deposit of the same amount: the deposit id in the 
 | 25 | 1 | [0x282789a0…](https://testnet.qlyphs.com/api/transactions/0x282789a02a0e9d169a8072a834ca9235ce9534254ba34ce65000586924b8fee5) block 129263 | [9CeUV65p…](https://testnet.nearblocks.io/txns/9CeUV65puUuVky647hsf9DsHurzERMQAjEFdsCKKpami) signers 1+2 | [rcf95044cb2c…](https://testnet.nearblocks.io/address/rcf95044cb2ccb461b2f3.qlyphs-pqroute-c.testnet) | none yet |
 | 26 | 0.1 | [0x2c682864…](https://testnet.qlyphs.com/api/transactions/0x2c682864e75b6c4ab3f2dc8dbb3fd6609a9546651ac0decfa31ea0bcb9ffb8e4) block 129671 | [FY7L5G6s…](https://testnet.nearblocks.io/txns/FY7L5G6sJXvgVEbe74nf5q9Wgp65N3UXpq8zVPqKJ4u8) signers 1+2 | [r8169624e34f…](https://testnet.nearblocks.io/address/r8169624e34f823a30816.qlyphs-pqroute-c.testnet) | none yet |
 | 27 | 0.1 | [0xfddb2c82…](https://testnet.qlyphs.com/api/transactions/0xfddb2c82b276705e945a47c9865ab2b325f17e3c01a27694fc95d3f25c312b91) block 129685 | [CA47JA5E…](https://testnet.nearblocks.io/txns/CA47JA5EqXGZnD39BNuzTotbiUKSCwnSUPvd7Uzgsv34) signers 1+2 | [r37773c9e70c…](https://testnet.nearblocks.io/address/r37773c9e70ccd770dcb0.qlyphs-pqroute-c.testnet) | [8Vpd6JAY…](https://testnet.nearblocks.io/txns/8Vpd6JAYfLAdeg7jZ1xJKAbrptcsxSWzXLeT8GAXtsDv) 0.1 |
+| 28 | 1 | [0xa87089c7…](https://testnet.qlyphs.com/api/transactions/0xa87089c75b892ee1ee68e8fd1b705b7ff049e846d4c1966f20b484d9042ac61d) block 142048 | [6KrpQheV…](https://testnet.nearblocks.io/txns/6KrpQheV59aXoxgsTg2SKUfUxoM2JEGMeeyPx4PjLq8) signers 1+2 | [r8e4890706bc…](https://testnet.nearblocks.io/address/r8e4890706bcb78d64892.qlyphs-pqroute-c.testnet) | none yet |
+| 29 | 1 | [0x3fbcbe85…](https://testnet.qlyphs.com/api/transactions/0x3fbcbe85d3c30a3f24bf05e45f28039b94f71c61f6d4a83055b1f8393654a30e) block 142072 | [BubpZXff…](https://testnet.nearblocks.io/txns/BubpZXffatD4iMJAeb2oJXYreKg9hfy2za5bNxoeh2R6) signers 1+2 | [re9dc3a65f35…](https://testnet.nearblocks.io/address/re9dc3a65f355d49a83f5.qlyphs-pqroute-c.testnet) | none yet |
+| 30 | 1 | [0xfbc651e9…](https://testnet.qlyphs.com/api/transactions/0xfbc651e92959ee91f0bd29ab2798a765e03e61b69aab7291f6616fff1532dfb6) block 142092 | [5ZbQ4wDn…](https://testnet.nearblocks.io/txns/5ZbQ4wDnuTVTo7FtQKwFBnjb7xYEJJUNgvLFxQpvj9ap) signers 1+2 | [r0e6c17f0349…](https://testnet.nearblocks.io/address/r0e6c17f0349772cd7bbb.qlyphs-pqroute-c.testnet) | none yet |
+| 31 | 2 | [0x52ff7098…](https://testnet.qlyphs.com/api/transactions/0x52ff70982f6d528e22503ea9cb0f43b00964aaddc6dadd7b444bc2aecc4bac5f) block 142110 | [4izFE5Lp…](https://testnet.nearblocks.io/txns/4izFE5Lp9nTKSH5hwrkSMWb2Z3UMVAvAhChxBnP1V1Hy) signers 1+2 | [r0d67d0932e3…](https://testnet.nearblocks.io/address/r0d67d0932e3a6b1a8a74.qlyphs-pqroute-c.testnet) | none yet |
+| 32 | 1 | [0x6efc6c02…](https://testnet.qlyphs.com/api/transactions/0x6efc6c02593a870b3259f15ad49049aed8bc7878d0c8607ce969e575604331c2) block 142205 | [4w3ADUpG…](https://testnet.nearblocks.io/txns/4w3ADUpG85xnGw7k4cvmDPEteYBYVf6cxgXDHuJuNXWC) signers 1+2 | [rf18c908e264…](https://testnet.nearblocks.io/address/rf18c908e264f7d2859d8.qlyphs-pqroute-c.testnet) | none yet |
+| 33 | 1 | [0xc2078260…](https://testnet.qlyphs.com/api/transactions/0xc207826081ad37cb1a14c0e5f8930d41847bd018ad7224f9f1fd7ff997f3ae6e) block 142221 | [417t3Y9X…](https://testnet.nearblocks.io/txns/417t3Y9XhoWU2jRFCgjMCtpjHvQmYqQPr59AFs46BJ6r) signers 1+2 | [r2b51ce92c35…](https://testnet.nearblocks.io/address/r2b51ce92c3573d71846a.qlyphs-pqroute-c.testnet) | none yet |
+| 34 | 1 | [0x6d5ca43a…](https://testnet.qlyphs.com/api/transactions/0x6d5ca43afe0b07d5e513a8b99e0270e01721cde85067becd2f090c8cb19b5388) block 142243 | [CkiwwXBA…](https://testnet.nearblocks.io/txns/CkiwwXBA8RJ1NhXwgmpSXd3Lvday4RtS7zt4E6N19Fmk) signers 1+2 | [r6ee5069eceb…](https://testnet.nearblocks.io/address/r6ee5069eceb6cd42078f.qlyphs-pqroute-c.testnet) | none yet |
+| 35 | 1 | [0xbb0c71dd…](https://testnet.qlyphs.com/api/transactions/0xbb0c71dd19ca3a1b95f12618105c5e55c1ad78a94f6a0402cc472f70606742a9) block 142274 | [5BPE68s8…](https://testnet.nearblocks.io/txns/5BPE68s89tuq4WGPTMPsuM6BvvShBuJfn1r71GhVbTT) signers 1+2 | [rc624f6d7950…](https://testnet.nearblocks.io/address/rc624f6d7950ddb58250c.qlyphs-pqroute-c.testnet) | none yet |
+| 36 | 1 | [0xd9749322…](https://testnet.qlyphs.com/api/transactions/0xd9749322b37985a28a182f9b0bdfcb12290ceda412594b651fea85e3ec1a30db) block 143400 | [2Bv5FfZs…](https://testnet.nearblocks.io/txns/2Bv5FfZsQ9yxWq4YZdn2ZyrgPebKdiZwNmojaPesLB6R) signers 1+2 | [r0e76d9e1180…](https://testnet.nearblocks.io/address/r0e76d9e11802c8066fc2.qlyphs-pqroute-c.testnet) | none yet |
+| 37 | 1 | [0x8c0604e7…](https://testnet.qlyphs.com/api/transactions/0x8c0604e7404c3d3793a7f86cc03b3a5bfd6c552df72ad31049c51c3e08a68fa8) block 143427 | [FNTQFxR4…](https://testnet.nearblocks.io/txns/FNTQFxR45YwnEkEXLFwcB4PRLPtEHiWuv96BDMVnnDg2) signers 1+2 | [r90b62e83790…](https://testnet.nearblocks.io/address/r90b62e83790ceee99b56.qlyphs-pqroute-c.testnet) | none yet |
+| 38 | 1 | [0xb6a3bb18…](https://testnet.qlyphs.com/api/transactions/0xb6a3bb188879c25336cea22ebe2a1f01f6c7bc89a6a3e7c1f9cfe0f64c496f75) block 143486 | [G96pMd7U…](https://testnet.nearblocks.io/txns/G96pMd7U4sWWjgCcTE6G9Zv1cDf7A5U83wXTo6W4WXeG) signers 1+2 | [re9ec4bacab6…](https://testnet.nearblocks.io/address/re9ec4bacab6bf19c706f.qlyphs-pqroute-c.testnet) | none yet |
+| 39 | 1 | [0xcee47bbb…](https://testnet.qlyphs.com/api/transactions/0xcee47bbb04365ba0d6fc579d34b50d9edf1fbc5e48102bd964f02c49d654ebdb) block 143873 | [9yY5WxbT…](https://testnet.nearblocks.io/txns/9yY5WxbTn4RdfQ65cC84gnNvCQqZfCAbfzHR9UCSJQpT) signers 1+2 | [rc4d0e230d20…](https://testnet.nearblocks.io/address/rc4d0e230d20430a63b11.qlyphs-pqroute-c.testnet) | none yet |
+| 40 | 3 | [0x9890a9f0…](https://testnet.qlyphs.com/api/transactions/0x9890a9f087ffbd7b2aed1eae99991090fd095e80b86b062f6296399a50e782aa) block 143900 | [FrxYP3ue…](https://testnet.nearblocks.io/txns/FrxYP3ueWFg92G24LA5nMtdLguVj2NtVLSk3tJGjK3tS) signers 1+2 | [r0bb19f07a1f…](https://testnet.nearblocks.io/address/r0bb19f07a1f78cc43e9b.qlyphs-pqroute-c.testnet) | none yet |
 
 ## Redemptions and releases
 
@@ -67,9 +80,21 @@ The NEAR bridge records every burn as a numbered redemption (amount, Quantus des
 | 16 | 1 | `0xa1417c334104e2a4…` | [0x75576f39…](https://testnet.qlyphs.com/api/transactions/0x75576f397470089f6d4ddff7bd5298b8d3c5225197bde9e8b19d286f5ace2ef9) |
 | 17 | 2 | `0xa1417c334104e2a4…` | [0x7f5ae48f…](https://testnet.qlyphs.com/api/transactions/0x7f5ae48f0cf9ce02d8880f5af590f0c8c51f67301dd875fe53739533108bf722) |
 | 18 | 0.1 | `0xedad0c07b9d00088…` | [0x670c6cbf…](https://testnet.qlyphs.com/api/transactions/0x670c6cbfc80d6eccaf329b53e9c59a9fc8439643a2d605c3f3ed2ce3331bcdc2) |
+| 19 | 1 | `0xa1417c334104e2a4…` | [0xb7d515f2…](https://testnet.qlyphs.com/api/transactions/0xb7d515f2743e63bdfe21b0cf798d419fd3d001f19ce0540c5b2aab3e8c4d672e) |
+| 20 | 1 | `0xa1417c334104e2a4…` | [0x182a8baf…](https://testnet.qlyphs.com/api/transactions/0x182a8baf6e831575d9f37e4b7b6b7f4d2f42f8417524e611d70b6bbbaa889839) |
+| 21 | 1 | `0xa1417c334104e2a4…` | [0x956e5986…](https://testnet.qlyphs.com/api/transactions/0x956e59860fec4c3dbcf8c6ad4dfae34003def2fc3dadfd8b4109bf99f3de8570) |
+| 22 | 1 | `0xa1417c334104e2a4…` | [0x207590e5…](https://testnet.qlyphs.com/api/transactions/0x207590e5b4ee1bda5bad2e5ca3e5dd6128468500bf99ad88ea193df3151c8bbb) |
+| 23 | 2 | `0xa1417c334104e2a4…` | [0xc4c28a2c…](https://testnet.qlyphs.com/api/transactions/0xc4c28a2caaa484f6eb4271ffdcd661618bf51c97231efb9ca4fe7866590210fb) |
+| 24 | 1 | `0xa1417c334104e2a4…` | [0x451b1a4e…](https://testnet.qlyphs.com/api/transactions/0x451b1a4ed2f780ffdba7336fe18ab191c5ba5017f23e7cc739794eae145a8573) |
+| 25 | 1 | `0xa1417c334104e2a4…` | [0xe0898bd8…](https://testnet.qlyphs.com/api/transactions/0xe0898bd8e286aa161d5cfea1ffe366159b0dc38f5404393ae3dc1e06ebc9af70) |
+| 26 | 1 | `0xa1417c334104e2a4…` | [0xa65d8b4f…](https://testnet.qlyphs.com/api/transactions/0xa65d8b4f6fd769d0c6f02637a6a9a5759afe27f661361d19c1841831b56958aa) |
+| 27 | 1 | `0xa1417c334104e2a4…` | [0x6bae24f6…](https://testnet.qlyphs.com/api/transactions/0x6bae24f6b432bb5ed82f0ae3c9ce468dd41fcec4c9178189136751ef3ba7c615) |
+| 28 | 1 | `0xa1417c334104e2a4…` | [0x9394cd72…](https://testnet.qlyphs.com/api/transactions/0x9394cd728d5991ccd39050e3194644f48097a17440685491a47786834704a7c4) |
+| 29 | 1 | `0xa1417c334104e2a4…` | [0xf53f018d…](https://testnet.qlyphs.com/api/transactions/0xf53f018dae72123f07841a6164fbfbef0d9962d4717c289c641ede062022e5c7) |
+| 30 | 1 | `0xa1417c334104e2a4…` | [0x73e6219e…](https://testnet.qlyphs.com/api/transactions/0x73e6219e31d4b2e0c3379e6d2adbb6a92a3bb06bdbb4c786cf9b40c0f8293fbb) |
 
-**Accounting.** 27 mints (46200000000042 planck) − 19 redemptions (35100000000042 planck) = 11100000000000; supply 11100000000000 at NEAR block 277100435.
+**Accounting.** 40 mints (62200000000042 planck) − 31 redemptions (48100000000042 planck) = 14100000000000; supply 14100000000000 at NEAR block 277430232.
 
-**Lock balance.** lock free balance 13100000000000 planck at Quantus block 131414 (0x8b217d417b…); supply 11100000000000 at NEAR block 277100435.
+**Lock balance.** lock free balance 16100000000000 planck at Quantus block 144839 (0x4eafd8c6b4…); supply 14100000000000 at NEAR block 277436066.
 
 Mints and releases are approved by two of the three attester keys, all operated by Qlyphs in one service: this shows 2-of-3 post-quantum authorization, not independent operators. The relayer that submits mints pays gas and has no authority; its only key is ML-DSA-65.

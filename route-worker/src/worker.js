@@ -73,8 +73,15 @@ export default {
       }
       if (req.method === 'GET' && url.pathname === '/claims') {
         const after = url.searchParams.get('after') ?? '';
-        const list = await env.ROUTE.list({ prefix: 'claim:', limit: 100 });
-        const keys = list.keys.map((k) => k.name).filter((k) => k > after).sort().slice(0, 20);
+        // Keys sort by time. Every page of the listing is read, so a claim is never hidden behind older ones.
+        const newer = [];
+        let cursor;
+        do {
+          const list = await env.ROUTE.list({ prefix: 'claim:', limit: 1000, cursor });
+          newer.push(...list.keys.map((k) => k.name).filter((k) => k > after));
+          cursor = list.list_complete ? undefined : list.cursor;
+        } while (cursor);
+        const keys = newer.sort().slice(0, 20);
         const claims = [];
         for (const k of keys) claims.push({ key: k, ...(JSON.parse((await env.ROUTE.get(k)) ?? '{}')) });
         return json(200, { claims }, cors);

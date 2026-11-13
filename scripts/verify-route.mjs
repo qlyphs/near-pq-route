@@ -42,14 +42,24 @@ const codeHash = async (account) => (await rpc('query', { request_type: 'view_ac
 // public indexer first; the checks themselves read every transaction from the RPC, never from the indexer.
 const TX_FILE = 'evidence/route-transactions.json';
 const txList = existsSync(TX_FILE) ? JSON.parse(readFileSync(TX_FILE, 'utf8')) : {};
-// The public index returns the newest 25 transactions per account (it ignores paging), so each refresh is merged
-// into the committed list instead of replacing it: older transactions stay listed.
+// The public index serves 25 transactions per page. Pages are read until one brings nothing new, and the result is
+// merged into the committed list, so older transactions stay listed.
 async function fromIndex(account) {
-  let j = {};
-  for (let i = 0; i < 6 && !j.data; i++) { if (i) await sleep(10_000 * i); j = await fetch(`${INDEX}/accounts/${account}/txns?per_page=25`).then((r) => r.json()).catch(() => ({})); }
-  if (!j.data) throw new Error(`index unavailable for ${account}`);
-  const fresh = j.data.map((t) => ({ hash: t.transaction_hash, signer: t.signer_account_id ?? t.predecessor_account_id, receiver: t.receiver_account_id, methods: (t.actions ?? []).map((a) => a.method ?? a.action) }));
-  return [...new Map([...(txList[account] ?? []), ...fresh].map((t) => [t.hash, t])).values()];
+  const seen = new Map((txList[account] ?? []).map((t) => [t.hash, t]));
+  const pageHashes = new Set();
+  for (let page = 1; page <= 40; page++) {
+    let j = {};
+    for (let i = 0; i < 6 && !j.data; i++) { if (i) await sleep(10_000 * i); j = await fetch(`${INDEX}/accounts/${account}/txns?per_page=25&page=${page}`).then((r) => r.json()).catch(() => ({})); }
+    if (!j.data) throw new Error(`index unavailable for ${account} (page ${page})`);
+    const fresh = j.data.filter((t) => !pageHashes.has(t.transaction_hash));
+    if (!fresh.length) break;
+    for (const t of fresh) {
+      pageHashes.add(t.transaction_hash);
+      seen.set(t.transaction_hash, { hash: t.transaction_hash, signer: t.signer_account_id ?? t.predecessor_account_id, receiver: t.receiver_account_id, methods: (t.actions ?? []).map((a) => a.method ?? a.action) });
+    }
+    await sleep(1500);
+  }
+  return [...seen.values()];
 }
 async function listTxs(account) {
   if (process.argv.includes('--index') || !txList[account]) { txList[account] = await fromIndex(account); await sleep(2000); writeFileSync(TX_FILE, JSON.stringify(txList, null, 1) + '\n'); }

@@ -1,7 +1,7 @@
 // Minimal NEAR client for the demo Worker: JSON-RPC, borsh transaction encoding and ed25519 signing.
 // Only the actions the demo sends (DeployContract, FunctionCall) are encoded.
 import { ed25519 } from '@noble/curves/ed25519';
-import { sha256 } from '@noble/hashes/sha256';
+import { sha256 } from '@noble/hashes/sha2.js';
 
 const B58 = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
 export function b58decode(s) {

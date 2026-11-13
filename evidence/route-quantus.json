@@ -1,19 +1,24 @@
 {
- "date": "2026-11-10T17:51:57.111Z",
+ "date": "2026-11-13T00:23:13.563Z",
  "quantus_rpc": "https://testnet-rpc.qlyphs.com",
  "quantus_finalized": {
-  "number": 131414,
-  "hash": "0x8b217d417bcad97f79264fe2b8de30a5ffa180a5b695a6bdf934df71f2e3dc4c"
+  "number": 144839,
+  "hash": "0x4eafd8c6b4256bcbca9fd4224840f135b74119f5b7b0d16f71b7ea3da1d63866"
  },
  "near_block": {
-  "height": 277100435,
-  "hash": "92ZvdjuMNNhJjG5ktARQ7n1JVno9PRgCc5aDKCx83Wpp"
+  "height": 277430232,
+  "hash": "3VBjyp7Pr7rQttNT2iGChrsSfDDJkZphStvbazY9Jqa6"
+ },
+ "near_live": {
+  "height": 277436066,
+  "redemptions": 31,
+  "supply": "14100000000000"
  },
  "upstream": {
   "file": "evidence/route-onchain.json",
-  "sha256": "e964d441af08c7fcb59958a26c5098e7e124854f2d7b7dd752d30a8349049ab9",
-  "date": "2026-11-10T12:22:21.621Z",
-  "checks": 104
+  "sha256": "6dfa300b8e13e9514eed23d5f18b93f0121f404c1910f6b339734598689cdc25",
+  "date": "2026-11-13T00:02:23.968Z",
+  "checks": 130
  },
  "indexer_used_for": "locating release extrinsics by hash",
  "bridge": "qtc-pq.qlyphs-pqroute-a.testnet",
@@ -179,18 +184,96 @@
    "tx": "0x9570e246910dddfbc98a830ee53fc93c35019f02f604184443091404895428c6",
    "block": 123076,
    "extrinsic": 1
+  },
+  {
+   "deposit_id": "82bf9560eeef13f86070ad53a2420765d43fb4d6ba69c32f6bd4403f24ce3523",
+   "tx": "0x9890a9f087ffbd7b2aed1eae99991090fd095e80b86b062f6296399a50e782aa",
+   "block": 143900,
+   "extrinsic": 1
+  },
+  {
+   "deposit_id": "cdd5316b7e67311d0f2097580c9b2eae7222a3278d23fbbc7c1523c79b8657cc",
+   "tx": "0xcee47bbb04365ba0d6fc579d34b50d9edf1fbc5e48102bd964f02c49d654ebdb",
+   "block": 143873,
+   "extrinsic": 1
+  },
+  {
+   "deposit_id": "4191fb41ca686ddcf2917f8f1685cae44dbd864fa4374fa538cd4903a19d33fb",
+   "tx": "0xb6a3bb188879c25336cea22ebe2a1f01f6c7bc89a6a3e7c1f9cfe0f64c496f75",
+   "block": 143486,
+   "extrinsic": 1
+  },
+  {
+   "deposit_id": "b1afdfc7f93dfbb56dd4d90aff9c166410f49df5ab32c513f744d82382b6b190",
+   "tx": "0x8c0604e7404c3d3793a7f86cc03b3a5bfd6c552df72ad31049c51c3e08a68fa8",
+   "block": 143427,
+   "extrinsic": 1
+  },
+  {
+   "deposit_id": "18c87e974cf57f5da95add903a345db7e6b7ceb65cd536a327889c371cdb82d0",
+   "tx": "0xd9749322b37985a28a182f9b0bdfcb12290ceda412594b651fea85e3ec1a30db",
+   "block": 143400,
+   "extrinsic": 1
+  },
+  {
+   "deposit_id": "0fb9460cdbd326db70e19e15c6bea3d66d4516581ce52a84a62143ffa06e6bc3",
+   "tx": "0xbb0c71dd19ca3a1b95f12618105c5e55c1ad78a94f6a0402cc472f70606742a9",
+   "block": 142274,
+   "extrinsic": 1
+  },
+  {
+   "deposit_id": "9d935b739694b9221301fbba9c4b96f4b6343c14acd9caf77e63eb5239e9a0da",
+   "tx": "0x6d5ca43afe0b07d5e513a8b99e0270e01721cde85067becd2f090c8cb19b5388",
+   "block": 142243,
+   "extrinsic": 1
+  },
+  {
+   "deposit_id": "d2716accd56fa795c34a67b9a4dfcaa73714e9eab3cbbcf9721c0c35ef274541",
+   "tx": "0xc207826081ad37cb1a14c0e5f8930d41847bd018ad7224f9f1fd7ff997f3ae6e",
+   "block": 142221,
+   "extrinsic": 1
+  },
+  {
+   "deposit_id": "5bb5babf451883daba0ca4b8679dd6f4031524d46acc4e3f4dcfb69f875b549f",
+   "tx": "0x6efc6c02593a870b3259f15ad49049aed8bc7878d0c8607ce969e575604331c2",
+   "block": 142205,
+   "extrinsic": 1
+  },
+  {
+   "deposit_id": "d7279a364a6f78924e18785f157094f317858d8191ac8f2227bce0fa01b149d4",
+   "tx": "0x52ff70982f6d528e22503ea9cb0f43b00964aaddc6dadd7b444bc2aecc4bac5f",
+   "block": 142110,
+   "extrinsic": 1
+  },
+  {
+   "deposit_id": "c54ea0774fec51ea6996871c2f7458121c7d60e152ed1562ac5906fe2690ad70",
+   "tx": "0xfbc651e92959ee91f0bd29ab2798a765e03e61b69aab7291f6616fff1532dfb6",
+   "block": 142092,
+   "extrinsic": 1
+  },
+  {
+   "deposit_id": "4c240429766e26a5768bc72c13ab5614b5d224c4290d060cf7f535c504dab3b0",
+   "tx": "0x3fbcbe85d3c30a3f24bf05e45f28039b94f71c61f6d4a83055b1f8393654a30e",
+   "block": 142072,
+   "extrinsic": 1
+  },
+  {
+   "deposit_id": "83fbbb8d496c928076ed17728c2026556a9dfe9b28090c28567b66978e2b3b3e",
+   "tx": "0xa87089c75b892ee1ee68e8fd1b705b7ff049e846d4c1966f20b484d9042ac61d",
+   "block": 142048,
+   "extrinsic": 1
   }
  ],
  "results": [
   {
    "name": "the NEAR report is a passing verify-route run on the bridge this index names",
    "ok": true,
-   "detail": "104 checks at 2026-11-10T12:22:21.621Z, bridge qtc-pq.qlyphs-pqroute-a.testnet"
+   "detail": "130 checks at 2026-11-13T00:02:23.968Z, bridge qtc-pq.qlyphs-pqroute-a.testnet"
   },
   {
    "name": "mints, deposits and releases are each listed once",
    "ok": true,
-   "detail": "27 mints, 27 deposits, 19 releases"
+   "detail": "40 mints, 40 deposits, 31 releases"
   },
   {
    "name": "the Quantus RPC serves the test chain the lock lives on",
@@ -200,7 +283,12 @@
   {
    "name": "the lock is a native 2-of-3 multisig of the three attester keys",
    "ok": true,
-   "detail": "threshold 2, 3 signers, at finalized block 131414"
+   "detail": "threshold 2, 3 signers, at finalized block 144839"
+  },
+  {
+   "name": "the index is a snapshot at a NEAR block",
+   "ok": true,
+   "detail": "NEAR block 277430232: 31 redemptions, supply 14100000000000"
   },
   {
    "name": "mint 2dKio9M96J… is backed by lock deposit 0x6982d95113… (block 120989 #1)",
@@ -338,6 +426,71 @@
    "detail": "deposit id recomputed from the block hash; finalized; succeeded, Transfer of 1000000000000 planck to the lock"
   },
   {
+   "name": "mint FrxYP3ueWF… is backed by lock deposit 0x9890a9f087… (block 143900 #1)",
+   "ok": true,
+   "detail": "deposit id recomputed from the block hash; finalized; succeeded, Transfer of 3000000000000 planck to the lock"
+  },
+  {
+   "name": "mint 9yY5WxbTn4… is backed by lock deposit 0xcee47bbb04… (block 143873 #1)",
+   "ok": true,
+   "detail": "deposit id recomputed from the block hash; finalized; succeeded, Transfer of 1000000000000 planck to the lock"
+  },
+  {
+   "name": "mint G96pMd7U4s… is backed by lock deposit 0xb6a3bb1888… (block 143486 #1)",
+   "ok": true,
+   "detail": "deposit id recomputed from the block hash; finalized; succeeded, Transfer of 1000000000000 planck to the lock"
+  },
+  {
+   "name": "mint FNTQFxR45Y… is backed by lock deposit 0x8c0604e740… (block 143427 #1)",
+   "ok": true,
+   "detail": "deposit id recomputed from the block hash; finalized; succeeded, Transfer of 1000000000000 planck to the lock"
+  },
+  {
+   "name": "mint 2Bv5FfZsQ9… is backed by lock deposit 0xd9749322b3… (block 143400 #1)",
+   "ok": true,
+   "detail": "deposit id recomputed from the block hash; finalized; succeeded, Transfer of 1000000000000 planck to the lock"
+  },
+  {
+   "name": "mint 5BPE68s89t… is backed by lock deposit 0xbb0c71dd19… (block 142274 #1)",
+   "ok": true,
+   "detail": "deposit id recomputed from the block hash; finalized; succeeded, Transfer of 1000000000000 planck to the lock"
+  },
+  {
+   "name": "mint CkiwwXBA8R… is backed by lock deposit 0x6d5ca43afe… (block 142243 #1)",
+   "ok": true,
+   "detail": "deposit id recomputed from the block hash; finalized; succeeded, Transfer of 1000000000000 planck to the lock"
+  },
+  {
+   "name": "mint 417t3Y9Xho… is backed by lock deposit 0xc207826081… (block 142221 #1)",
+   "ok": true,
+   "detail": "deposit id recomputed from the block hash; finalized; succeeded, Transfer of 1000000000000 planck to the lock"
+  },
+  {
+   "name": "mint 4w3ADUpG85… is backed by lock deposit 0x6efc6c0259… (block 142205 #1)",
+   "ok": true,
+   "detail": "deposit id recomputed from the block hash; finalized; succeeded, Transfer of 1000000000000 planck to the lock"
+  },
+  {
+   "name": "mint 4izFE5Lp9n… is backed by lock deposit 0x52ff70982f… (block 142110 #1)",
+   "ok": true,
+   "detail": "deposit id recomputed from the block hash; finalized; succeeded, Transfer of 2000000000000 planck to the lock"
+  },
+  {
+   "name": "mint 5ZbQ4wDnuT… is backed by lock deposit 0xfbc651e929… (block 142092 #1)",
+   "ok": true,
+   "detail": "deposit id recomputed from the block hash; finalized; succeeded, Transfer of 1000000000000 planck to the lock"
+  },
+  {
+   "name": "mint BubpZXffat… is backed by lock deposit 0x3fbcbe85d3… (block 142072 #1)",
+   "ok": true,
+   "detail": "deposit id recomputed from the block hash; finalized; succeeded, Transfer of 1000000000000 planck to the lock"
+  },
+  {
+   "name": "mint 6KrpQheV59… is backed by lock deposit 0xa87089c75b… (block 142048 #1)",
+   "ok": true,
+   "detail": "deposit id recomputed from the block hash; finalized; succeeded, Transfer of 1000000000000 planck to the lock"
+  },
+  {
    "name": "redemption 0 (2000000000001 planck to 07f81a9542…) released by 0x370045ac32…",
    "ok": true,
    "detail": "block 120987 #1; hash recomputed; proposal 4 executed by the lock, inner call succeeded, 2 signers approved, Transfer of the redeemed amount to the destination"
@@ -433,14 +586,74 @@
    "detail": "block 129701 #1; hash recomputed; proposal 22 executed by the lock, inner call succeeded, 2 signers approved, Transfer of the redeemed amount to the destination"
   },
   {
-   "name": "verified mints minus redemptions equal the bridge supply",
+   "name": "redemption 19 (1000000000000 planck to a1417c3341…) released by 0xb7d515f274…",
    "ok": true,
-   "detail": "27 mints (46200000000042 planck) − 19 redemptions (35100000000042 planck) = 11100000000000; supply 11100000000000 at NEAR block 277100435"
+   "detail": "block 142083 #1; hash recomputed; proposal 23 executed by the lock, inner call succeeded, 2 signers approved, Transfer of the redeemed amount to the destination"
   },
   {
-   "name": "the lock holds at least the bridge supply",
+   "name": "redemption 20 (1000000000000 planck to a1417c3341…) released by 0x182a8baf6e…",
    "ok": true,
-   "detail": "lock free balance 13100000000000 planck at Quantus block 131414 (0x8b217d417b…); supply 11100000000000 at NEAR block 277100435"
+   "detail": "block 142086 #1; hash recomputed; proposal 24 executed by the lock, inner call succeeded, 2 signers approved, Transfer of the redeemed amount to the destination"
+  },
+  {
+   "name": "redemption 21 (1000000000000 planck to a1417c3341…) released by 0x956e59860f…",
+   "ok": true,
+   "detail": "block 142089 #1; hash recomputed; proposal 25 executed by the lock, inner call succeeded, 2 signers approved, Transfer of the redeemed amount to the destination"
+  },
+  {
+   "name": "redemption 22 (1000000000000 planck to a1417c3341…) released by 0x207590e5b4…",
+   "ok": true,
+   "detail": "block 142324 #1; hash recomputed; proposal 26 executed by the lock, inner call succeeded, 2 signers approved, Transfer of the redeemed amount to the destination"
+  },
+  {
+   "name": "redemption 23 (2000000000000 planck to a1417c3341…) released by 0xc4c28a2caa…",
+   "ok": true,
+   "detail": "block 142329 #1; hash recomputed; proposal 27 executed by the lock, inner call succeeded, 2 signers approved, Transfer of the redeemed amount to the destination"
+  },
+  {
+   "name": "redemption 24 (1000000000000 planck to a1417c3341…) released by 0x451b1a4ed2…",
+   "ok": true,
+   "detail": "block 142334 #1; hash recomputed; proposal 28 executed by the lock, inner call succeeded, 2 signers approved, Transfer of the redeemed amount to the destination"
+  },
+  {
+   "name": "redemption 25 (1000000000000 planck to a1417c3341…) released by 0xe0898bd8e2…",
+   "ok": true,
+   "detail": "block 142337 #1; hash recomputed; proposal 29 executed by the lock, inner call succeeded, 2 signers approved, Transfer of the redeemed amount to the destination"
+  },
+  {
+   "name": "redemption 26 (1000000000000 planck to a1417c3341…) released by 0xa65d8b4f6f…",
+   "ok": true,
+   "detail": "block 142340 #1; hash recomputed; proposal 30 executed by the lock, inner call succeeded, 2 signers approved, Transfer of the redeemed amount to the destination"
+  },
+  {
+   "name": "redemption 27 (1000000000000 planck to a1417c3341…) released by 0x6bae24f6b4…",
+   "ok": true,
+   "detail": "block 142344 #1; hash recomputed; proposal 31 executed by the lock, inner call succeeded, 2 signers approved, Transfer of the redeemed amount to the destination"
+  },
+  {
+   "name": "redemption 28 (1000000000000 planck to a1417c3341…) released by 0x9394cd728d…",
+   "ok": true,
+   "detail": "block 143582 #1; hash recomputed; proposal 32 executed by the lock, inner call succeeded, 2 signers approved, Transfer of the redeemed amount to the destination"
+  },
+  {
+   "name": "redemption 29 (1000000000000 planck to a1417c3341…) released by 0xf53f018dae…",
+   "ok": true,
+   "detail": "block 143586 #1; hash recomputed; proposal 33 executed by the lock, inner call succeeded, 2 signers approved, Transfer of the redeemed amount to the destination"
+  },
+  {
+   "name": "redemption 30 (1000000000000 planck to a1417c3341…) released by 0x73e6219e31…",
+   "ok": true,
+   "detail": "block 143590 #1; hash recomputed; proposal 34 executed by the lock, inner call succeeded, 2 signers approved, Transfer of the redeemed amount to the destination"
+  },
+  {
+   "name": "verified mints minus redemptions equal the bridge supply",
+   "ok": true,
+   "detail": "40 mints (62200000000042 planck) − 31 redemptions (48100000000042 planck) = 14100000000000; supply 14100000000000 at NEAR block 277430232"
+  },
+  {
+   "name": "the lock holds at least the bridge supply now",
+   "ok": true,
+   "detail": "lock free balance 16100000000000 planck at Quantus block 144839 (0x4eafd8c6b4…); supply 14100000000000 at NEAR block 277436066"
   }
  ]
 }

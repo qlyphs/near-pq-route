@@ -1,5 +1,5 @@
 {
- "date": "2026-11-12T23:25:05.346Z",
+ "date": "2026-11-13T00:02:23.968Z",
  "rpc": "https://archival-rpc.testnet.fastnear.com",
  "bridges": [
   {
@@ -396,7 +396,8 @@
       2
      ],
      "signer": "relay.qlyphs-pqroute-a.testnet",
-     "signer_key_scheme": "ml-dsa-65"
+     "signer_key_scheme": "ml-dsa-65",
+     "account_creation_tx": "4iCXic7tZwvgaGpFqJxK9Yf8yh8i52c2Au5K5DKxbPv8"
     },
     {
      "tx": "9yY5WxbTn4RdfQ65cC84gnNvCQqZfCAbfzHR9UCSJQpT",
@@ -409,7 +410,8 @@
       2
      ],
      "signer": "relay.qlyphs-pqroute-a.testnet",
-     "signer_key_scheme": "ml-dsa-65"
+     "signer_key_scheme": "ml-dsa-65",
+     "account_creation_tx": "4kTBanfTES5xUQPhAnyFsbEaFtGgmswLcWrrCoE2g3Ha"
     },
     {
      "tx": "G96pMd7U4sWWjgCcTE6G9Zv1cDf7A5U83wXTo6W4WXeG",
@@ -422,7 +424,8 @@
       2
      ],
      "signer": "relay.qlyphs-pqroute-a.testnet",
-     "signer_key_scheme": "ml-dsa-65"
+     "signer_key_scheme": "ml-dsa-65",
+     "account_creation_tx": "2f43JVG9xiRv2VgbLZX5dyY49svZwcry6xL6nEeg9VTt"
     },
     {
      "tx": "FNTQFxR45YwnEkEXLFwcB4PRLPtEHiWuv96BDMVnnDg2",
@@ -435,7 +438,8 @@
       2
      ],
      "signer": "relay.qlyphs-pqroute-a.testnet",
-     "signer_key_scheme": "ml-dsa-65"
+     "signer_key_scheme": "ml-dsa-65",
+     "account_creation_tx": "9zhKR18N2sHsmDhuomhFxcS2MwK25GsxFjRogRYCumeg"
     },
     {
      "tx": "2Bv5FfZsQ9yxWq4YZdn2ZyrgPebKdiZwNmojaPesLB6R",
@@ -448,7 +452,8 @@
       2
      ],
      "signer": "relay.qlyphs-pqroute-a.testnet",
-     "signer_key_scheme": "ml-dsa-65"
+     "signer_key_scheme": "ml-dsa-65",
+     "account_creation_tx": "Gm8k7StNQKQQDwK6LtSMqwYdRcFosDFqXdBf4QFd4BMb"
     },
     {
      "tx": "5BPE68s89tuq4WGPTMPsuM6BvvShBuJfn1r71GhVbTT",
@@ -461,7 +466,8 @@
       2
      ],
      "signer": "relay.qlyphs-pqroute-a.testnet",
-     "signer_key_scheme": "ml-dsa-65"
+     "signer_key_scheme": "ml-dsa-65",
+     "account_creation_tx": "EF9CnhUyteCaT3X4CKB3YKZgMTiyqaSmuPpiwRPAgj17"
     },
     {
      "tx": "CkiwwXBA8RJ1NhXwgmpSXd3Lvday4RtS7zt4E6N19Fmk",
@@ -474,7 +480,8 @@
       2
      ],
      "signer": "relay.qlyphs-pqroute-a.testnet",
-     "signer_key_scheme": "ml-dsa-65"
+     "signer_key_scheme": "ml-dsa-65",
+     "account_creation_tx": "AVKf6LZCt2pNXNTw4ppnZA8SQoxsQAM8KpsNcX8kNaCn"
     },
     {
      "tx": "417t3Y9XhoWU2jRFCgjMCtpjHvQmYqQPr59AFs46BJ6r",
@@ -487,7 +494,8 @@
       2
      ],
      "signer": "relay.qlyphs-pqroute-a.testnet",
-     "signer_key_scheme": "ml-dsa-65"
+     "signer_key_scheme": "ml-dsa-65",
+     "account_creation_tx": "3oSj5No4KmU2wKCvKo9QSvfn64xDH262Db7obhvAwVGL"
     },
     {
      "tx": "4w3ADUpG85xnGw7k4cvmDPEteYBYVf6cxgXDHuJuNXWC",
@@ -500,7 +508,8 @@
       2
      ],
      "signer": "relay.qlyphs-pqroute-a.testnet",
-     "signer_key_scheme": "ml-dsa-65"
+     "signer_key_scheme": "ml-dsa-65",
+     "account_creation_tx": "SaBp9cyGpwtwAD2QQm8qJxtUEcev4mNLfHApr788zex"
     },
     {
      "tx": "4izFE5Lp9nTKSH5hwrkSMWb2Z3UMVAvAhChxBnP1V1Hy",
@@ -513,7 +522,8 @@
       2
      ],
      "signer": "relay.qlyphs-pqroute-a.testnet",
-     "signer_key_scheme": "ml-dsa-65"
+     "signer_key_scheme": "ml-dsa-65",
+     "account_creation_tx": "7zoc1HBBfA7PQzyNZdBWeZrRQV2xqXx11RGDyApDZF28"
     },
     {
      "tx": "5ZbQ4wDnuTVTo7FtQKwFBnjb7xYEJJUNgvLFxQpvj9ap",
@@ -526,7 +536,8 @@
       2
      ],
      "signer": "relay.qlyphs-pqroute-a.testnet",
-     "signer_key_scheme": "ml-dsa-65"
+     "signer_key_scheme": "ml-dsa-65",
+     "account_creation_tx": "2zefPKkWovAvrzTAVcpUuMgGb21LWkMcjUcZnBZRtyFY"
     },
     {
      "tx": "BubpZXffatD4iMJAeb2oJXYreKg9hfy2za5bNxoeh2R6",
@@ -539,7 +550,8 @@
       2
      ],
      "signer": "relay.qlyphs-pqroute-a.testnet",
-     "signer_key_scheme": "ml-dsa-65"
+     "signer_key_scheme": "ml-dsa-65",
+     "account_creation_tx": "8kg17iwDZ3usSgxVPYddMH8hGPyoRCK9iNwNVbsF8VMQ"
     },
     {
      "tx": "6KrpQheV59aXoxgsTg2SKUfUxoM2JEGMeeyPx4PjLq8",
@@ -552,7 +564,8 @@
       2
      ],
      "signer": "relay.qlyphs-pqroute-a.testnet",
-     "signer_key_scheme": "ml-dsa-65"
+     "signer_key_scheme": "ml-dsa-65",
+     "account_creation_tx": "4kfZ1YeG51qnyLPdzuijx3AixihnmeQ1UiDvg67my6c8"
     }
    ],
    "withdrawals": [
@@ -1642,69 +1655,69 @@
    "detail": "5GKgHe8ooA…"
   },
   {
-   "name": "r0bb19f07a1f78… creation transaction found",
-   "ok": false,
-   "detail": "not in the sponsor list"
+   "name": "r0bb19f07a1f78… opened by the ML-DSA-65 sponsor (create, fund, one ML-DSA-65 key) at block 277412683, before its mint at 277412910",
+   "ok": true,
+   "detail": "4iCXic7tZw…"
   },
   {
-   "name": "rc4d0e230d2043… creation transaction found",
-   "ok": false,
-   "detail": "not in the sponsor list"
+   "name": "rc4d0e230d2043… opened by the ML-DSA-65 sponsor (create, fund, one ML-DSA-65 key) at block 277412119, before its mint at 277412470",
+   "ok": true,
+   "detail": "4kTBanfTES…"
   },
   {
-   "name": "re9ec4bacab6bf… creation transaction found",
-   "ok": false,
-   "detail": "not in the sponsor list"
+   "name": "re9ec4bacab6bf… opened by the ML-DSA-65 sponsor (create, fund, one ML-DSA-65 key) at block 277402052, before its mint at 277402497",
+   "ok": true,
+   "detail": "2f43JVG9xi…"
   },
   {
-   "name": "r90b62e83790ce… creation transaction found",
-   "ok": false,
-   "detail": "not in the sponsor list"
+   "name": "r90b62e83790ce… opened by the ML-DSA-65 sponsor (create, fund, one ML-DSA-65 key) at block 277400968, before its mint at 277401199",
+   "ok": true,
+   "detail": "9zhKR18N2s…"
   },
   {
-   "name": "r0e76d9e11802c… creation transaction found",
-   "ok": false,
-   "detail": "not in the sponsor list"
+   "name": "r0e76d9e11802c… opened by the ML-DSA-65 sponsor (create, fund, one ML-DSA-65 key) at block 277400583, before its mint at 277400780",
+   "ok": true,
+   "detail": "Gm8k7StNQK…"
   },
   {
-   "name": "rc624f6d7950dd… creation transaction found",
-   "ok": false,
-   "detail": "not in the sponsor list"
+   "name": "rc624f6d7950dd… opened by the ML-DSA-65 sponsor (create, fund, one ML-DSA-65 key) at block 277371276, before its mint at 277371536",
+   "ok": true,
+   "detail": "EF9CnhUyte…"
   },
   {
-   "name": "r6ee5069eceb6c… creation transaction found",
-   "ok": false,
-   "detail": "not in the sponsor list"
+   "name": "r6ee5069eceb6c… opened by the ML-DSA-65 sponsor (create, fund, one ML-DSA-65 key) at block 277370546, before its mint at 277370732",
+   "ok": true,
+   "detail": "AVKf6LZCt2…"
   },
   {
-   "name": "r2b51ce92c3573… creation transaction found",
-   "ok": false,
-   "detail": "not in the sponsor list"
+   "name": "r2b51ce92c3573… opened by the ML-DSA-65 sponsor (create, fund, one ML-DSA-65 key) at block 277369901, before its mint at 277370216",
+   "ok": true,
+   "detail": "3oSj5No4Km…"
   },
   {
-   "name": "rf18c908e264f7… creation transaction found",
-   "ok": false,
-   "detail": "not in the sponsor list"
+   "name": "rf18c908e264f7… opened by the ML-DSA-65 sponsor (create, fund, one ML-DSA-65 key) at block 277369383, before its mint at 277369647",
+   "ok": true,
+   "detail": "SaBp9cyGpw…"
   },
   {
-   "name": "r0d67d0932e3a6… creation transaction found",
-   "ok": false,
-   "detail": "not in the sponsor list"
+   "name": "r0d67d0932e3a6… opened by the ML-DSA-65 sponsor (create, fund, one ML-DSA-65 key) at block 277367055, before its mint at 277367172",
+   "ok": true,
+   "detail": "7zoc1HBBfA…"
   },
   {
-   "name": "r0e6c17f034977… creation transaction found",
-   "ok": false,
-   "detail": "not in the sponsor list"
+   "name": "r0e6c17f034977… opened by the ML-DSA-65 sponsor (create, fund, one ML-DSA-65 key) at block 277366734, before its mint at 277367000",
+   "ok": true,
+   "detail": "2zefPKkWov…"
   },
   {
-   "name": "re9dc3a65f355d… creation transaction found",
-   "ok": false,
-   "detail": "not in the sponsor list"
+   "name": "re9dc3a65f355d… opened by the ML-DSA-65 sponsor (create, fund, one ML-DSA-65 key) at block 277366101, before its mint at 277366330",
+   "ok": true,
+   "detail": "8kg17iwDZ3…"
   },
   {
-   "name": "r8e4890706bcb7… creation transaction found",
-   "ok": false,
-   "detail": "not in the sponsor list"
+   "name": "r8e4890706bcb7… opened by the ML-DSA-65 sponsor (create, fund, one ML-DSA-65 key) at block 277365497, before its mint at 277365738",
+   "ok": true,
+   "detail": "4kfZ1YeG51…"
   }
  ]
 }

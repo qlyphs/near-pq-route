@@ -39,6 +39,35 @@ runs all three attester keys in one service: this demonstrates 2-of-3 post-quant
 independent operators (see [what this is not](#what-this-is-and-is-not) and the
 [path to independent operators](#path-to-independent-operators)).
 
+## The thesis: NEAR as the post-quantum gateway
+
+Each claim below comes with the command that checks it. Anyone can rerun them.
+
+1. **Post-quantum chains already bring value to NEAR.** QTC, the coin of Quantus, where every account signs with
+   ML-DSA, has a supply of 220,216.66 QTC on NEAR mainnet at block 224,345,811 (2026-11-13). That is
+   about $13.4M at the 2026-11-11 CoinGecko price of $60.65. It was 214,888.98 QTC on 2026-11-09, so about 5,300 QTC
+   arrived in four days.
+   ```sh
+   curl -s https://rpc.mainnet.fastnear.com -H 'content-type: application/json' -d '{"jsonrpc":"2.0","id":1,"method":"query","params":{"request_type":"call_function","finality":"final","account_id":"qtc.omft.near","method_name":"ft_total_supply","args_base64":"e30="}}'
+   ```
+2. **Their way in is still classical.** Every QTC on NEAR is minted through `bridge-mng.near`, whose only access
+   key is one ed25519 full-access key, the kind a quantum computer is expected to break. The snapshot is in
+   [evidence/bridge-mng-snapshot.json](evidence/bridge-mng-snapshot.json), and the key was unchanged at block
+   224,345,811.
+   ```sh
+   curl -s https://rpc.mainnet.fastnear.com -H 'content-type: application/json' -d '{"jsonrpc":"2.0","id":1,"method":"query","params":{"request_type":"view_access_key_list","finality":"final","account_id":"bridge-mng.near"}}'
+   ```
+3. **A post-quantum way in works today.** This route has made 40 mints and 31 releases on testnet. Each mint
+   carries two ML-DSA-87 attestations verified by a keyless contract, and each withdrawal is signed by a native
+   ML-DSA-65 account. Both chains can be checked with `node scripts/verify-route.mjs` (130/130) and
+   `node scripts/verify-quantus.mjs` (78/78); see [docs/EVIDENCE.md](docs/EVIDENCE.md).
+4. **So NEAR can be where post-quantum liquidity lands.** The contract checks ML-DSA attestations and nothing
+   specific to QTC. NEAR accounts can hold native ML-DSA-65 keys since protocol 88, and Intents is where
+   cross-chain assets meet. As more chains move to ML-DSA, their assets can enter NEAR through this pattern
+   ([docs/PROPOSAL.md](docs/PROPOSAL.md)), rather than through one classical key each.
+
+What this does not show: demand. Testnet usage is our own, and QTC is one chain so far.
+
 ## Check it yourself (read-only)
 
 ```sh

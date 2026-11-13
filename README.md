@@ -1,5 +1,7 @@
 # Qlyphs: a post-quantum route into NEAR Intents
 
+**Demo video:** [the thread on X](https://x.com/iamyacine/status/2121180420146647492) · **Live app:** [app-testnet.qlyphs.com/bridge/quantum](https://app-testnet.qlyphs.com/bridge/quantum)
+
 **QTC is signed with ML-DSA on Quantus. This route brings it into NEAR Intents and back with ML-DSA at every
 application authorization step: user transactions, bridge approvals and withdrawals.**
 

@@ -237,12 +237,8 @@ Commit dates can be rewritten, block times cannot. On NEAR testnet, the route's 
 created at 2026-11-08 23:59 UTC (block 276,845,398, tx `3ciFNuoeFNPAn5aoUoauiNGvAmoTx9WZPyaYBGAcjJgD`). Every mint and
 withdrawal in [docs/EVIDENCE.md](docs/EVIDENCE.md) came after that.
 
-AI assistance: this repository was written with AI coding assistants (Claude Code and Pi Code), with ChatGPT 6 Pro
-as security auditor and DeepSeek (uncensored, on NEAR AI Cloud), directed and reviewed by the author, who is
-responsible for it.
-
-Thanks to Illia for the metal-framed *Attention Is All You Need* at qDays, and for the $1,000 of NEAR AI Cloud that
-came with it. The frame watched over the desk where this was built, and the credits ran DeepSeek.
+AI assistance: this repository was written with AI coding assistants (Claude Code and Pi Code), directed and
+reviewed by the author, who is responsible for it.
 
 The bridge verifies ML-DSA-87 on-chain with its own freestanding C verifier (`core/pq87.c`, written after the
 pq-crystals reference; see [THIRD_PARTY.md](THIRD_PARTY.md)). Built with [`near/intents`](https://github.com/near/intents) (unmodified verifier),

@@ -1,5 +1,5 @@
 {
- "date": "2026-11-10T17:54:59.406Z",
+ "date": "2026-11-12T23:25:05.346Z",
  "rpc": "https://archival-rpc.testnet.fastnear.com",
  "bridges": [
   {
@@ -384,6 +384,175 @@
      "signer": "relay.qlyphs-pqroute-a.testnet",
      "signer_key_scheme": "ml-dsa-65",
      "account_creation_tx": "5GKgHe8ooAYkRVtwMMrjervmK6SsxauP1VkRwfzh5i8o"
+    },
+    {
+     "tx": "FrxYP3ueWFg92G24LA5nMtdLguVj2NtVLSk3tJGjK3tS",
+     "deposit_id": "82bf9560eeef13f86070ad53a2420765d43fb4d6ba69c32f6bd4403f24ce3523",
+     "planck": "3000000000000",
+     "receiver": "r0bb19f07a1f78cc43e9b.qlyphs-pqroute-c.testnet",
+     "into_intents": true,
+     "attesters": [
+      1,
+      2
+     ],
+     "signer": "relay.qlyphs-pqroute-a.testnet",
+     "signer_key_scheme": "ml-dsa-65"
+    },
+    {
+     "tx": "9yY5WxbTn4RdfQ65cC84gnNvCQqZfCAbfzHR9UCSJQpT",
+     "deposit_id": "cdd5316b7e67311d0f2097580c9b2eae7222a3278d23fbbc7c1523c79b8657cc",
+     "planck": "1000000000000",
+     "receiver": "rc4d0e230d20430a63b11.qlyphs-pqroute-c.testnet",
+     "into_intents": true,
+     "attesters": [
+      1,
+      2
+     ],
+     "signer": "relay.qlyphs-pqroute-a.testnet",
+     "signer_key_scheme": "ml-dsa-65"
+    },
+    {
+     "tx": "G96pMd7U4sWWjgCcTE6G9Zv1cDf7A5U83wXTo6W4WXeG",
+     "deposit_id": "4191fb41ca686ddcf2917f8f1685cae44dbd864fa4374fa538cd4903a19d33fb",
+     "planck": "1000000000000",
+     "receiver": "re9ec4bacab6bf19c706f.qlyphs-pqroute-c.testnet",
+     "into_intents": true,
+     "attesters": [
+      1,
+      2
+     ],
+     "signer": "relay.qlyphs-pqroute-a.testnet",
+     "signer_key_scheme": "ml-dsa-65"
+    },
+    {
+     "tx": "FNTQFxR45YwnEkEXLFwcB4PRLPtEHiWuv96BDMVnnDg2",
+     "deposit_id": "b1afdfc7f93dfbb56dd4d90aff9c166410f49df5ab32c513f744d82382b6b190",
+     "planck": "1000000000000",
+     "receiver": "r90b62e83790ceee99b56.qlyphs-pqroute-c.testnet",
+     "into_intents": true,
+     "attesters": [
+      1,
+      2
+     ],
+     "signer": "relay.qlyphs-pqroute-a.testnet",
+     "signer_key_scheme": "ml-dsa-65"
+    },
+    {
+     "tx": "2Bv5FfZsQ9yxWq4YZdn2ZyrgPebKdiZwNmojaPesLB6R",
+     "deposit_id": "18c87e974cf57f5da95add903a345db7e6b7ceb65cd536a327889c371cdb82d0",
+     "planck": "1000000000000",
+     "receiver": "r0e76d9e11802c8066fc2.qlyphs-pqroute-c.testnet",
+     "into_intents": true,
+     "attesters": [
+      1,
+      2
+     ],
+     "signer": "relay.qlyphs-pqroute-a.testnet",
+     "signer_key_scheme": "ml-dsa-65"
+    },
+    {
+     "tx": "5BPE68s89tuq4WGPTMPsuM6BvvShBuJfn1r71GhVbTT",
+     "deposit_id": "0fb9460cdbd326db70e19e15c6bea3d66d4516581ce52a84a62143ffa06e6bc3",
+     "planck": "1000000000000",
+     "receiver": "rc624f6d7950ddb58250c.qlyphs-pqroute-c.testnet",
+     "into_intents": true,
+     "attesters": [
+      1,
+      2
+     ],
+     "signer": "relay.qlyphs-pqroute-a.testnet",
+     "signer_key_scheme": "ml-dsa-65"
+    },
+    {
+     "tx": "CkiwwXBA8RJ1NhXwgmpSXd3Lvday4RtS7zt4E6N19Fmk",
+     "deposit_id": "9d935b739694b9221301fbba9c4b96f4b6343c14acd9caf77e63eb5239e9a0da",
+     "planck": "1000000000000",
+     "receiver": "r6ee5069eceb6cd42078f.qlyphs-pqroute-c.testnet",
+     "into_intents": true,
+     "attesters": [
+      1,
+      2
+     ],
+     "signer": "relay.qlyphs-pqroute-a.testnet",
+     "signer_key_scheme": "ml-dsa-65"
+    },
+    {
+     "tx": "417t3Y9XhoWU2jRFCgjMCtpjHvQmYqQPr59AFs46BJ6r",
+     "deposit_id": "d2716accd56fa795c34a67b9a4dfcaa73714e9eab3cbbcf9721c0c35ef274541",
+     "planck": "1000000000000",
+     "receiver": "r2b51ce92c3573d71846a.qlyphs-pqroute-c.testnet",
+     "into_intents": true,
+     "attesters": [
+      1,
+      2
+     ],
+     "signer": "relay.qlyphs-pqroute-a.testnet",
+     "signer_key_scheme": "ml-dsa-65"
+    },
+    {
+     "tx": "4w3ADUpG85xnGw7k4cvmDPEteYBYVf6cxgXDHuJuNXWC",
+     "deposit_id": "5bb5babf451883daba0ca4b8679dd6f4031524d46acc4e3f4dcfb69f875b549f",
+     "planck": "1000000000000",
+     "receiver": "rf18c908e264f7d2859d8.qlyphs-pqroute-c.testnet",
+     "into_intents": true,
+     "attesters": [
+      1,
+      2
+     ],
+     "signer": "relay.qlyphs-pqroute-a.testnet",
+     "signer_key_scheme": "ml-dsa-65"
+    },
+    {
+     "tx": "4izFE5Lp9nTKSH5hwrkSMWb2Z3UMVAvAhChxBnP1V1Hy",
+     "deposit_id": "d7279a364a6f78924e18785f157094f317858d8191ac8f2227bce0fa01b149d4",
+     "planck": "2000000000000",
+     "receiver": "r0d67d0932e3a6b1a8a74.qlyphs-pqroute-c.testnet",
+     "into_intents": true,
+     "attesters": [
+      1,
+      2
+     ],
+     "signer": "relay.qlyphs-pqroute-a.testnet",
+     "signer_key_scheme": "ml-dsa-65"
+    },
+    {
+     "tx": "5ZbQ4wDnuTVTo7FtQKwFBnjb7xYEJJUNgvLFxQpvj9ap",
+     "deposit_id": "c54ea0774fec51ea6996871c2f7458121c7d60e152ed1562ac5906fe2690ad70",
+     "planck": "1000000000000",
+     "receiver": "r0e6c17f0349772cd7bbb.qlyphs-pqroute-c.testnet",
+     "into_intents": true,
+     "attesters": [
+      1,
+      2
+     ],
+     "signer": "relay.qlyphs-pqroute-a.testnet",
+     "signer_key_scheme": "ml-dsa-65"
+    },
+    {
+     "tx": "BubpZXffatD4iMJAeb2oJXYreKg9hfy2za5bNxoeh2R6",
+     "deposit_id": "4c240429766e26a5768bc72c13ab5614b5d224c4290d060cf7f535c504dab3b0",
+     "planck": "1000000000000",
+     "receiver": "re9dc3a65f355d49a83f5.qlyphs-pqroute-c.testnet",
+     "into_intents": true,
+     "attesters": [
+      1,
+      2
+     ],
+     "signer": "relay.qlyphs-pqroute-a.testnet",
+     "signer_key_scheme": "ml-dsa-65"
+    },
+    {
+     "tx": "6KrpQheV59aXoxgsTg2SKUfUxoM2JEGMeeyPx4PjLq8",
+     "deposit_id": "83fbbb8d496c928076ed17728c2026556a9dfe9b28090c28567b66978e2b3b3e",
+     "planck": "1000000000000",
+     "receiver": "r8e4890706bcb78d64892.qlyphs-pqroute-c.testnet",
+     "into_intents": true,
+     "attesters": [
+      1,
+      2
+     ],
+     "signer": "relay.qlyphs-pqroute-a.testnet",
+     "signer_key_scheme": "ml-dsa-65"
     }
    ],
    "withdrawals": [
@@ -1058,6 +1227,71 @@
    "detail": "1000000000000 planck to r23951b89557c1be3bac3.qlyphs-pqroute-c.testnet inside Intents"
   },
   {
+   "name": "mint FrxYP3ueWF…: attesters 1 and 2 signed with ML-DSA-87 (verified here)",
+   "ok": true,
+   "detail": "3000000000000 planck to r0bb19f07a1f78cc43e9b.qlyphs-pqroute-c.testnet inside Intents"
+  },
+  {
+   "name": "mint 9yY5WxbTn4…: attesters 1 and 2 signed with ML-DSA-87 (verified here)",
+   "ok": true,
+   "detail": "1000000000000 planck to rc4d0e230d20430a63b11.qlyphs-pqroute-c.testnet inside Intents"
+  },
+  {
+   "name": "mint G96pMd7U4s…: attesters 1 and 2 signed with ML-DSA-87 (verified here)",
+   "ok": true,
+   "detail": "1000000000000 planck to re9ec4bacab6bf19c706f.qlyphs-pqroute-c.testnet inside Intents"
+  },
+  {
+   "name": "mint FNTQFxR45Y…: attesters 1 and 2 signed with ML-DSA-87 (verified here)",
+   "ok": true,
+   "detail": "1000000000000 planck to r90b62e83790ceee99b56.qlyphs-pqroute-c.testnet inside Intents"
+  },
+  {
+   "name": "mint 2Bv5FfZsQ9…: attesters 1 and 2 signed with ML-DSA-87 (verified here)",
+   "ok": true,
+   "detail": "1000000000000 planck to r0e76d9e11802c8066fc2.qlyphs-pqroute-c.testnet inside Intents"
+  },
+  {
+   "name": "mint 5BPE68s89t…: attesters 1 and 2 signed with ML-DSA-87 (verified here)",
+   "ok": true,
+   "detail": "1000000000000 planck to rc624f6d7950ddb58250c.qlyphs-pqroute-c.testnet inside Intents"
+  },
+  {
+   "name": "mint CkiwwXBA8R…: attesters 1 and 2 signed with ML-DSA-87 (verified here)",
+   "ok": true,
+   "detail": "1000000000000 planck to r6ee5069eceb6cd42078f.qlyphs-pqroute-c.testnet inside Intents"
+  },
+  {
+   "name": "mint 417t3Y9Xho…: attesters 1 and 2 signed with ML-DSA-87 (verified here)",
+   "ok": true,
+   "detail": "1000000000000 planck to r2b51ce92c3573d71846a.qlyphs-pqroute-c.testnet inside Intents"
+  },
+  {
+   "name": "mint 4w3ADUpG85…: attesters 1 and 2 signed with ML-DSA-87 (verified here)",
+   "ok": true,
+   "detail": "1000000000000 planck to rf18c908e264f7d2859d8.qlyphs-pqroute-c.testnet inside Intents"
+  },
+  {
+   "name": "mint 4izFE5Lp9n…: attesters 1 and 2 signed with ML-DSA-87 (verified here)",
+   "ok": true,
+   "detail": "2000000000000 planck to r0d67d0932e3a6b1a8a74.qlyphs-pqroute-c.testnet inside Intents"
+  },
+  {
+   "name": "mint 5ZbQ4wDnuT…: attesters 1 and 2 signed with ML-DSA-87 (verified here)",
+   "ok": true,
+   "detail": "1000000000000 planck to r0e6c17f0349772cd7bbb.qlyphs-pqroute-c.testnet inside Intents"
+  },
+  {
+   "name": "mint BubpZXffat…: attesters 1 and 2 signed with ML-DSA-87 (verified here)",
+   "ok": true,
+   "detail": "1000000000000 planck to re9dc3a65f355d49a83f5.qlyphs-pqroute-c.testnet inside Intents"
+  },
+  {
+   "name": "mint 6KrpQheV59…: attesters 1 and 2 signed with ML-DSA-87 (verified here)",
+   "ok": true,
+   "detail": "1000000000000 planck to r8e4890706bcb78d64892.qlyphs-pqroute-c.testnet inside Intents"
+  },
+  {
    "name": "qtc-pq.qlyphs-pqroute-a.testnet: 7 forged or replayed mint attempts, all refused by the contract",
    "ok": true,
    "detail": "two different attesters are required; invalid attestation signature; deposit already minted"
@@ -1406,6 +1640,71 @@
    "name": "r23951b89557c1… opened by the ML-DSA-65 sponsor (create, fund, one ML-DSA-65 key) at block 276896693, before its mint at 276896939",
    "ok": true,
    "detail": "5GKgHe8ooA…"
+  },
+  {
+   "name": "r0bb19f07a1f78… creation transaction found",
+   "ok": false,
+   "detail": "not in the sponsor list"
+  },
+  {
+   "name": "rc4d0e230d2043… creation transaction found",
+   "ok": false,
+   "detail": "not in the sponsor list"
+  },
+  {
+   "name": "re9ec4bacab6bf… creation transaction found",
+   "ok": false,
+   "detail": "not in the sponsor list"
+  },
+  {
+   "name": "r90b62e83790ce… creation transaction found",
+   "ok": false,
+   "detail": "not in the sponsor list"
+  },
+  {
+   "name": "r0e76d9e11802c… creation transaction found",
+   "ok": false,
+   "detail": "not in the sponsor list"
+  },
+  {
+   "name": "rc624f6d7950dd… creation transaction found",
+   "ok": false,
+   "detail": "not in the sponsor list"
+  },
+  {
+   "name": "r6ee5069eceb6c… creation transaction found",
+   "ok": false,
+   "detail": "not in the sponsor list"
+  },
+  {
+   "name": "r2b51ce92c3573… creation transaction found",
+   "ok": false,
+   "detail": "not in the sponsor list"
+  },
+  {
+   "name": "rf18c908e264f7… creation transaction found",
+   "ok": false,
+   "detail": "not in the sponsor list"
+  },
+  {
+   "name": "r0d67d0932e3a6… creation transaction found",
+   "ok": false,
+   "detail": "not in the sponsor list"
+  },
+  {
+   "name": "r0e6c17f034977… creation transaction found",
+   "ok": false,
+   "detail": "not in the sponsor list"
+  },
+  {
+   "name": "re9dc3a65f355d… creation transaction found",
+   "ok": false,
+   "detail": "not in the sponsor list"
+  },
+  {
+   "name": "r8e4890706bcb7… creation transaction found",
+   "ok": false,
+   "detail": "not in the sponsor list"
   }
  ]
 }
